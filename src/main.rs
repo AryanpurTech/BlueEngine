@@ -5,87 +5,16 @@
  * Mystic Blue team. The license is same as the one on the root.
 */
 
-use wgpu;
-use futures::executor::block_on;
 #[allow(unreachable_code)]
+use futures::executor::block_on;
 use winit::{
-    event::*,
+    event::{Event, WindowEvent, *},
     event_loop::{ControlFlow, EventLoop},
-    window::{Window, WindowBuilder},
+    window::WindowBuilder,
 };
 extern crate env_logger;
 
-struct State {
-    surface: wgpu::Surface,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    sc_desc: wgpu::SwapChainDescriptor,
-    swap_chain: wgpu::SwapChain,
-    size: winit::dpi::PhysicalSize<u32>,
-}
-
-impl State {
-    async fn new(window: &Window) -> Self {
-        let size = window.inner_size();
-
-        // The instance is a handle to our GPU
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-        let surface = unsafe { instance.create_surface((window)) };
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::Default,
-                compatible_surface: Some(&surface),
-            })
-            .await
-            .unwrap();
-
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::default(),
-                    shader_validation: true,
-                },
-                None, // Trace path
-            )
-            .await
-            .unwrap();
-
-        let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
-            width: size.width,
-            height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
-        };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
-
-        Self {
-            surface,
-            device,
-            queue,
-            sc_desc,
-            swap_chain,
-            size,
-        }
-    }
-
-    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        todo!()
-    }
-
-    fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!()
-    }
-
-    fn update(&mut self) {
-        todo!()
-    }
-
-    fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
-        todo!()
-    }
-}
+mod state;
 
 fn main() {
     env_logger::init();
@@ -121,7 +50,7 @@ fn main() {
     let window = new_window.build(&event_loop).unwrap();
 
     // State class for wgpu
-    let mut state = block_on(State::new(&window));
+    let mut state = block_on(state::State::new(&window));
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {
@@ -129,21 +58,44 @@ fn main() {
             Event::WindowEvent {
                 ref event,
                 window_id,
-            } if window_id == window.id() => match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::KeyboardInput { input, .. } => match input {
-                    KeyboardInput {
-                        state: ElementState::Pressed,
-                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    _ => {}
-                },
-                _ => {}
-            },
+            } if window_id == window.id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                        WindowEvent::KeyboardInput { input, .. } => match input {
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            } => *control_flow = ControlFlow::Exit,
+                            _ => {}
+                        },
+                        WindowEvent::Resized(physical_state) => {
+                            state.resize(*physical_state);
+                        }
+                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                            // new_inner_state is &&mut so we have to dereference it twice
+                            state.resize(**new_inner_size);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Event::RedrawRequested(_) => {
+                state.update();
+                match state.render() {
+                    Ok(_) => {}
+                    // Recreate the swap_chain if lost
+                    Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
+                    // The system is out of memory, we should probably quit
+                    Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                    // All other errors (Outdated, Timeout) should be resolved by the next frame
+                    Err(e) => eprintln!("{:?}", e),
+                }
+            }
             Event::MainEventsCleared => {
-                // Here lies the main code
-
+                // RedrawRequested will only trigger once, unless we manually
+                // request it.
                 window.request_redraw();
             }
             _ => (),
