@@ -14,9 +14,17 @@ use winit::{
 };
 extern crate env_logger;
 
+mod shader;
 mod state;
 
 fn main() {
+    let cwd = std::env::current_dir().unwrap();
+    println!("{:?}", cwd.join("shaders").join("shader.vs").to_str().unwrap());
+    let mut shader_compiler = shader::Shader::new();
+    shader_compiler.add_shader(cwd.join("shaders").join("shader.vs").to_str().unwrap());
+    shader_compiler.add_shader(cwd.join("shaders").join("shader.fs").to_str().unwrap());
+    shader_compiler.compile();
+
     env_logger::init();
     let width: f64 = 800.0;
     let height: f64 = 600.0;

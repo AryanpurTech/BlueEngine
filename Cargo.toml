@@ -11,11 +11,16 @@ cgmath = "*"
 env_logger = "*"
 log = "*"
 futures = "*"
+anyhow = "1.0"
+fs_extra = "1.1"
+glob = "0.3"
+shaderc = "*"
+sled = "*"
 
 [dependencies.wgpu]
 version = "*"
 features = ["vulkan-portability"]
- 
+
 [profile.release]
 lto = true
-opt-level = "3"
+opt-level = 3
