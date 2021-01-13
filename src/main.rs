@@ -19,11 +19,9 @@ mod state;
 
 fn main() {
     let cwd = std::env::current_dir().unwrap();
-    println!("{:?}", cwd.join("shaders").join("shader.vs").to_str().unwrap());
-    let mut shader_compiler = shader::Shader::new();
-    shader_compiler.add_shader(cwd.join("shaders").join("shader.vs").to_str().unwrap());
-    shader_compiler.add_shader(cwd.join("shaders").join("shader.fs").to_str().unwrap());
-    shader_compiler.compile();
+    println!("{:?}", cwd.join("shaders"));
+    let vertex_shader = std::fs::read(cwd.join("shaders").join("shader.vs.spv")).unwrap();
+    let fragment_shader = std::fs::read(cwd.join("shaders").join("shader.fs.spv")).unwrap();
 
     env_logger::init();
     let width: f64 = 800.0;
@@ -58,7 +56,7 @@ fn main() {
     let window = new_window.build(&event_loop).unwrap();
 
     // State class for wgpu
-    let mut state = block_on(state::State::new(&window));
+    let mut state = block_on(state::State::new(&window, vertex_shader.as_slice(), fragment_shader.as_slice()));
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {

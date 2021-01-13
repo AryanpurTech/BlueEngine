@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use wgpu;
 use winit::{event::WindowEvent, window::Window};
 
@@ -12,7 +14,7 @@ pub struct State {
 }
 
 impl State {
-    pub async fn new(window: &Window) -> Self {
+    pub async fn new(window: &Window, vertex_shader: &[u8], fragment_shader: &[u8]) -> Self {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -47,31 +49,10 @@ impl State {
         };
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
-        let vs_src = include_str!("../shaders/shader.vs");
-        let fs_src = include_str!("../shaders/shader.fs");
-        let mut compiler = shaderc::Compiler::new().unwrap();
-        let vs_spirv = compiler
-            .compile_into_spirv(
-                vs_src,
-                shaderc::ShaderKind::Vertex,
-                "shader.vs",
-                "main",
-                None,
-            )
-            .unwrap();
-        let fs_spirv = compiler
-            .compile_into_spirv(
-                fs_src,
-                shaderc::ShaderKind::Fragment,
-                "shader.fs",
-                "main",
-                None,
-            )
-            .unwrap();
         let vs_module =
-            device.create_shader_module(wgpu::util::make_spirv(&vs_spirv.as_binary_u8()));
+            device.create_shader_module(wgpu::util::make_spirv(vertex_shader));
         let fs_module =
-            device.create_shader_module(wgpu::util::make_spirv(&fs_spirv.as_binary_u8()));
+            device.create_shader_module(wgpu::util::make_spirv(fragment_shader));
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
