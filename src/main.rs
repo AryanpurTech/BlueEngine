@@ -12,10 +12,23 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-extern crate env_logger;
 
-mod shader;
 mod state;
+
+const VERTICES: &[state::Vertex] = &[
+    state::Vertex {
+        position: [0.0, 0.5, 0.0],
+        color: [1.0, 0.0, 0.0],
+    },
+    state::Vertex {
+        position: [-0.5, -0.5, 0.0],
+        color: [0.0, 1.0, 0.0],
+    },
+    state::Vertex {
+        position: [0.5, -0.5, 0.0],
+        color: [0.0, 0.0, 1.0],
+    },
+];
 
 fn main() {
     let cwd = std::env::current_dir().unwrap();
@@ -23,7 +36,6 @@ fn main() {
     let vertex_shader = std::fs::read(cwd.join("shaders").join("shader.vs.spv")).unwrap();
     let fragment_shader = std::fs::read(cwd.join("shaders").join("shader.fs.spv")).unwrap();
 
-    env_logger::init();
     let width: f64 = 800.0;
     let height: f64 = 600.0;
     let title = "Blue Engine";
@@ -56,7 +68,12 @@ fn main() {
     let window = new_window.build(&event_loop).unwrap();
 
     // State class for wgpu
-    let mut state = block_on(state::State::new(&window, vertex_shader.as_slice(), fragment_shader.as_slice()));
+    let mut state = block_on(state::State::new(
+        &window,
+        vertex_shader.as_slice(),
+        fragment_shader.as_slice(),
+        VERTICES
+    ));
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {
