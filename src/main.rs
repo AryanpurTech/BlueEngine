@@ -14,28 +14,34 @@ use winit::{
 };
 
 mod state;
+use state::Vertex;
 
-const VERTICES: &[state::Vertex] = &[
-    state::Vertex {
-        position: [0.0, 0.5, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    state::Vertex {
-        position: [-0.5, -0.5, 0.0],
-        color: [0.0, 1.0, 0.0],
-    },
-    state::Vertex {
-        position: [0.5, -0.5, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
+const VERTICES: &[Vertex] = &[
+    Vertex {
+        position: [-0.0868241, 0.49240386, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // A
+    Vertex {
+        position: [-0.49513406, 0.06958647, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // B
+    Vertex {
+        position: [-0.21918549, -0.44939706, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // C
+    Vertex {
+        position: [0.35966998, -0.3473291, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // D
+    Vertex {
+        position: [0.44147372, 0.2347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    }, // E
 ];
 
-fn main() {
-    let cwd = std::env::current_dir().unwrap();
-    println!("{:?}", cwd.join("shaders"));
-    let vertex_shader = std::fs::read(cwd.join("shaders").join("shader.vs.spv")).unwrap();
-    let fragment_shader = std::fs::read(cwd.join("shaders").join("shader.fs.spv")).unwrap();
+const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
 
+fn main() {
     let width: f64 = 800.0;
     let height: f64 = 600.0;
     let title = "Blue Engine";
@@ -68,12 +74,26 @@ fn main() {
     let window = new_window.build(&event_loop).unwrap();
 
     // State class for wgpu
-    let mut state = block_on(state::State::new(
-        &window,
-        vertex_shader.as_slice(),
-        fragment_shader.as_slice(),
-        VERTICES
-    ));
+    let mut state = block_on(state::State::new(&window));
+
+
+
+    let cwd = std::env::current_dir().unwrap();
+    println!("{:?}", cwd.join("shaders"));
+    let vertex_shader = std::fs::read(cwd.join("shaders").join("shader.vs.spv")).unwrap();
+    let fragment_shader = std::fs::read(cwd.join("shaders").join("shader.fs.spv")).unwrap();
+
+    let pipe1 = state::RenderPipelineLayout {
+        name: String::from("triangle 1"),
+        vertex_shader: vertex_shader,
+        fragment_shader: fragment_shader,
+        verticies: Vec::from(VERTICES),
+        indicies: Vec::from(INDICES),
+    };
+    
+    state.new_pipeline(pipe1, 0..1);
+
+
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {

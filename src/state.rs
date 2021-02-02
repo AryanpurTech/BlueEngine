@@ -1,4 +1,6 @@
-use wgpu::{self, util::DeviceExt};
+use std::ops::Range;
+
+use wgpu::{self, util::DeviceExt, Buffer, RenderPipeline};
 use winit::{event::WindowEvent, window::Window};
 
 #[repr(C)]
@@ -31,6 +33,21 @@ impl Vertex {
     }
 }
 
+pub struct RenderPipelineLayout {
+    pub name: String,
+    pub vertex_shader: Vec<u8>,
+    pub fragment_shader: Vec<u8>,
+    pub verticies: Vec<Vertex>,
+    pub indicies: Vec<u16>,
+}
+
+struct Pipeline {
+    render_pipeline: RenderPipeline,
+    vertex_buffer: Buffer,
+    length: u32,
+    instances: Range<u32>,
+}
+
 pub struct State {
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -38,18 +55,11 @@ pub struct State {
     sc_desc: wgpu::SwapChainDescriptor,
     swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    num_verticies: u32,
+    render_pipeline: Vec<Pipeline>,
 }
 
 impl State {
-    pub async fn new(
-        window: &Window,
-        vertex_shader: &[u8],
-        fragment_shader: &[u8],
-        verticies: &[Vertex],
-    ) -> Self {
+    pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -84,58 +94,7 @@ impl State {
         };
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
-        let vs_module = device.create_shader_module(wgpu::util::make_spirv(vertex_shader));
-        let fs_module = device.create_shader_module(wgpu::util::make_spirv(fragment_shader));
-
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(verticies),
-            usage: wgpu::BufferUsage::VERTEX,
-        });
-
-        let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
-            });
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex_stage: wgpu::ProgrammableStageDescriptor {
-                module: &vs_module,
-                entry_point: "main", // 1
-            },
-            fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
-                module: &fs_module,
-                entry_point: "main",
-            }),
-            rasterization_state: Some(wgpu::RasterizationStateDescriptor {
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: wgpu::CullMode::Back,
-                depth_bias: 0,
-                depth_bias_slope_scale: 0.0,
-                depth_bias_clamp: 0.0,
-                clamp_depth: false,
-            }),
-            color_states: &[wgpu::ColorStateDescriptor {
-                format: sc_desc.format,
-                color_blend: wgpu::BlendDescriptor::REPLACE,
-                alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                write_mask: wgpu::ColorWrite::ALL,
-            }],
-            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-            depth_stencil_state: None,
-            vertex_state: wgpu::VertexStateDescriptor {
-                index_format: wgpu::IndexFormat::Uint16,
-                vertex_buffers: &[Vertex::desc()],
-            },
-            sample_count: 1,
-            sample_mask: !0,
-            alpha_to_coverage_enabled: false,
-        });
-
-        let num_verticies = verticies.len() as u32;
+        let render_pipeline: Vec<Pipeline> = Vec::new();
 
         Self {
             surface,
@@ -145,8 +104,6 @@ impl State {
             swap_chain,
             size,
             render_pipeline,
-            vertex_buffer,
-            num_verticies,
         }
     }
 
@@ -183,9 +140,11 @@ impl State {
             depth_stencil_attachment: None,
         });
 
-        render_pass.set_pipeline(&self.render_pipeline);
-        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-        render_pass.draw(0..self.num_verticies, 0..1);
+        for i in self.render_pipeline.iter() {
+            render_pass.set_pipeline(&i.render_pipeline);
+            render_pass.set_vertex_buffer(0, i.vertex_buffer.slice(..));
+            render_pass.draw(0..i.length, i.instances.clone());
+        }
 
         drop(render_pass);
 
@@ -193,5 +152,75 @@ impl State {
         self.queue.submit(std::iter::once(encoder.finish()));
 
         Ok(())
+    }
+
+    pub fn new_pipeline(&mut self, pipeline: RenderPipelineLayout, instances: Range<u32>) {
+        let vs_module = self
+            .device
+            .create_shader_module(wgpu::util::make_spirv(pipeline.vertex_shader.as_slice()));
+        let fs_module = self
+            .device
+            .create_shader_module(wgpu::util::make_spirv(pipeline.fragment_shader.as_slice()));
+
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(pipeline.verticies.as_slice()),
+                usage: wgpu::BufferUsage::VERTEX,
+            });
+
+        let render_pipeline_layout =
+            self.device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Render Pipeline Layout"),
+                    bind_group_layouts: &[],
+                    push_constant_ranges: &[],
+                });
+
+        let render_pipeline = self
+            .device
+            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some(pipeline.name.as_str()),
+                layout: Some(&render_pipeline_layout),
+                vertex_stage: wgpu::ProgrammableStageDescriptor {
+                    module: &vs_module,
+                    entry_point: "main", // 1
+                },
+                fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+                    module: &fs_module,
+                    entry_point: "main",
+                }),
+                rasterization_state: Some(wgpu::RasterizationStateDescriptor {
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: wgpu::CullMode::Back,
+                    depth_bias: 0,
+                    depth_bias_slope_scale: 0.0,
+                    depth_bias_clamp: 0.0,
+                    clamp_depth: false,
+                }),
+                color_states: &[wgpu::ColorStateDescriptor {
+                    format: self.sc_desc.format,
+                    color_blend: wgpu::BlendDescriptor::REPLACE,
+                    alpha_blend: wgpu::BlendDescriptor::REPLACE,
+                    write_mask: wgpu::ColorWrite::ALL,
+                }],
+                primitive_topology: wgpu::PrimitiveTopology::TriangleList,
+                depth_stencil_state: None,
+                vertex_state: wgpu::VertexStateDescriptor {
+                    index_format: wgpu::IndexFormat::Uint16,
+                    vertex_buffers: &[Vertex::desc()],
+                },
+                sample_count: 1,
+                sample_mask: !0,
+                alpha_to_coverage_enabled: false,
+            });
+
+        self.render_pipeline.push(Pipeline {
+            render_pipeline: render_pipeline,
+            vertex_buffer: vertex_buffer,
+            length: pipeline.verticies.len() as u32,
+            instances: instances,
+        })
     }
 }
