@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use wgpu::{self, util::DeviceExt, Buffer, RenderPipeline};
-use winit::{event::WindowEvent, window::Window};
+use winit::{event::{KeyboardInput, VirtualKeyCode, WindowEvent}, window::Window};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -44,6 +44,7 @@ pub struct RenderPipelineLayout {
 struct Pipeline {
     render_pipeline: RenderPipeline,
     vertex_buffer: Buffer,
+    index_buffer: Buffer,
     length: u32,
     instances: Range<u32>,
 }
@@ -115,7 +116,21 @@ impl State {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        false
+        match event {
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state,
+                        virtual_keycode: Some(VirtualKeyCode::Space),
+                        ..
+                    },
+                ..
+            } => {
+                println!("{:?}", state);
+                true
+            }
+            _ => false,
+        }
     }
 
     pub fn update(&mut self) {}
@@ -143,7 +158,8 @@ impl State {
         for i in self.render_pipeline.iter() {
             render_pass.set_pipeline(&i.render_pipeline);
             render_pass.set_vertex_buffer(0, i.vertex_buffer.slice(..));
-            render_pass.draw(0..i.length, i.instances.clone());
+            render_pass.set_index_buffer(i.index_buffer.slice(..));
+            render_pass.draw_indexed(0..i.length, 0, i.instances.clone());
         }
 
         drop(render_pass);
@@ -168,6 +184,14 @@ impl State {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(pipeline.verticies.as_slice()),
                 usage: wgpu::BufferUsage::VERTEX,
+            });
+
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(pipeline.indicies.as_slice()),
+                usage: wgpu::BufferUsage::INDEX,
             });
 
         let render_pipeline_layout =
@@ -219,7 +243,8 @@ impl State {
         self.render_pipeline.push(Pipeline {
             render_pipeline: render_pipeline,
             vertex_buffer: vertex_buffer,
-            length: pipeline.verticies.len() as u32,
+            index_buffer: index_buffer,
+            length: pipeline.indicies.len() as u32,
             instances: instances,
         })
     }

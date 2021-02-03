@@ -9,6 +9,7 @@ winit = "*"
 cgmath = "*"
 futures = "*"
 bytemuck = { version = "*", features = [ "derive" ] }
+winit_input_helper = "*"
 
 [dependencies.wgpu]
 version = "*"

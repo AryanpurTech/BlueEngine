@@ -23,23 +23,39 @@ const VERTICES: &[Vertex] = &[
     }, // A
     Vertex {
         position: [-0.49513406, 0.06958647, 0.0],
-        color: [0.5, 0.0, 0.5],
+        color: [0.0, 1.0, 0.0],
     }, // B
     Vertex {
         position: [-0.21918549, -0.44939706, 0.0],
-        color: [0.5, 0.0, 0.5],
+        color: [1.0, 0.0, 0.0],
     }, // C
     Vertex {
         position: [0.35966998, -0.3473291, 0.0],
-        color: [0.5, 0.0, 0.5],
+        color: [0.0, 0.0, 1.0],
     }, // D
     Vertex {
         position: [0.44147372, 0.2347359, 0.0],
-        color: [0.5, 0.0, 0.5],
+        color: [0.0, 0.5, 0.0],
     }, // E
 ];
 
+const TRIANGLES: &[Vertex] = &[
+    Vertex {
+        position: [1.0, 1.0, 0.0],
+        color: [1.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [0.0, 0.0, 0.0],
+        color: [0.0, 1.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, 0.0, 0.0],
+        color: [0.0, 0.0, 1.0],
+    },
+];
+
 const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+const TRAINGLEINDICES: &[u16] = &[0, 1, 2];
 
 fn main() {
     let width: f64 = 800.0;
@@ -80,20 +96,31 @@ fn main() {
 
     let cwd = std::env::current_dir().unwrap();
     println!("{:?}", cwd.join("shaders"));
-    let vertex_shader = std::fs::read(cwd.join("shaders").join("shader.vs.spv")).unwrap();
-    let fragment_shader = std::fs::read(cwd.join("shaders").join("shader.fs.spv")).unwrap();
+    let vertex_shader = std::fs::read(cwd.join("shader").join("shader.vs.spv")).unwrap();
+    let fragment_shader = std::fs::read(cwd.join("shader").join("shader.fs.spv")).unwrap();
 
     let pipe1 = state::RenderPipelineLayout {
         name: String::from("triangle 1"),
-        vertex_shader: vertex_shader,
-        fragment_shader: fragment_shader,
+        vertex_shader: vertex_shader.clone(),
+        fragment_shader: fragment_shader.clone(),
         verticies: Vec::from(VERTICES),
         indicies: Vec::from(INDICES),
     };
-    
+
+    let pipe2 = state::RenderPipelineLayout {
+        name: String::from("triangle 1"),
+        vertex_shader: vertex_shader,
+        fragment_shader: fragment_shader,
+        verticies: Vec::from(TRIANGLES),
+        indicies: Vec::from(TRAINGLEINDICES),
+    };
+
     state.new_pipeline(pipe1, 0..1);
+    state.new_pipeline(pipe2, 0..1);
 
-
+    let timer = std::time::SystemTime::now();
+    let mut tick: u64 = 0;
+    let mut fps: i8 = 0;
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {
@@ -127,7 +154,16 @@ fn main() {
             Event::RedrawRequested(_) => {
                 state.update();
                 match state.render() {
-                    Ok(_) => {}
+                    Ok(_) => {
+                        let now = timer.elapsed().unwrap().as_secs();
+                        if tick < now {
+                            tick = now;
+                            println!("FPS: {}", fps);
+                            fps = 0;
+                        } else {
+                            fps = fps + 1;
+                        }
+                    }
                     // Recreate the swap_chain if lost
                     Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
                     // The system is out of memory, we should probably quit
@@ -139,6 +175,7 @@ fn main() {
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.
+
                 window.request_redraw();
             }
             _ => (),
