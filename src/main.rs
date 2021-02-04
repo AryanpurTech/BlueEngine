@@ -92,35 +92,22 @@ fn main() {
     // State class for wgpu
     let mut state = block_on(state::State::new(&window));
 
-
-
     let cwd = std::env::current_dir().unwrap();
     println!("{:?}", cwd.join("shaders"));
-    let vertex_shader = std::fs::read(cwd.join("shader").join("shader.vs.spv")).unwrap();
-    let fragment_shader = std::fs::read(cwd.join("shader").join("shader.fs.spv")).unwrap();
+    let vertex_shader = std::fs::read(cwd.join("res").join("shader.vs.spv")).unwrap();
+    let fragment_shader = std::fs::read(cwd.join("res").join("shader.fs.spv")).unwrap();
 
-    let pipe1 = state::RenderPipelineLayout {
-        name: String::from("triangle 1"),
-        vertex_shader: vertex_shader.clone(),
-        fragment_shader: fragment_shader.clone(),
-        verticies: Vec::from(VERTICES),
-        indicies: Vec::from(INDICES),
-    };
+    let shader = state.new_shaders("shader", vertex_shader, fragment_shader);
 
-    let pipe2 = state::RenderPipelineLayout {
-        name: String::from("triangle 1"),
-        vertex_shader: vertex_shader,
-        fragment_shader: fragment_shader,
-        verticies: Vec::from(TRIANGLES),
-        indicies: Vec::from(TRAINGLEINDICES),
-    };
+    let pipe1 = state.new_buffers(Vec::from(VERTICES), Vec::from(INDICES), 0..1);
+    let pipe2 = state.new_buffers(Vec::from(TRIANGLES), Vec::from(TRAINGLEINDICES), 0..1);
 
-    state.new_pipeline(pipe1, 0..1);
-    state.new_pipeline(pipe2, 0..1);
+    state.new_life(shader.clone(), pipe1);
+    state.new_life(shader, pipe2);
 
     let timer = std::time::SystemTime::now();
     let mut tick: u64 = 0;
-    let mut fps: i8 = 0;
+    let mut fps: i32 = 0;
 
     // Let's start defining the loop, shall we?
     event_loop.run(move |event, _, control_flow| {
@@ -151,19 +138,12 @@ fn main() {
                     }
                 }
             }
-            Event::RedrawRequested(_) => {
+
+            Event::MainEventsCleared => {
+                //window.request_redraw();
                 state.update();
                 match state.render() {
-                    Ok(_) => {
-                        let now = timer.elapsed().unwrap().as_secs();
-                        if tick < now {
-                            tick = now;
-                            println!("FPS: {}", fps);
-                            fps = 0;
-                        } else {
-                            fps = fps + 1;
-                        }
-                    }
+                    Ok(_) => {}
                     // Recreate the swap_chain if lost
                     Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
                     // The system is out of memory, we should probably quit
@@ -172,13 +152,15 @@ fn main() {
                     Err(e) => eprintln!("{:?}", e),
                 }
             }
-            Event::MainEventsCleared => {
-                // RedrawRequested will only trigger once, unless we manually
-                // request it.
-
-                window.request_redraw();
-            }
             _ => (),
+        }
+        let now = timer.elapsed().unwrap().as_secs();
+        if tick < now {
+            tick = now;
+            println!("FPS: {}", fps);
+            fps = 0;
+        } else {
+            fps = fps + 1;
         }
     });
 }

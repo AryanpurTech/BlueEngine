@@ -1,7 +1,10 @@
 use std::ops::Range;
 
 use wgpu::{self, util::DeviceExt, Buffer, RenderPipeline};
-use winit::{event::{KeyboardInput, VirtualKeyCode, WindowEvent}, window::Window};
+use winit::{
+    event::{KeyboardInput, VirtualKeyCode, WindowEvent},
+    window::Window,
+};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -33,20 +36,18 @@ impl Vertex {
     }
 }
 
-pub struct RenderPipelineLayout {
-    pub name: String,
-    pub vertex_shader: Vec<u8>,
-    pub fragment_shader: Vec<u8>,
-    pub verticies: Vec<Vertex>,
-    pub indicies: Vec<u16>,
-}
+type Shaders = RenderPipeline;
 
-struct Pipeline {
-    render_pipeline: RenderPipeline,
+pub struct Buffers {
     vertex_buffer: Buffer,
     index_buffer: Buffer,
     length: u32,
     instances: Range<u32>,
+}
+
+pub struct Body {
+    pub shader_index: usize,
+    pub buffers: Buffers,
 }
 
 pub struct State {
@@ -56,7 +57,8 @@ pub struct State {
     sc_desc: wgpu::SwapChainDescriptor,
     swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline: Vec<Pipeline>,
+    shaders: Vec<Shaders>,
+    render_pipeline: Vec<Body>,
 }
 
 impl State {
@@ -95,7 +97,8 @@ impl State {
         };
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
-        let render_pipeline: Vec<Pipeline> = Vec::new();
+        let shaders: Vec<Shaders> = Vec::new();
+        let render_pipeline: Vec<Body> = Vec::new();
 
         Self {
             surface,
@@ -104,6 +107,7 @@ impl State {
             sc_desc,
             swap_chain,
             size,
+            shaders,
             render_pipeline,
         }
     }
@@ -126,7 +130,9 @@ impl State {
                     },
                 ..
             } => {
-                println!("{:?}", state);
+                if state == &winit::event::ElementState::Released {
+                    println!("{:?}", state);
+                }
                 true
             }
             _ => false,
@@ -156,10 +162,14 @@ impl State {
         });
 
         for i in self.render_pipeline.iter() {
-            render_pass.set_pipeline(&i.render_pipeline);
-            render_pass.set_vertex_buffer(0, i.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(i.index_buffer.slice(..));
-            render_pass.draw_indexed(0..i.length, 0, i.instances.clone());
+            render_pass.set_pipeline(
+                self.shaders
+                    .get(i.shader_index)
+                    .expect(format!("Couldn't find shader at index: {}", i.shader_index).as_str()),
+            );
+            render_pass.set_vertex_buffer(0, i.buffers.vertex_buffer.slice(..));
+            render_pass.set_index_buffer(i.buffers.index_buffer.slice(..));
+            render_pass.draw_indexed(0..i.buffers.length, 0, i.buffers.instances.clone());
         }
 
         drop(render_pass);
@@ -170,29 +180,25 @@ impl State {
         Ok(())
     }
 
-    pub fn new_pipeline(&mut self, pipeline: RenderPipelineLayout, instances: Range<u32>) {
+    pub fn new_life(&mut self, shader_index: usize, buffers: Buffers) {
+        self.render_pipeline.push(Body {
+            shader_index: shader_index,
+            buffers: buffers,
+        });
+    }
+
+    pub fn new_shaders(
+        &mut self,
+        name: &'static str,
+        vertex_shader: Vec<u8>,
+        fragment_shader: Vec<u8>,
+    ) -> usize {
         let vs_module = self
             .device
-            .create_shader_module(wgpu::util::make_spirv(pipeline.vertex_shader.as_slice()));
+            .create_shader_module(wgpu::util::make_spirv(vertex_shader.as_slice()));
         let fs_module = self
             .device
-            .create_shader_module(wgpu::util::make_spirv(pipeline.fragment_shader.as_slice()));
-
-        let vertex_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(pipeline.verticies.as_slice()),
-                usage: wgpu::BufferUsage::VERTEX,
-            });
-
-        let index_buffer = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(pipeline.indicies.as_slice()),
-                usage: wgpu::BufferUsage::INDEX,
-            });
+            .create_shader_module(wgpu::util::make_spirv(fragment_shader.as_slice()));
 
         let render_pipeline_layout =
             self.device
@@ -205,7 +211,7 @@ impl State {
         let render_pipeline = self
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some(pipeline.name.as_str()),
+                label: Some(name),
                 layout: Some(&render_pipeline_layout),
                 vertex_stage: wgpu::ProgrammableStageDescriptor {
                     module: &vs_module,
@@ -240,12 +246,38 @@ impl State {
                 alpha_to_coverage_enabled: false,
             });
 
-        self.render_pipeline.push(Pipeline {
-            render_pipeline: render_pipeline,
+        let index = self.shaders.len();
+        self.shaders.push(render_pipeline);
+        return index;
+    }
+
+    pub fn new_buffers(
+        &mut self,
+        verticies: Vec<Vertex>,
+        indicies: Vec<u16>,
+        instances: Range<u32>,
+    ) -> Buffers {
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(verticies.as_slice()),
+                usage: wgpu::BufferUsage::VERTEX,
+            });
+
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(indicies.as_slice()),
+                usage: wgpu::BufferUsage::INDEX,
+            });
+
+        return Buffers {
             vertex_buffer: vertex_buffer,
             index_buffer: index_buffer,
-            length: pipeline.indicies.len() as u32,
+            length: indicies.len() as u32,
             instances: instances,
-        })
+        };
     }
 }

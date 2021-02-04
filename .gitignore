@@ -2,4 +2,4 @@ target
 Cargo.lock
 .vscode
 tools
-shader
+res

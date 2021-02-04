@@ -8,6 +8,7 @@ edition = "2018"
 winit = "*"
 cgmath = "*"
 futures = "*"
+image = "*"
 bytemuck = { version = "*", features = [ "derive" ] }
 winit_input_helper = "*"
 
@@ -17,4 +18,5 @@ features = ["vulkan-portability"]
 
 [profile.release]
 lto = true
-opt-level = 3
+opt-level = "z"
+codegen-units = 1
