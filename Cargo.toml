@@ -1,8 +1,12 @@
 [package]
-name = "blue_engine"
+name = "blue_engine_core"
 version = "0.1.0"
 authors = ["elham <elhamaryanpur5@gmail.com>"]
 edition = "2018"
+
+[lib]
+name = "blue_engine_core"
+crate-type = ["rlib"]
 
 [dependencies]
 winit = "*"
@@ -15,8 +19,3 @@ winit_input_helper = "*"
 [dependencies.wgpu]
 version = "*"
 features = ["vulkan-portability"]
-
-[profile.release]
-lto = true
-opt-level = "z"
-codegen-units = 1

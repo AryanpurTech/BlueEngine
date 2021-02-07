@@ -50,10 +50,10 @@ pub struct Body {
     pub buffers: Buffers,
 }
 
-pub struct State {
+pub struct Renderer {
     surface: wgpu::Surface,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
     sc_desc: wgpu::SwapChainDescriptor,
     swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
@@ -61,7 +61,7 @@ pub struct State {
     render_pipeline: Vec<Body>,
 }
 
-impl State {
+impl Renderer {
     pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
 
@@ -70,7 +70,7 @@ impl State {
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::Default,
+                power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: Some(&surface),
             })
             .await
@@ -125,14 +125,12 @@ impl State {
                 input:
                     KeyboardInput {
                         state,
-                        virtual_keycode: Some(VirtualKeyCode::Space),
+                        virtual_keycode: Some(VirtualKeyCode::Escape),
                         ..
                     },
                 ..
             } => {
-                if state == &winit::event::ElementState::Released {
-                    println!("{:?}", state);
-                }
+                if state == &winit::event::ElementState::Released {}
                 true
             }
             _ => false,
@@ -161,12 +159,17 @@ impl State {
             depth_stencil_attachment: None,
         });
 
+        let mut already_loaded_shader: usize = 5;
+
         for i in self.render_pipeline.iter() {
-            render_pass.set_pipeline(
-                self.shaders
-                    .get(i.shader_index)
-                    .expect(format!("Couldn't find shader at index: {}", i.shader_index).as_str()),
-            );
+            if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() == 0 {
+                render_pass.set_pipeline(
+                    self.shaders.get(i.shader_index.clone()).expect(
+                        format!("Couldn't find shader at index: {}", i.shader_index).as_str(),
+                    ),
+                );
+                already_loaded_shader = i.shader_index;
+            }
             render_pass.set_vertex_buffer(0, i.buffers.vertex_buffer.slice(..));
             render_pass.set_index_buffer(i.buffers.index_buffer.slice(..));
             render_pass.draw_indexed(0..i.buffers.length, 0, i.buffers.instances.clone());
@@ -192,7 +195,7 @@ impl State {
         name: &'static str,
         vertex_shader: Vec<u8>,
         fragment_shader: Vec<u8>,
-    ) -> usize {
+    ) -> Result<usize, ()> {
         let vs_module = self
             .device
             .create_shader_module(wgpu::util::make_spirv(vertex_shader.as_slice()));
@@ -248,7 +251,7 @@ impl State {
 
         let index = self.shaders.len();
         self.shaders.push(render_pipeline);
-        return index;
+        Ok(index)
     }
 
     pub fn new_buffers(
