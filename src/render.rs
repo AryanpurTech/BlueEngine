@@ -1,65 +1,11 @@
+use crate::definitions::{Buffers, Pipeline, Renderer, Shaders, Vertex};
+use anyhow::*;
 use std::ops::Range;
-
-use wgpu::{self, util::DeviceExt, Buffer, RenderPipeline};
+use wgpu::{self, util::DeviceExt};
 use winit::{
     event::{KeyboardInput, VirtualKeyCode, WindowEvent},
     window::Window,
 };
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct Vertex {
-    pub position: [f32; 3],
-    pub color: [f32; 3],
-}
-unsafe impl bytemuck::Pod for Vertex {}
-unsafe impl bytemuck::Zeroable for Vertex {}
-
-impl Vertex {
-    fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
-        wgpu::VertexBufferDescriptor {
-            stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttributeDescriptor {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float3,
-                },
-                wgpu::VertexAttributeDescriptor {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float3,
-                },
-            ],
-        }
-    }
-}
-
-type Shaders = RenderPipeline;
-
-pub struct Buffers {
-    vertex_buffer: Buffer,
-    index_buffer: Buffer,
-    length: u32,
-    instances: Range<u32>,
-}
-
-pub struct Body {
-    pub shader_index: usize,
-    pub buffers: Buffers,
-}
-
-pub struct Renderer {
-    surface: wgpu::Surface,
-    pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
-    sc_desc: wgpu::SwapChainDescriptor,
-    swap_chain: wgpu::SwapChain,
-    pub size: winit::dpi::PhysicalSize<u32>,
-    shaders: Vec<Shaders>,
-    render_pipeline: Vec<Body>,
-}
 
 impl Renderer {
     pub async fn new(window: &Window) -> Self {
@@ -79,9 +25,9 @@ impl Renderer {
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
+                    label: Some("Device"),
                     features: wgpu::Features::empty(),
                     limits: wgpu::Limits::default(),
-                    shader_validation: true,
                 },
                 None, // Trace path
             )
@@ -89,7 +35,7 @@ impl Renderer {
             .unwrap();
 
         let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
             format: wgpu::TextureFormat::Bgra8UnormSrgb,
             width: size.width,
             height: size.height,
@@ -97,8 +43,42 @@ impl Renderer {
         };
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStage::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Uint,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStage::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler {
+                            comparison: false,
+                            filtering: true,
+                        },
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let render_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[&texture_bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
         let shaders: Vec<Shaders> = Vec::new();
-        let render_pipeline: Vec<Body> = Vec::new();
+        let render_pipeline: Vec<Pipeline> = Vec::new();
+        let texture_bind_group_vec: Vec<wgpu::BindGroup> = Vec::new();
 
         Self {
             surface,
@@ -107,7 +87,12 @@ impl Renderer {
             sc_desc,
             swap_chain,
             size,
+
+            texture_bind_group_layout,
+            render_pipeline_layout,
+
             shaders,
+            texture_bind_group: texture_bind_group_vec,
             render_pipeline,
         }
     }
@@ -148,6 +133,7 @@ impl Renderer {
             });
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Render pass"),
             color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
                 attachment: &frame.view,
                 resolve_target: None,
@@ -160,6 +146,7 @@ impl Renderer {
         });
 
         let mut already_loaded_shader: usize = 5;
+        let mut already_loaded_texture: usize = 5;
 
         for i in self.render_pipeline.iter() {
             if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() == 0 {
@@ -170,8 +157,21 @@ impl Renderer {
                 );
                 already_loaded_shader = i.shader_index;
             }
+
+            if i.texture_index.is_some() {
+                let texture_index = i.texture_index.unwrap();
+                if already_loaded_texture != texture_index.clone() || texture_index.clone() == 0 {
+                    render_pass.set_bind_group(
+                        0,
+                        self.texture_bind_group.get(texture_index.clone()).unwrap(),
+                        &[],
+                    );
+                    already_loaded_texture = texture_index;
+                }
+            }
             render_pass.set_vertex_buffer(0, i.buffers.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(i.buffers.index_buffer.slice(..));
+            render_pass
+                .set_index_buffer(i.buffers.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..i.buffers.length, 0, i.buffers.instances.clone());
         }
 
@@ -183,10 +183,16 @@ impl Renderer {
         Ok(())
     }
 
-    pub fn new_life(&mut self, shader_index: usize, buffers: Buffers) {
-        self.render_pipeline.push(Body {
+    pub fn new_pipeline(
+        &mut self,
+        shader_index: usize,
+        buffers: Buffers,
+        texture_bind_group: Option<usize>,
+    ) {
+        self.render_pipeline.push(Pipeline {
             shader_index: shader_index,
             buffers: buffers,
+            texture_index: texture_bind_group,
         });
     }
 
@@ -195,59 +201,59 @@ impl Renderer {
         name: &'static str,
         vertex_shader: Vec<u8>,
         fragment_shader: Vec<u8>,
-    ) -> Result<usize, ()> {
+    ) -> Result<usize> {
         let vs_module = self
             .device
-            .create_shader_module(wgpu::util::make_spirv(vertex_shader.as_slice()));
+            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+                label: Some("Vertex Shader Source"),
+                source: wgpu::util::make_spirv(vertex_shader.as_slice()),
+                flags: wgpu::ShaderFlags::VALIDATION,
+            });
         let fs_module = self
             .device
-            .create_shader_module(wgpu::util::make_spirv(fragment_shader.as_slice()));
+            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+                label: Some("Fragment Shader Source"),
+                source: wgpu::util::make_spirv(fragment_shader.as_slice()),
+                flags: wgpu::ShaderFlags::VALIDATION,
+            });
 
-        let render_pipeline_layout =
-            self.device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[],
-                    push_constant_ranges: &[],
-                });
-
+        println!("layout done");
         let render_pipeline = self
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some(name),
-                layout: Some(&render_pipeline_layout),
-                vertex_stage: wgpu::ProgrammableStageDescriptor {
+                layout: Some(&self.render_pipeline_layout),
+                vertex: wgpu::VertexState {
                     module: &vs_module,
-                    entry_point: "main", // 1
+                    entry_point: "main",
+                    buffers: &[Vertex::desc()],
                 },
-                fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+                fragment: Some(wgpu::FragmentState {
                     module: &fs_module,
                     entry_point: "main",
+                    targets: &[wgpu::ColorTargetState {
+                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        alpha_blend: wgpu::BlendState::REPLACE,
+                        color_blend: wgpu::BlendState::REPLACE,
+                        write_mask: wgpu::ColorWrite::ALL,
+                    }],
                 }),
-                rasterization_state: Some(wgpu::RasterizationStateDescriptor {
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
                     front_face: wgpu::FrontFace::Ccw,
                     cull_mode: wgpu::CullMode::Back,
-                    depth_bias: 0,
-                    depth_bias_slope_scale: 0.0,
-                    depth_bias_clamp: 0.0,
-                    clamp_depth: false,
-                }),
-                color_states: &[wgpu::ColorStateDescriptor {
-                    format: self.sc_desc.format,
-                    color_blend: wgpu::BlendDescriptor::REPLACE,
-                    alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                    write_mask: wgpu::ColorWrite::ALL,
-                }],
-                primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-                depth_stencil_state: None,
-                vertex_state: wgpu::VertexStateDescriptor {
-                    index_format: wgpu::IndexFormat::Uint16,
-                    vertex_buffers: &[Vertex::desc()],
+                    polygon_mode: wgpu::PolygonMode::Fill,
                 },
-                sample_count: 1,
-                sample_mask: !0,
-                alpha_to_coverage_enabled: false,
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
             });
+
+        println!("creations success");
 
         let index = self.shaders.len();
         self.shaders.push(render_pipeline);
