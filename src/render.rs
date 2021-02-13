@@ -50,7 +50,7 @@ impl Renderer {
                         binding: 0,
                         visibility: wgpu::ShaderStage::FRAGMENT,
                         ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Uint,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
                             view_dimension: wgpu::TextureViewDimension::D2,
                             multisampled: false,
                         },
@@ -232,7 +232,7 @@ impl Renderer {
                     module: &fs_module,
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
                         alpha_blend: wgpu::BlendState::REPLACE,
                         color_blend: wgpu::BlendState::REPLACE,
                         write_mask: wgpu::ColorWrite::ALL,

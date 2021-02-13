@@ -15,7 +15,6 @@ futures = "*"
 image = "*"
 bytemuck = { version = "*", features = [ "derive" ] }
 winit_input_helper = "*"
-sled = "*"
 anyhow = "*"
 
 [dependencies.wgpu]

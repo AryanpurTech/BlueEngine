@@ -18,23 +18,25 @@ impl Renderer {
             MODE = AddressMode::ClampToEdge;
         };
 
-        let diffuse_image =
+        let img =
             load_from_memory(diffuse_bytes.as_slice()).expect("Couldn't Load Image For Texture");
-        let diffuse_rgba = diffuse_image
+        //let diffuse_rgba = diffuse_image
+        //    .as_rgba8()
+        //    .expect("Couldn't Obtain RGBA Data Of The Texture Image");
+
+        let rgba = img
             .as_rgba8()
             .expect("Couldn't Obtain RGBA Data Of The Texture Image");
+        let dimensions = img.dimensions();
 
-        let dimentions = diffuse_image.dimensions();
-
-        let texture_size = wgpu::Extent3d {
-            width: dimentions.0,
-            height: dimentions.1,
+        let size = wgpu::Extent3d {
+            width: dimensions.0,
+            height: dimensions.1,
             depth: 1,
         };
-
-        let diffuse_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some(name),
-            size: texture_size,
+            size,
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
@@ -44,28 +46,27 @@ impl Renderer {
 
         self.queue.write_texture(
             wgpu::TextureCopyView {
-                texture: &diffuse_texture,
+                texture: &texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
             },
-            diffuse_bytes.as_slice(),
+            rgba,
             wgpu::TextureDataLayout {
                 offset: 0,
-                bytes_per_row: 4 * dimentions.0,
-                rows_per_image: dimentions.1,
+                bytes_per_row: 4 * dimensions.0,
+                rows_per_image: dimensions.1,
             },
-            texture_size,
+            size,
         );
 
-        let diffuse_texture_view =
-            diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let diffuse_sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: MODE.clone(),
-            address_mode_v: MODE.clone(),
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+            address_mode_u: MODE,
+            address_mode_v: MODE,
             address_mode_w: MODE,
-            mag_filter: FilterMode::Linear,
-            min_filter: FilterMode::Nearest,
-            mipmap_filter: FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
         });
 
@@ -75,11 +76,11 @@ impl Renderer {
             entries: &[
                 BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_view),
+                    resource: wgpu::BindingResource::TextureView(&view),
                 },
                 BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_sampler),
+                    resource: wgpu::BindingResource::Sampler(&sampler),
                 },
             ],
         });

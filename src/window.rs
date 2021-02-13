@@ -6,6 +6,7 @@
 */
 
 use crate::definitions::{Renderer, WindowDescriptor};
+use anyhow::*;
 use futures::executor::block_on;
 #[allow(unreachable_code)]
 use winit::{
@@ -15,7 +16,7 @@ use winit::{
 };
 
 #[allow(unreachable_code)]
-pub fn new(settings: WindowDescriptor) -> Result<(), ()> {
+pub fn new(settings: WindowDescriptor) -> Result<()> {
     // Dimentions of the window, as width and height
     // and then are set as a logical size that the window can accept
     let dimention = winit::dpi::LogicalSize {
