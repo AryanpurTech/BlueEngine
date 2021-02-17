@@ -1,4 +1,4 @@
-use crate::definitions::{Buffers, Pipeline, Renderer, Shaders, Vertex};
+use crate::definitions::{Buffers, Pipeline, Renderer, UniformBindGroup, UniformBuffer, Vertex};
 use anyhow::*;
 use std::ops::Range;
 use wgpu::{self, util::DeviceExt};
@@ -69,16 +69,45 @@ impl Renderer {
                 label: Some("texture_bind_group_layout"),
             });
 
+        let uniform_dynamic_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("uniform dynamic bind group layout"),
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: true,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            });
+
+        let uniform_static_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("uniform static bind group layout"),
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            });
+
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout],
+                bind_group_layouts: &[
+                    &texture_bind_group_layout,
+                    &uniform_static_bind_group_layout,
+                ],
                 push_constant_ranges: &[],
             });
-
-        let shaders: Vec<Shaders> = Vec::new();
-        let render_pipeline: Vec<Pipeline> = Vec::new();
-        let texture_bind_group_vec: Vec<wgpu::BindGroup> = Vec::new();
 
         Self {
             surface,
@@ -89,11 +118,14 @@ impl Renderer {
             size,
 
             texture_bind_group_layout,
+            uniform_dynamic_bind_group_layout,
+            uniform_static_bind_group_layout,
             render_pipeline_layout,
 
-            shaders,
-            texture_bind_group: texture_bind_group_vec,
-            render_pipeline,
+            shaders: Vec::new(),
+            texture_bind_group: Vec::new(),
+            uniform_bind_group: Vec::new(),
+            render_pipeline: Vec::new(),
         }
     }
 
@@ -147,6 +179,7 @@ impl Renderer {
 
         let mut already_loaded_shader: usize = 5;
         let mut already_loaded_texture: usize = 5;
+        let mut already_loaded_uniform_buffer: usize = 5;
 
         for i in self.render_pipeline.iter() {
             if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() == 0 {
@@ -169,6 +202,32 @@ impl Renderer {
                     already_loaded_texture = texture_index;
                 }
             }
+
+            if i.uniform_buffer.is_some() {
+                let uniform_buffer_index = i.uniform_buffer.unwrap();
+                let uniform_buffer_enum = self.uniform_bind_group.get(uniform_buffer_index);
+
+                if uniform_buffer_enum.is_some() {
+                    if let UniformBindGroup::Matrix(uniform_buffer) = uniform_buffer_enum.unwrap() {
+                        if already_loaded_uniform_buffer != uniform_buffer_index.clone()
+                            || uniform_buffer_index.clone() == 0
+                        {
+                            render_pass.set_bind_group(1, uniform_buffer, &[]);
+                            already_loaded_uniform_buffer = uniform_buffer_index;
+                        }
+                    } else if let UniformBindGroup::Array(uniform_buffer) =
+                        uniform_buffer_enum.unwrap()
+                    {
+                        if already_loaded_uniform_buffer != uniform_buffer_index.clone()
+                            || uniform_buffer_index.clone() == 0
+                        {
+                            render_pass.set_bind_group(1, uniform_buffer, &[]);
+                            already_loaded_uniform_buffer = uniform_buffer_index;
+                        }
+                    }
+                }
+            }
+
             render_pass.set_vertex_buffer(0, i.buffers.vertex_buffer.slice(..));
             render_pass
                 .set_index_buffer(i.buffers.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -187,12 +246,14 @@ impl Renderer {
         &mut self,
         shader_index: usize,
         buffers: Buffers,
-        texture_bind_group: Option<usize>,
+        texture_index: Option<usize>,
+        uniform_buffer: Option<usize>,
     ) {
         self.render_pipeline.push(Pipeline {
-            shader_index: shader_index,
-            buffers: buffers,
-            texture_index: texture_bind_group,
+            shader_index,
+            buffers,
+            texture_index,
+            uniform_buffer,
         });
     }
 
@@ -201,6 +262,7 @@ impl Renderer {
         name: &'static str,
         vertex_shader: Vec<u8>,
         fragment_shader: Vec<u8>,
+        is_static: bool,
     ) -> Result<usize> {
         let vs_module = self
             .device
@@ -217,12 +279,26 @@ impl Renderer {
                 flags: wgpu::ShaderFlags::VALIDATION,
             });
 
-        println!("layout done");
+        let dynamic_layout = self
+            .device
+            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[
+                    &self.texture_bind_group_layout,
+                    &self.uniform_dynamic_bind_group_layout,
+                ],
+                push_constant_ranges: &[],
+            });
+
         let render_pipeline = self
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some(name),
-                layout: Some(&self.render_pipeline_layout),
+                layout: Some(if is_static {
+                    &self.render_pipeline_layout
+                } else {
+                    &dynamic_layout
+                }),
                 vertex: wgpu::VertexState {
                     module: &vs_module,
                     entry_point: "main",
@@ -283,10 +359,108 @@ impl Renderer {
             });
 
         return Buffers {
-            vertex_buffer: vertex_buffer,
-            index_buffer: index_buffer,
+            vertex_buffer,
+            index_buffer,
             length: indicies.len() as u32,
-            instances: instances,
+            instances,
         };
+    }
+
+    pub fn new_uniform_buffer(
+        &mut self,
+        name: &str,
+        uniform: UniformBuffer,
+        is_static: bool,
+    ) -> Result<usize> {
+        if let UniformBuffer::Matrix(value) = uniform {
+            let uniform_buffer =
+                self.device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some(name),
+                        contents: bytemuck::cast_slice(&[value]),
+                        usage: wgpu::BufferUsage::UNIFORM,
+                    });
+
+            if is_static {
+                let uniform_bind_group =
+                    self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        label: Some(format!("{} bind group", name).as_str()),
+                        layout: &self.uniform_static_bind_group_layout,
+                        entries: &[wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Buffer {
+                                buffer: &uniform_buffer,
+                                offset: 0,
+                                size: None,
+                            },
+                        }],
+                    });
+
+                self.uniform_bind_group
+                    .push(UniformBindGroup::Array(uniform_bind_group));
+            } else {
+                let uniform_bind_group =
+                    self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        label: Some(format!("{} bind group", name).as_str()),
+                        layout: &self.uniform_dynamic_bind_group_layout,
+                        entries: &[wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Buffer {
+                                buffer: &uniform_buffer,
+                                offset: 0,
+                                size: None,
+                            },
+                        }],
+                    });
+
+                self.uniform_bind_group
+                    .push(UniformBindGroup::Array(uniform_bind_group));
+            }
+        } else if let UniformBuffer::Array(value) = uniform {
+            let uniform_buffer =
+                self.device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some(name),
+                        contents: bytemuck::cast_slice(&[value]),
+                        usage: wgpu::BufferUsage::UNIFORM,
+                    });
+
+            if is_static {
+                let uniform_bind_group =
+                    self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        label: Some(format!("{} bind group", name).as_str()),
+                        layout: &self.uniform_static_bind_group_layout,
+                        entries: &[wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Buffer {
+                                buffer: &uniform_buffer,
+                                offset: 0,
+                                size: None,
+                            },
+                        }],
+                    });
+
+                self.uniform_bind_group
+                    .push(UniformBindGroup::Array(uniform_bind_group));
+            } else {
+                let uniform_bind_group =
+                    self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        label: Some(format!("{} bind group", name).as_str()),
+                        layout: &self.uniform_dynamic_bind_group_layout,
+                        entries: &[wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Buffer {
+                                buffer: &uniform_buffer,
+                                offset: 0,
+                                size: None,
+                            },
+                        }],
+                    });
+
+                self.uniform_bind_group
+                    .push(UniformBindGroup::Array(uniform_bind_group));
+            }
+        }
+        Ok(self.uniform_bind_group.len() - 1)
     }
 }

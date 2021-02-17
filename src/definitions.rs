@@ -1,5 +1,3 @@
-use wgpu::VertexBufferLayout;
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
@@ -8,6 +6,32 @@ pub struct Vertex {
 }
 unsafe impl bytemuck::Pod for Vertex {}
 unsafe impl bytemuck::Zeroable for Vertex {}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct _UniformsM {
+    pub data: [[f32; 4]; 4],
+}
+unsafe impl bytemuck::Pod for _UniformsM {}
+unsafe impl bytemuck::Zeroable for _UniformsM {}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct _UniformsV {
+    pub data: [f32; 4],
+}
+unsafe impl bytemuck::Pod for _UniformsV {}
+unsafe impl bytemuck::Zeroable for _UniformsV {}
+
+pub enum UniformBuffer {
+    Matrix(_UniformsM),
+    Array(_UniformsV),
+}
+
+pub enum UniformBindGroup {
+    Matrix(wgpu::BindGroup),
+    Array(wgpu::BindGroup),
+}
 
 impl Vertex {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -32,15 +56,11 @@ impl Vertex {
 
 pub type Shaders = wgpu::RenderPipeline;
 
-pub struct Texture {
-    pub bind_group: wgpu::BindGroup,
-    pub rgba: image::RgbaImage,
-}
-
 pub struct Pipeline {
     pub shader_index: usize,
     pub buffers: Buffers,
     pub texture_index: Option<usize>,
+    pub uniform_buffer: Option<usize>,
 }
 
 pub struct Buffers {
@@ -58,9 +78,12 @@ pub struct Renderer {
     pub swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
+    pub uniform_dynamic_bind_group_layout: wgpu::BindGroupLayout,
+    pub uniform_static_bind_group_layout: wgpu::BindGroupLayout,
     pub render_pipeline_layout: wgpu::PipelineLayout,
     pub shaders: Vec<Shaders>,
     pub texture_bind_group: Vec<wgpu::BindGroup>,
+    pub uniform_bind_group: Vec<UniformBindGroup>,
     pub render_pipeline: Vec<Pipeline>,
 }
 
@@ -87,4 +110,14 @@ pub struct WindowDescriptor {
     pub before: Callback,
     pub during: Callback,
     pub after: Callback,
+}
+
+pub struct Camera {
+    pub eye: cgmath::Point3<f32>,
+    pub target: cgmath::Point3<f32>,
+    pub up: cgmath::Vector3<f32>,
+    pub aspect: f32,
+    pub fovy: f32,
+    pub znear: f32,
+    pub zfar: f32,
 }

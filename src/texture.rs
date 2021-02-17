@@ -1,6 +1,6 @@
 use crate::definitions::Renderer;
 use image::{load_from_memory, GenericImageView};
-use wgpu::{self, AddressMode, BindGroupEntry, FilterMode};
+use wgpu::{self, AddressMode, BindGroupEntry};
 
 impl Renderer {
     pub fn new_texture(
@@ -9,13 +9,13 @@ impl Renderer {
         diffuse_bytes: Vec<u8>,
         mode: &'static str,
     ) -> Result<usize, ()> {
-        let mut MODE: AddressMode;
+        let _mode: AddressMode;
         if mode == "repeat" {
-            MODE = AddressMode::Repeat;
+            _mode = AddressMode::Repeat;
         } else if mode == "mirror_repeat" {
-            MODE = AddressMode::MirrorRepeat;
+            _mode = AddressMode::MirrorRepeat;
         } else {
-            MODE = AddressMode::ClampToEdge;
+            _mode = AddressMode::ClampToEdge;
         };
 
         let img =
@@ -61,9 +61,9 @@ impl Renderer {
 
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: MODE,
-            address_mode_v: MODE,
-            address_mode_w: MODE,
+            address_mode_u: _mode,
+            address_mode_v: _mode,
+            address_mode_w: _mode,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Nearest,
             mipmap_filter: wgpu::FilterMode::Nearest,
