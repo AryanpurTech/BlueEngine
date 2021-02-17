@@ -14,6 +14,11 @@ pub struct _UniformsM {
 }
 unsafe impl bytemuck::Pod for _UniformsM {}
 unsafe impl bytemuck::Zeroable for _UniformsM {}
+impl _UniformsM {
+    pub fn update(&mut self, uniform: _UniformsM) {
+        self.data = uniform.data;
+    }
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -22,6 +27,11 @@ pub struct _UniformsV {
 }
 unsafe impl bytemuck::Pod for _UniformsV {}
 unsafe impl bytemuck::Zeroable for _UniformsV {}
+impl _UniformsV {
+    pub fn update(&mut self, uniform: _UniformsV) {
+        self.data = uniform.data;
+    }
+}
 
 pub enum UniformBuffer {
     Matrix(_UniformsM),
@@ -99,7 +109,11 @@ pub struct BuffersData {
     pub instances: std::ops::Range<u32>,
 }
 
-pub type Callback = Option<fn(renderer: &mut Renderer)>;
+pub enum WindowCallbackEvents<'a> {
+    Before,
+    During(&'a winit_input_helper::WinitInputHelper),
+    After,
+}
 
 pub struct WindowDescriptor {
     pub width: f64,
@@ -107,9 +121,6 @@ pub struct WindowDescriptor {
     pub title: &'static str,
     pub decorations: bool,
     pub resizable: bool,
-    pub before: Callback,
-    pub during: Callback,
-    pub after: Callback,
 }
 
 pub struct Camera {
@@ -121,3 +132,6 @@ pub struct Camera {
     pub znear: f32,
     pub zfar: f32,
 }
+
+pub use winit::event::MouseButton;
+pub use winit::event::VirtualKeyCode as KeyboardKeys;

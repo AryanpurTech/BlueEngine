@@ -5,7 +5,7 @@
  * Mystic Blue team. The license is same as the one on the root.
 */
 
-use crate::definitions::{Renderer, WindowDescriptor};
+use crate::definitions::{Renderer, WindowCallbackEvents, WindowDescriptor};
 use anyhow::*;
 use futures::executor::block_on;
 #[allow(unreachable_code)]
@@ -16,7 +16,10 @@ use winit::{
 };
 
 #[allow(unreachable_code)]
-pub fn new(settings: WindowDescriptor) -> Result<()> {
+pub fn new<F>(settings: WindowDescriptor, mut logic: F) -> Result<()>
+where
+    F: 'static + FnMut(&mut Renderer, WindowCallbackEvents),
+{
     // Dimentions of the window, as width and height
     // and then are set as a logical size that the window can accept
     let dimention = winit::dpi::LogicalSize {
@@ -44,18 +47,11 @@ pub fn new(settings: WindowDescriptor) -> Result<()> {
 
     let mut renderer = block_on(Renderer::new(&window));
 
-    let timer = std::time::SystemTime::now();
-    let mut tick: u64 = 0;
-    let mut fps: i32 = 0;
-
-    {
-        let before = settings.before;
-        if before.is_some() {
-            before.unwrap()(&mut renderer)
-        };
-    }
+    logic(&mut renderer, WindowCallbackEvents::Before);
+    let mut input = winit_input_helper::WinitInputHelper::new();
 
     event_loop.run(move |event, _, control_flow| {
+        input.update(&event);
         match event {
             Event::WindowEvent {
                 ref event,
@@ -85,15 +81,10 @@ pub fn new(settings: WindowDescriptor) -> Result<()> {
             }
 
             Event::MainEventsCleared => {
-                //window.request_redraw();
                 renderer.update();
+                logic(&mut renderer, WindowCallbackEvents::During(&input));
                 match renderer.render() {
-                    Ok(_) => {
-                        let during = settings.during;
-                        if during.is_some() {
-                            during.unwrap()(&mut renderer)
-                        };
-                    }
+                    Ok(_) => {}
                     // Recreate the swap_chain if lost
                     Err(wgpu::SwapChainError::Lost) => renderer.resize(renderer.size),
                     // The system is out of memory, we should probably quit
@@ -104,22 +95,8 @@ pub fn new(settings: WindowDescriptor) -> Result<()> {
             }
             _ => (),
         }
-        let now = timer.elapsed().unwrap().as_secs();
-        if tick < now {
-            tick = now;
-            println!("FPS: {}", fps);
-            fps = 0;
-        } else {
-            fps = fps + 1;
-        }
     });
-
-    {
-        let after = settings.after;
-        if after.is_some() {
-            after.unwrap()(&mut renderer)
-        };
-    }
+    logic(&mut renderer, WindowCallbackEvents::After);
 
     Ok(())
 }
