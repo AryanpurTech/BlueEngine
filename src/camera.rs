@@ -1,4 +1,4 @@
-use crate::definitions::{Camera, Renderer, _UniformsM};
+use crate::definitions::{uniform_type::Matrix, Camera, Renderer};
 use anyhow::*;
 
 #[rustfmt::skip]
@@ -29,16 +29,16 @@ impl Camera {
         Ok(OPENGL_TO_WGPU_MATRIX * proj * view)
     }
 
-    pub fn new_camera_uniform_buffer(&self) -> Result<_UniformsM> {
+    pub fn new_camera_uniform_buffer(&self) -> Result<Matrix> {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         let camera_matrix = OPENGL_TO_WGPU_MATRIX * proj * view;
-        Ok(_UniformsM {
+        Ok(Matrix {
             data: camera_matrix.into(),
         })
     }
 
-    pub fn update_view_proj(&mut self, view_proj: &mut _UniformsM) {
+    pub fn update_view_proj(&mut self, view_proj: &mut Matrix) {
         view_proj.data = self
             .build_view_projection_matrix()
             .expect("Couldn't build view projection matrix")

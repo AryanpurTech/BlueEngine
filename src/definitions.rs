@@ -2,46 +2,11 @@
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
     pub position: [f32; 3],
+    pub color: [f32; 4],
     pub texture: [f32; 2],
 }
 unsafe impl bytemuck::Pod for Vertex {}
 unsafe impl bytemuck::Zeroable for Vertex {}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct _UniformsM {
-    pub data: [[f32; 4]; 4],
-}
-unsafe impl bytemuck::Pod for _UniformsM {}
-unsafe impl bytemuck::Zeroable for _UniformsM {}
-impl _UniformsM {
-    pub fn update(&mut self, uniform: _UniformsM) {
-        self.data = uniform.data;
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct _UniformsV {
-    pub data: [f32; 4],
-}
-unsafe impl bytemuck::Pod for _UniformsV {}
-unsafe impl bytemuck::Zeroable for _UniformsV {}
-impl _UniformsV {
-    pub fn update(&mut self, uniform: _UniformsV) {
-        self.data = uniform.data;
-    }
-}
-
-pub enum UniformBuffer {
-    Matrix(_UniformsM),
-    Array(_UniformsV),
-}
-
-pub enum UniformBindGroup {
-    Matrix(wgpu::BindGroup),
-    Array(wgpu::BindGroup),
-}
 
 impl Vertex {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -57,9 +22,54 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
+                    format: wgpu::VertexFormat::Float4,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                    shader_location: 2,
                     format: wgpu::VertexFormat::Float2,
                 },
             ],
+        }
+    }
+}
+
+pub mod uniform_type {
+    pub trait Types {}
+
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+    pub struct Matrix {
+        pub data: [[f32; 4]; 4],
+    }
+    impl Types for Matrix {}
+    impl Matrix {
+        pub fn update(&mut self, uniform: Matrix) {
+            self.data = uniform.data;
+        }
+    }
+
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+    pub struct Array {
+        pub data: [f32; 4],
+    }
+    impl Types for Array {}
+    impl Array {
+        pub fn update(&mut self, uniform: Array) {
+            self.data = uniform.data;
+        }
+    }
+
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+    pub struct Float {
+        pub data: f32,
+    }
+    impl Types for Float {}
+    impl Float {
+        pub fn update(&mut self, uniform: Float) {
+            self.data = uniform.data;
         }
     }
 }
@@ -68,7 +78,7 @@ pub type Shaders = wgpu::RenderPipeline;
 
 pub struct Pipeline {
     pub shader_index: usize,
-    pub buffers: Buffers,
+    pub buffer_index: usize,
     pub texture_index: Option<usize>,
     pub uniform_buffer: Option<usize>,
 }
@@ -81,32 +91,19 @@ pub struct Buffers {
 }
 
 pub struct Renderer {
-    pub surface: wgpu::Surface,
-    pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
-    pub sc_desc: wgpu::SwapChainDescriptor,
-    pub swap_chain: wgpu::SwapChain,
+    pub(crate) surface: wgpu::Surface,
+    pub(crate) device: wgpu::Device,
+    pub(crate) queue: wgpu::Queue,
+    pub(crate) sc_desc: wgpu::SwapChainDescriptor,
+    pub(crate) swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub texture_bind_group_layout: wgpu::BindGroupLayout,
-    pub uniform_dynamic_bind_group_layout: wgpu::BindGroupLayout,
-    pub uniform_static_bind_group_layout: wgpu::BindGroupLayout,
-    pub render_pipeline_layout: wgpu::PipelineLayout,
+    pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
+    pub(crate) uniform_bind_group_layout: wgpu::BindGroupLayout,
     pub shaders: Vec<Shaders>,
+    pub buffers: Vec<Buffers>,
     pub texture_bind_group: Vec<wgpu::BindGroup>,
-    pub uniform_bind_group: Vec<UniformBindGroup>,
+    pub uniform_bind_group: Vec<wgpu::BindGroup>,
     pub render_pipeline: Vec<Pipeline>,
-}
-
-pub struct ShadersData {
-    pub name: &'static str,
-    pub vertex_shader: Vec<u8>,
-    pub fragment_shader: Vec<u8>,
-}
-
-pub struct BuffersData {
-    pub verticies: Vec<Vertex>,
-    pub indicies: Vec<u16>,
-    pub instances: std::ops::Range<u32>,
 }
 
 pub enum WindowCallbackEvents<'a> {
@@ -135,3 +132,10 @@ pub struct Camera {
 
 pub use winit::event::MouseButton;
 pub use winit::event::VirtualKeyCode as KeyboardKeys;
+
+#[derive(Clone, Debug)]
+pub enum UniformBuffer {
+    Matrix(&'static str, uniform_type::Matrix),
+    Array(&'static str, uniform_type::Array),
+    Float(&'static str, uniform_type::Float),
+}
