@@ -1,5 +1,6 @@
 use crate::definitions::{Buffers, Pipeline, UniformBuffer, Vertex};
 use anyhow::*;
+use image::GenericImageView;
 use std::ops::Range;
 use wgpu::util::DeviceExt;
 
@@ -44,17 +45,18 @@ impl crate::definitions::Renderer {
                 source: wgpu::util::make_spirv(fragment_shader.as_slice()),
                 flags: wgpu::ShaderFlags::VALIDATION,
             });
-
         let render_pipeline_layout =
             self.device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[
-                        &self.texture_bind_group_layout,
                         &self.uniform_bind_group_layout,
+                        &self.texture_bind_group_layout,
                     ],
                     push_constant_ranges: &[],
                 });
+
+        
 
         let render_pipeline = self
             .device
@@ -135,7 +137,7 @@ impl crate::definitions::Renderer {
         Ok(self.buffers.len() - 1)
     }
 
-    pub fn remove_buffers(&mut self, index: usize) -> Result<()> {
+    pub fn remove_buffer(&mut self, index: usize) -> Result<()> {
         self.buffers.remove(index);
         Ok(())
     }
@@ -196,6 +198,7 @@ impl crate::definitions::Renderer {
                 count: None,
             });
         }
+
         let uniform_bind_group_layout =
             self.device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -215,6 +218,99 @@ impl crate::definitions::Renderer {
 
     pub fn remove_buffer_entry(&mut self, index: usize) -> Result<()> {
         self.uniform_bind_group.remove(index);
+        Ok(())
+    }
+
+    pub fn new_texture(
+        &mut self,
+        name: &'static str,
+        diffuse_bytes: Vec<u8>,
+        mode: &'static str,
+    ) -> Result<usize, ()> {
+        let _mode: wgpu::AddressMode;
+        if mode == "repeat" {
+            _mode = wgpu::AddressMode::Repeat;
+        } else if mode == "mirror_repeat" {
+            _mode = wgpu::AddressMode::MirrorRepeat;
+        } else {
+            _mode = wgpu::AddressMode::ClampToEdge;
+        };
+
+        let img = image::load_from_memory(diffuse_bytes.as_slice())
+            .expect("Couldn't Load Image For Texture");
+        //let diffuse_rgba = diffuse_image
+        //    .as_rgba8()
+        //    .expect("Couldn't Obtain RGBA Data Of The Texture Image");
+
+        let rgba = img
+            .as_rgba8()
+            .expect("Couldn't Obtain RGBA Data Of The Texture Image");
+        let dimensions = img.dimensions();
+
+        let size = wgpu::Extent3d {
+            width: dimensions.0,
+            height: dimensions.1,
+            depth: 1,
+        };
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some(name),
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST,
+        });
+
+        self.queue.write_texture(
+            wgpu::TextureCopyView {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+            },
+            rgba,
+            wgpu::TextureDataLayout {
+                offset: 0,
+                bytes_per_row: 4 * dimensions.0,
+                rows_per_image: dimensions.1,
+            },
+            size,
+        );
+
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+            address_mode_u: _mode,
+            address_mode_v: _mode,
+            address_mode_w: _mode,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+
+        let diffuse_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &self.texture_bind_group_layout,
+            label: Some("Diffuse Bind Group"),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&sampler),
+                },
+            ],
+        });
+
+        let address = self.texture_bind_group.len();
+        self.texture_bind_group.push(diffuse_bind_group);
+
+        Ok(address)
+    }
+
+    pub fn remove_texture(&mut self, index: usize) -> Result<()> {
+        self.texture_bind_group.remove(index);
         Ok(())
     }
 }

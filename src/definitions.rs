@@ -2,7 +2,6 @@
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 4],
     pub texture: [f32; 2],
 }
 unsafe impl bytemuck::Pod for Vertex {}
@@ -22,11 +21,6 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
-                    shader_location: 2,
                     format: wgpu::VertexFormat::Float2,
                 },
             ],
@@ -129,6 +123,8 @@ pub struct Camera {
     pub znear: f32,
     pub zfar: f32,
 }
+
+use std::usize;
 
 pub use winit::event::MouseButton;
 pub use winit::event::VirtualKeyCode as KeyboardKeys;

@@ -47,6 +47,7 @@ where
 
     let mut renderer = block_on(Renderer::new(&window));
 
+
     logic(&mut renderer, WindowCallbackEvents::Before);
     let mut input = winit_input_helper::WinitInputHelper::new();
 
