@@ -1,4 +1,4 @@
-name: Rust
+name: POSIX build
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Rust
+name: Win build
 
 on:
   push:
