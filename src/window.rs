@@ -1,22 +1,20 @@
 /*
- * Blue Engine is a graphics backend made by the Mystic Blue team.
+ * Blue Engine is a graphics backend made by the Blue Mazar team.
  *
  * It provides API and backend details for the projects within the
  * Mystic Blue team. The license is same as the one on the root.
 */
 
 use crate::definitions::{Renderer, WindowCallbackEvents, WindowDescriptor};
-use anyhow::*;
-use futures::executor::block_on;
-#[allow(unreachable_code)]
 use winit::{
     event::{Event, WindowEvent, *},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
+/// Creates a new window in current thread.
 #[allow(unreachable_code)]
-pub fn new<F>(settings: WindowDescriptor, mut logic: F) -> Result<()>
+pub fn new<F>(settings: WindowDescriptor, mut logic: F) -> Result<(), anyhow::Error>
 where
     F: 'static + FnMut(&mut Renderer, WindowCallbackEvents),
 {
@@ -40,17 +38,19 @@ where
     // will create the main event loop of the window.
     // and will contain all the callbacks and button press
     // also will allow graphics API
-
     let event_loop = EventLoop::new();
     // bind the loop to window
     let window = new_window.build(&event_loop).unwrap();
 
-    let mut renderer = block_on(Renderer::new(&window));
+    // The renderer init on current window
+    let mut renderer = futures::executor::block_on(Renderer::new(&window));
 
-
+    // Run the callback of before renderer start
     logic(&mut renderer, WindowCallbackEvents::Before);
+    // and get input events to handle them later
     let mut input = winit_input_helper::WinitInputHelper::new();
 
+    // The main loop
     event_loop.run(move |event, _, control_flow| {
         input.update(&event);
         match event {
@@ -58,31 +58,28 @@ where
                 ref event,
                 window_id,
             } if window_id == window.id() => {
-                if !renderer.input(event) {
-                    match event {
-                        WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                        WindowEvent::KeyboardInput { input, .. } => match input {
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            } => *control_flow = ControlFlow::Exit,
-                            _ => {}
-                        },
-                        WindowEvent::Resized(physical_renderer) => {
-                            renderer.resize(*physical_renderer);
-                        }
-                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            // new_inner_renderer is &&mut so we have to dereference it twice
-                            renderer.resize(**new_inner_size);
-                        }
+                match event {
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    WindowEvent::KeyboardInput { input, .. } => match input {
+                        KeyboardInput {
+                            state: ElementState::Pressed,
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        } => *control_flow = ControlFlow::Exit,
                         _ => {}
+                    },
+                    WindowEvent::Resized(physical_renderer) => {
+                        renderer.resize(*physical_renderer);
                     }
+                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                        // new_inner_renderer is &&mut so we have to dereference it twice
+                        renderer.resize(**new_inner_size);
+                    }
+                    _ => {}
                 }
             }
 
             Event::MainEventsCleared => {
-                renderer.update();
                 logic(&mut renderer, WindowCallbackEvents::During(&input));
                 match renderer.render() {
                     Ok(_) => {}

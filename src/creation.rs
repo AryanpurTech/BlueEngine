@@ -1,10 +1,9 @@
 use crate::definitions::{Buffers, Pipeline, UniformBuffer, Vertex};
-use anyhow::*;
 use image::GenericImageView;
-use std::ops::Range;
 use wgpu::util::DeviceExt;
 
 impl crate::definitions::Renderer {
+    /// Creates a new render pipeline. Could be thought of as like materials in game engines.
     pub fn new_pipeline(
         &mut self,
         shader_index: usize,
@@ -20,17 +19,19 @@ impl crate::definitions::Renderer {
         });
     }
 
-    pub fn remove_pipeline(&mut self, index: usize) -> Result<()> {
+    /// Deletes a render pipeline
+    pub fn remove_pipeline(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.render_pipeline.remove(index);
         Ok(())
     }
 
+    /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
     pub fn new_shaders(
         &mut self,
         name: &'static str,
         vertex_shader: Vec<u8>,
         fragment_shader: Vec<u8>,
-    ) -> Result<usize> {
+    ) -> Result<usize, anyhow::Error> {
         let vs_module = self
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
@@ -50,13 +51,11 @@ impl crate::definitions::Renderer {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[
-                        &self.uniform_bind_group_layout,
                         &self.texture_bind_group_layout,
+                        &self.uniform_bind_group_layout,
                     ],
                     push_constant_ranges: &[],
                 });
-
-        
 
         let render_pipeline = self
             .device
@@ -93,24 +92,24 @@ impl crate::definitions::Renderer {
                 },
             });
 
-        println!("creations success");
-
         let index = self.shaders.len();
         self.shaders.push(render_pipeline);
         Ok(index)
     }
 
-    pub fn remove_sahder(&mut self, index: usize) -> Result<()> {
+    /// Deletes a shader group
+    pub fn remove_sahder(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.shaders.remove(index);
         Ok(())
     }
 
+    /// Creates a new vertex buffer and indecies
     pub fn new_buffers(
         &mut self,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
-        instances: Range<u32>,
-    ) -> Result<usize> {
+        instances: std::ops::Range<u32>,
+    ) -> Result<usize, anyhow::Error> {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -137,12 +136,17 @@ impl crate::definitions::Renderer {
         Ok(self.buffers.len() - 1)
     }
 
-    pub fn remove_buffer(&mut self, index: usize) -> Result<()> {
+    /// Removes vertex and index buffer group
+    pub fn remove_buffer(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.buffers.remove(index);
         Ok(())
     }
 
-    pub fn new_uniform_buffer(&mut self, uniforms: Vec<UniformBuffer>) -> Result<usize> {
+    /// Creates a new uniform buffer group, according to a list of types
+    pub fn new_uniform_buffer(
+        &mut self,
+        uniforms: Vec<UniformBuffer>,
+    ) -> Result<usize, anyhow::Error> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
         let mut buffer_vec = Vec::<wgpu::Buffer>::new();
@@ -171,7 +175,7 @@ impl crate::definitions::Renderer {
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(*name),
                             contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsage::UNIFORM,
+                            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
                         },
                     ));
                 }
@@ -206,6 +210,7 @@ impl crate::definitions::Renderer {
                     entries: &buffer_layout.as_slice(),
                 });
         self.uniform_bind_group_layout = uniform_bind_group_layout;
+
         let uniform_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Uniform Bind Groups"),
             layout: &self.uniform_bind_group_layout,
@@ -216,11 +221,13 @@ impl crate::definitions::Renderer {
         Ok(self.uniform_bind_group.len() - 1)
     }
 
-    pub fn remove_buffer_entry(&mut self, index: usize) -> Result<()> {
+    /// Removes uniform buffer group
+    pub fn remove_buffer_entry(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.uniform_bind_group.remove(index);
         Ok(())
     }
 
+    /// Creates a new texture data
     pub fn new_texture(
         &mut self,
         name: &'static str,
@@ -309,7 +316,8 @@ impl crate::definitions::Renderer {
         Ok(address)
     }
 
-    pub fn remove_texture(&mut self, index: usize) -> Result<()> {
+    /// Deltes texture data
+    pub fn remove_texture(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.texture_bind_group.remove(index);
         Ok(())
     }

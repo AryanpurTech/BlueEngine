@@ -1,14 +1,16 @@
+/// Will contain all details about a vertex and will be sent to GPU
+// Will be turned to C code and sent to GPU
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
+    /// Contains position data for the vertex in 3D space
     pub position: [f32; 3],
+    /// Contains texture position data for the vertex
     pub texture: [f32; 2],
 }
-unsafe impl bytemuck::Pod for Vertex {}
-unsafe impl bytemuck::Zeroable for Vertex {}
-
+// implementing some structure data for the layout configuration later on pipeline
 impl Vertex {
-    pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+    pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
             step_mode: wgpu::InputStepMode::Vertex,
@@ -28,39 +30,39 @@ impl Vertex {
     }
 }
 
+/// A container for uniform buffer types
 pub mod uniform_type {
-    pub trait Types {}
 
+    /// 4 by 4, 32 bit float matrix uniform buffer
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Matrix {
         pub data: [[f32; 4]; 4],
     }
-    impl Types for Matrix {}
     impl Matrix {
         pub fn update(&mut self, uniform: Matrix) {
             self.data = uniform.data;
         }
     }
 
+    /// An array with length 4, each 32 bit float value, uniform buffer
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Array {
         pub data: [f32; 4],
     }
-    impl Types for Array {}
     impl Array {
         pub fn update(&mut self, uniform: Array) {
             self.data = uniform.data;
         }
     }
 
+    /// A 32 bit float uniform buffer
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Float {
         pub data: f32,
     }
-    impl Types for Float {}
     impl Float {
         pub fn update(&mut self, uniform: Float) {
             self.data = uniform.data;
@@ -68,8 +70,7 @@ pub mod uniform_type {
     }
 }
 
-pub type Shaders = wgpu::RenderPipeline;
-
+// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
 pub struct Pipeline {
     pub shader_index: usize,
     pub buffer_index: usize,
@@ -77,6 +78,7 @@ pub struct Pipeline {
     pub uniform_buffer: Option<usize>,
 }
 
+// Container for vertex and index buffer
 pub struct Buffers {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
@@ -84,51 +86,79 @@ pub struct Buffers {
     pub instances: std::ops::Range<u32>,
 }
 
+// Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
     pub(crate) surface: wgpu::Surface,
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
     pub(crate) sc_desc: wgpu::SwapChainDescriptor,
     pub(crate) swap_chain: wgpu::SwapChain,
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub(crate) size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) uniform_bind_group_layout: wgpu::BindGroupLayout,
-    pub shaders: Vec<Shaders>,
-    pub buffers: Vec<Buffers>,
-    pub texture_bind_group: Vec<wgpu::BindGroup>,
-    pub uniform_bind_group: Vec<wgpu::BindGroup>,
-    pub render_pipeline: Vec<Pipeline>,
+    pub(crate) shaders: Vec<wgpu::RenderPipeline>,
+    pub(crate) buffers: Vec<Buffers>,
+    pub(crate) texture_bind_group: Vec<wgpu::BindGroup>,
+    pub(crate) uniform_bind_group: Vec<wgpu::BindGroup>,
+    pub(crate) render_pipeline: Vec<Pipeline>,
 }
 
+// Callbacks for renderloop
 pub enum WindowCallbackEvents<'a> {
-    Before,
-    During(&'a winit_input_helper::WinitInputHelper),
-    After,
+    Before,                                           // This will run before the loop
+    During(&'a winit_input_helper::WinitInputHelper), // will be called during the loop
+    After, // will be called after the loop ended. Maybe for cleanup?
 }
 
+/// Descriptor and settings for a window.
 pub struct WindowDescriptor {
+    /// The width of the window
     pub width: f64,
+    /// The height of the window
     pub height: f64,
+    /// The title of the window
     pub title: &'static str,
+    /// Should the window contain the keys like minimize, maximize, or resize?
     pub decorations: bool,
+    /// Should the window be resizable
     pub resizable: bool,
 }
+impl WindowDescriptor {
+    /// Will quickly create a window with default settings
+    pub fn default() -> Result<Self, anyhow::Error> {
+        Ok(Self {
+            width: 800.0,
+            height: 600.0,
+            title: "Blue Engine by Blue Mazar",
+            decorations: true,
+            resizable: true,
+        })
+    }
+}
 
+/// Container for the camera feature. The settings here are needed for 
+/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
 pub struct Camera {
+    /// The position of the camera in 3D space
     pub eye: cgmath::Point3<f32>,
+    /// The target at which the camera should be looking
     pub target: cgmath::Point3<f32>,
     pub up: cgmath::Vector3<f32>,
     pub aspect: f32,
+    /// The field of view of the camera
     pub fovy: f32,
+    /// The closest view of camera
     pub znear: f32,
+    /// The furthest view of camera
     pub zfar: f32,
 }
 
-use std::usize;
-
+/// The mouse button identifier
 pub use winit::event::MouseButton;
+/// Keyboard keys identifier
 pub use winit::event::VirtualKeyCode as KeyboardKeys;
 
+/// Buffer type enum, allowing for multiple types to be sent
 #[derive(Clone, Debug)]
 pub enum UniformBuffer {
     Matrix(&'static str, uniform_type::Matrix),
