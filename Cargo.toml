@@ -1,8 +1,13 @@
 [package]
 name = "blue_engine_core"
 version = "0.1.0"
-authors = ["elham <elhamaryanpur5@gmail.com>"]
+authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
+description = "General-Purpose, Easy-to-use, Fast, Extendable, Secure, And Portable Graphics Engine"
+documentation = "https://github.com/BlueMazar/BlueEngine/wiki"
+repository = "https://github.com/BlueMazar/BlueEngine"
+keywords = ["gamedev", "graphics", "3D", "2D", "game"]
+categories = ["game-development", "gui", "graphics", "rendering"]
 
 [lib]
 name = "blue_engine_core"
