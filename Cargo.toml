@@ -8,6 +8,7 @@ documentation = "https://github.com/BlueMazar/BlueEngine/wiki"
 repository = "https://github.com/BlueMazar/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D", "game"]
 categories = ["game-development", "gui", "graphics", "rendering"]
+license-file = "LICENSE.txt"
 
 [lib]
 name = "blue_engine_core"
