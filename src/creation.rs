@@ -1,37 +1,89 @@
-use crate::definitions::{Buffers, Pipeline, UniformBuffer, Vertex};
+use crate::definitions::{
+    Pipeline, Shaders, Textures, UniformBuffer, UniformBuffers, Vertex, VertexBuffers,
+};
 use image::GenericImageView;
 use wgpu::util::DeviceExt;
 
 impl crate::definitions::Renderer {
-    /// Creates a new render pipeline. Could be thought of as like materials in game engines.
-    pub fn new_pipeline(
+    /// Creates and adds the pipeline to render queue
+    pub fn build_and_append_pipeline(
         &mut self,
         shader_index: usize,
         buffer_index: usize,
         texture_index: Option<usize>,
         uniform_buffer: Option<usize>,
-    ) {
-        self.render_pipeline.push(Pipeline {
+    ) -> Result<usize, anyhow::Error> {
+        let pipe = self
+            .build_pipeline(shader_index, buffer_index, texture_index, uniform_buffer)
+            .expect("Couldn't Create Render Pipeline");
+        self.render_pipelines.push(pipe);
+        Ok(self.render_pipelines.len() - 1)
+    }
+
+    /// Creates a new render pipeline. Could be thought of as like materials in game engines.
+    pub fn build_pipeline(
+        &mut self,
+        shader_index: usize,
+        vertex_buffer_index: usize,
+        texture_index: Option<usize>,
+        uniform_index: Option<usize>,
+    ) -> Result<Pipeline, anyhow::Error> {
+        Ok(Pipeline {
             shader_index,
-            buffer_index,
+            vertex_buffer_index,
             texture_index,
-            uniform_buffer,
-        });
+            uniform_index,
+        })
+    }
+
+    /// Appends a pipeline to render queue
+    pub fn append_pipeline(&mut self, pipeline: Pipeline) -> Result<usize, anyhow::Error> {
+        self.render_pipelines.push(pipeline);
+        Ok(self.render_pipelines.len() - 1)
+    }
+
+    /// Allows to modify a pipeline
+    pub fn update_pipeline(
+        &mut self,
+        index: usize,
+        pipeline: &mut Pipeline,
+    ) -> Result<(), anyhow::Error> {
+        let element = self.render_pipelines.get_mut(index).unwrap();
+        element.vertex_buffer_index = pipeline.vertex_buffer_index;
+        element.shader_index = pipeline.shader_index;
+        element.texture_index = pipeline.texture_index;
+        element.uniform_index = pipeline.uniform_index;
+        Ok(())
     }
 
     /// Deletes a render pipeline
     pub fn remove_pipeline(&mut self, index: usize) -> Result<(), anyhow::Error> {
-        self.render_pipeline.remove(index);
+        self.render_pipelines.remove(index);
         Ok(())
     }
 
-    /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
-    pub fn new_shaders(
+    /// Creates and adds the shaders to render queue
+    pub fn build_and_append_shaders(
         &mut self,
         name: &'static str,
         vertex_shader: Vec<u8>,
         fragment_shader: Vec<u8>,
     ) -> Result<usize, anyhow::Error> {
+        let shaders = self
+            .build_shaders(name, vertex_shader, fragment_shader)
+            .expect("Couldn't create shaders");
+        let index = self.shaders.len();
+        self.shaders.push(shaders);
+        Ok(index)
+    }
+
+    /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
+    pub fn build_shaders(
+        &mut self,
+        name: &'static str,
+        vertex_shader: Vec<u8>,
+        fragment_shader: Vec<u8>,
+    ) -> Result<Shaders, anyhow::Error> {
         let vs_module = self
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
@@ -92,8 +144,13 @@ impl crate::definitions::Renderer {
                 },
             });
 
+        Ok(render_pipeline)
+    }
+
+    /// Appends a shader to render queue
+    pub fn append_shaders(&mut self, shader: Shaders) -> Result<usize, anyhow::Error> {
         let index = self.shaders.len();
-        self.shaders.push(render_pipeline);
+        self.shaders.push(shader);
         Ok(index)
     }
 
@@ -103,13 +160,28 @@ impl crate::definitions::Renderer {
         Ok(())
     }
 
-    /// Creates a new vertex buffer and indecies
-    pub fn new_buffers(
+    /// Creates and adds the vertex buffers to render queue
+    pub fn build_and_append_vertex_buffers(
         &mut self,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         instances: std::ops::Range<u32>,
     ) -> Result<usize, anyhow::Error> {
+        let vertex_buffers = self
+            .build_vertex_buffers(verticies, indicies, instances)
+            .expect("Couldn't create vertex buffer");
+        let index = self.shaders.len();
+        self.vertex_buffers.push(vertex_buffers);
+        Ok(index)
+    }
+
+    /// Creates a new vertex buffer and indecies
+    pub fn build_vertex_buffers(
+        &mut self,
+        verticies: Vec<Vertex>,
+        indicies: Vec<u16>,
+        instances: std::ops::Range<u32>,
+    ) -> Result<VertexBuffers, anyhow::Error> {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -126,27 +198,48 @@ impl crate::definitions::Renderer {
                 usage: wgpu::BufferUsage::INDEX,
             });
 
-        self.buffers.push(Buffers {
+        Ok(VertexBuffers {
             vertex_buffer,
             index_buffer,
             length: indicies.len() as u32,
             instances,
-        });
+        })
+    }
 
-        Ok(self.buffers.len() - 1)
+    /// Appends a vertex buffer to render queue
+    pub fn append_vertex_buffer(
+        &mut self,
+        vertex_buffer: VertexBuffers,
+    ) -> Result<usize, anyhow::Error> {
+        let index = self.vertex_buffers.len();
+        self.vertex_buffers.push(vertex_buffer);
+        Ok(index)
     }
 
     /// Removes vertex and index buffer group
-    pub fn remove_buffer(&mut self, index: usize) -> Result<(), anyhow::Error> {
-        self.buffers.remove(index);
+    pub fn remove_vertex_buffer(&mut self, index: usize) -> Result<(), anyhow::Error> {
+        self.vertex_buffers.remove(index);
         Ok(())
     }
 
-    /// Creates a new uniform buffer group, according to a list of types
-    pub fn new_uniform_buffer(
+    /// Creates and adds the uniform buffers to render queue
+    pub fn build_and_append_uniform_buffers(
         &mut self,
         uniforms: Vec<UniformBuffer>,
     ) -> Result<usize, anyhow::Error> {
+        let uniform_buffers = self
+            .build_uniform_buffer(uniforms)
+            .expect("Couldn't create uniform buffer");
+        let index = self.shaders.len();
+        self.uniform_bind_group.push(uniform_buffers);
+        Ok(index)
+    }
+
+    /// Creates a new uniform buffer group, according to a list of types
+    pub fn build_uniform_buffer(
+        &mut self,
+        uniforms: Vec<UniformBuffer>,
+    ) -> Result<UniformBuffers, anyhow::Error> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
         let mut buffer_vec = Vec::<wgpu::Buffer>::new();
@@ -216,24 +309,48 @@ impl crate::definitions::Renderer {
             layout: &self.uniform_bind_group_layout,
             entries: &buffer_entry.as_slice(),
         });
-        self.uniform_bind_group.push(uniform_bind_group);
 
-        Ok(self.uniform_bind_group.len() - 1)
+        Ok(uniform_bind_group)
+    }
+
+    /// Appends a uniform buffer to render queue
+    pub fn append_uniform_buffer(
+        &mut self,
+        buffer: UniformBuffers,
+    ) -> Result<usize, anyhow::Error> {
+        let index = self.uniform_bind_group.len();
+        self.uniform_bind_group.push(buffer);
+        Ok(index)
     }
 
     /// Removes uniform buffer group
-    pub fn remove_buffer_entry(&mut self, index: usize) -> Result<(), anyhow::Error> {
+    pub fn remove_uniform_buffer(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.uniform_bind_group.remove(index);
         Ok(())
     }
 
-    /// Creates a new texture data
-    pub fn new_texture(
+    /// Creates and adds the texture to render queue
+    pub fn build_and_append_texture(
         &mut self,
         name: &'static str,
         diffuse_bytes: Vec<u8>,
         mode: &'static str,
-    ) -> Result<usize, ()> {
+    ) -> Result<usize, anyhow::Error> {
+        let textures = self
+            .build_texture(name, diffuse_bytes, mode)
+            .expect("Couldn't create shaders");
+        let index = self.shaders.len();
+        self.texture_bind_group.push(textures);
+        Ok(index)
+    }
+
+    /// Creates a new texture data
+    pub fn build_texture(
+        &mut self,
+        name: &'static str,
+        diffuse_bytes: Vec<u8>,
+        mode: &'static str,
+    ) -> Result<Textures, ()> {
         let _mode: wgpu::AddressMode;
         if mode == "repeat" {
             _mode = wgpu::AddressMode::Repeat;
@@ -245,9 +362,6 @@ impl crate::definitions::Renderer {
 
         let img = image::load_from_memory(diffuse_bytes.as_slice())
             .expect("Couldn't Load Image For Texture");
-        //let diffuse_rgba = diffuse_image
-        //    .as_rgba8()
-        //    .expect("Couldn't Obtain RGBA Data Of The Texture Image");
 
         let rgba = img
             .as_rgba8()
@@ -310,10 +424,14 @@ impl crate::definitions::Renderer {
             ],
         });
 
-        let address = self.texture_bind_group.len();
-        self.texture_bind_group.push(diffuse_bind_group);
+        Ok(diffuse_bind_group)
+    }
 
-        Ok(address)
+    /// Appends a texture to render queue
+    pub fn append_texture(&mut self, buffer: Textures) -> Result<usize, anyhow::Error> {
+        let index = self.texture_bind_group.len();
+        self.texture_bind_group.push(buffer);
+        Ok(index)
     }
 
     /// Deltes texture data

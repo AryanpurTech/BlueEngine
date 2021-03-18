@@ -1,8 +1,6 @@
 use crate::definitions::Renderer;
 use anyhow::*;
-use winit::{
-    window::Window,
-};
+use winit::window::Window;
 
 impl Renderer {
     pub(crate) async fn new(window: &Window) -> Self {
@@ -84,10 +82,10 @@ impl Renderer {
             uniform_bind_group_layout,
 
             shaders: Vec::new(),
-            buffers: Vec::new(),
+            vertex_buffers: Vec::new(),
             texture_bind_group: Vec::new(),
             uniform_bind_group: Vec::new(),
-            render_pipeline: Vec::new(),
+            render_pipelines: Vec::new(),
         }
     }
 
@@ -124,7 +122,7 @@ impl Renderer {
         let mut already_loaded_texture: usize = 5;
         let mut already_loaded_uniform_buffer: usize = 5;
 
-        for i in self.render_pipeline.iter() {
+        for i in self.render_pipelines.iter() {
             if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() == 0 {
                 render_pass.set_pipeline(
                     self.shaders.get(i.shader_index.clone()).expect(
@@ -146,8 +144,8 @@ impl Renderer {
                 }
             }
 
-            if i.uniform_buffer.is_some() {
-                let uniform_buffer_index = i.uniform_buffer.clone().unwrap();
+            if i.uniform_index.is_some() {
+                let uniform_buffer_index = i.uniform_index.clone().unwrap();
                 let uniform_buffer_enum_option = self.uniform_bind_group.get(uniform_buffer_index);
 
                 if uniform_buffer_enum_option.is_some() {
@@ -167,13 +165,15 @@ impl Renderer {
                 }
             }
 
-            if already_loaded_buffer != i.buffer_index.clone() || i.buffer_index.clone() == 0 {
-                let buffers = self.buffers.get(i.buffer_index).unwrap();
+            if already_loaded_buffer != i.vertex_buffer_index.clone()
+                || i.vertex_buffer_index.clone() == 0
+            {
+                let buffers = self.vertex_buffers.get(i.vertex_buffer_index).unwrap();
                 render_pass.set_vertex_buffer(0, buffers.vertex_buffer.slice(..));
                 render_pass
                     .set_index_buffer(buffers.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
                 render_pass.draw_indexed(0..buffers.length, 0, buffers.instances.clone());
-                already_loaded_buffer = i.buffer_index;
+                already_loaded_buffer = i.vertex_buffer_index;
             }
         }
 

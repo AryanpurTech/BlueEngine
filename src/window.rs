@@ -9,14 +9,14 @@ use crate::definitions::{Renderer, WindowCallbackEvents, WindowDescriptor};
 use winit::{
     event::{Event, WindowEvent, *},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
+    window::{Window, WindowBuilder},
 };
 
 /// Creates a new window in current thread.
 #[allow(unreachable_code)]
 pub fn new<F>(settings: WindowDescriptor, mut logic: F) -> Result<(), anyhow::Error>
 where
-    F: 'static + FnMut(&mut Renderer, WindowCallbackEvents),
+    F: 'static + FnMut(&mut Renderer, WindowCallbackEvents, &Window),
 {
     // Dimentions of the window, as width and height
     // and then are set as a logical size that the window can accept
@@ -46,7 +46,7 @@ where
     let mut renderer = futures::executor::block_on(Renderer::new(&window));
 
     // Run the callback of before renderer start
-    logic(&mut renderer, WindowCallbackEvents::Before);
+    logic(&mut renderer, WindowCallbackEvents::Before, &window);
     // and get input events to handle them later
     let mut input = winit_input_helper::WinitInputHelper::new();
 
@@ -80,7 +80,7 @@ where
             }
 
             Event::MainEventsCleared => {
-                logic(&mut renderer, WindowCallbackEvents::During(&input));
+                logic(&mut renderer, WindowCallbackEvents::During(&input), &window);
                 match renderer.render() {
                     Ok(_) => {}
                     // Recreate the swap_chain if lost
@@ -94,7 +94,7 @@ where
             _ => (),
         }
     });
-    logic(&mut renderer, WindowCallbackEvents::After);
+    logic(&mut renderer, WindowCallbackEvents::After, &window);
 
     Ok(())
 }

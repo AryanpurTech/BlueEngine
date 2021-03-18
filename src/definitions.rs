@@ -73,18 +73,22 @@ pub mod uniform_type {
 // Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
 pub struct Pipeline {
     pub shader_index: usize,
-    pub buffer_index: usize,
+    pub vertex_buffer_index: usize,
     pub texture_index: Option<usize>,
-    pub uniform_buffer: Option<usize>,
+    pub uniform_index: Option<usize>,
 }
 
 // Container for vertex and index buffer
-pub struct Buffers {
+pub struct VertexBuffers {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub length: u32,
     pub instances: std::ops::Range<u32>,
 }
+
+pub type Shaders = wgpu::RenderPipeline;
+pub type UniformBuffers = wgpu::BindGroup;
+pub type Textures = wgpu::BindGroup;
 
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
@@ -93,14 +97,14 @@ pub struct Renderer {
     pub(crate) queue: wgpu::Queue,
     pub(crate) sc_desc: wgpu::SwapChainDescriptor,
     pub(crate) swap_chain: wgpu::SwapChain,
-    pub(crate) size: winit::dpi::PhysicalSize<u32>,
+    pub size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) uniform_bind_group_layout: wgpu::BindGroupLayout,
-    pub(crate) shaders: Vec<wgpu::RenderPipeline>,
-    pub(crate) buffers: Vec<Buffers>,
-    pub(crate) texture_bind_group: Vec<wgpu::BindGroup>,
-    pub(crate) uniform_bind_group: Vec<wgpu::BindGroup>,
-    pub(crate) render_pipeline: Vec<Pipeline>,
+    pub(crate) shaders: Vec<Shaders>,
+    pub(crate) vertex_buffers: Vec<VertexBuffers>,
+    pub(crate) texture_bind_group: Vec<Textures>,
+    pub(crate) uniform_bind_group: Vec<UniformBuffers>,
+    pub(crate) render_pipelines: Vec<Pipeline>,
 }
 
 // Callbacks for renderloop
@@ -136,7 +140,7 @@ impl WindowDescriptor {
     }
 }
 
-/// Container for the camera feature. The settings here are needed for 
+/// Container for the camera feature. The settings here are needed for
 /// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
 pub struct Camera {
     /// The position of the camera in 3D space

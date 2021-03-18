@@ -14,7 +14,7 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 impl Camera {
     pub fn new(renderer: &mut Renderer) -> Result<Self> {
         Ok(Self {
-            eye: (0.0, 0.0, 2.5).into(),
+            eye: (0.0, 0.0, 2.2).into(),
             target: (0.0, 0.0, 0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: renderer.sc_desc.width as f32 / renderer.sc_desc.height as f32,
