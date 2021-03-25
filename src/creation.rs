@@ -43,17 +43,8 @@ impl crate::definitions::Renderer {
     }
 
     /// Allows to modify a pipeline
-    pub fn update_pipeline(
-        &mut self,
-        index: usize,
-        pipeline: &mut Pipeline,
-    ) -> Result<(), anyhow::Error> {
-        let element = self.render_pipelines.get_mut(index).unwrap();
-        element.vertex_buffer_index = pipeline.vertex_buffer_index;
-        element.shader_index = pipeline.shader_index;
-        element.texture_index = pipeline.texture_index;
-        element.uniform_index = pipeline.uniform_index;
-        Ok(())
+    pub fn get_pipeline(&mut self, index: usize) -> Result<&mut Pipeline, anyhow::Error> {
+        Ok(self.render_pipelines.get_mut(index).unwrap())
     }
 
     /// Deletes a render pipeline
@@ -170,7 +161,7 @@ impl crate::definitions::Renderer {
         let vertex_buffers = self
             .build_vertex_buffers(verticies, indicies, instances)
             .expect("Couldn't create vertex buffer");
-        let index = self.shaders.len();
+        let index = self.vertex_buffers.len();
         self.vertex_buffers.push(vertex_buffers);
         Ok(index)
     }
@@ -339,7 +330,7 @@ impl crate::definitions::Renderer {
         let textures = self
             .build_texture(name, diffuse_bytes, mode)
             .expect("Couldn't create shaders");
-        let index = self.shaders.len();
+        let index = self.texture_bind_group.len();
         self.texture_bind_group.push(textures);
         Ok(index)
     }

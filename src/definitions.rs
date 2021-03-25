@@ -140,23 +140,6 @@ impl WindowDescriptor {
     }
 }
 
-/// Container for the camera feature. The settings here are needed for
-/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
-pub struct Camera {
-    /// The position of the camera in 3D space
-    pub eye: cgmath::Point3<f32>,
-    /// The target at which the camera should be looking
-    pub target: cgmath::Point3<f32>,
-    pub up: cgmath::Vector3<f32>,
-    pub aspect: f32,
-    /// The field of view of the camera
-    pub fovy: f32,
-    /// The closest view of camera
-    pub znear: f32,
-    /// The furthest view of camera
-    pub zfar: f32,
-}
-
 /// The mouse button identifier
 pub use winit::event::MouseButton;
 /// Keyboard keys identifier
@@ -168,4 +151,37 @@ pub enum UniformBuffer {
     Matrix(&'static str, uniform_type::Matrix),
     Array(&'static str, uniform_type::Array),
     Float(&'static str, uniform_type::Float),
+}
+
+#[rustfmt::skip]
+pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
+    1.0, 0.0, 0.0, 0.0, 
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.0, 0.0, 0.5, 1.0
+);
+
+pub fn normalize(value: u32, max: u32) -> f32 {
+    let mut result = value as f32 / max as f32;
+
+    if value == max {
+        result = 0.0;
+    } else if result < max as f32 / 2.0 {
+
+    }
+
+    if result > -1.0 {
+        return result as f32;
+    } else {
+        return -1.0;
+    }
+}
+
+pub fn size_normalize(value: u32, max: u32) -> f32 {
+    let result = value as f32 / max as f32;
+    if result > -1.0 {
+        return result as f32;
+    } else {
+        return -1.0;
+    }
 }

@@ -1,8 +1,8 @@
 /*
- * Blue Engine is a graphics backend made by the Blue Mazar team.
+ * Blue Engine copyright © Elham Aryanpur
  *
- * It provides API and backend details for the projects within the
- * Mystic Blue team. The license is same as the one on the root.
+ * window.rs provies API for windowing and renderer initialization.
+ * The license is same as the one on the root.
 */
 
 use crate::definitions::{Renderer, WindowCallbackEvents, WindowDescriptor};
