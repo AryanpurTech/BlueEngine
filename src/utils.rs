@@ -1,2 +1,3 @@
 pub mod camera;
-pub mod shapes2D;
+pub mod shapes;
+pub mod text;

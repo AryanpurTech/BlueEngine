@@ -83,7 +83,6 @@ pub struct VertexBuffers {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub length: u32,
-    pub instances: std::ops::Range<u32>,
 }
 
 pub type Shaders = wgpu::RenderPipeline;
@@ -161,24 +160,14 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     0.0, 0.0, 0.5, 1.0
 );
 
-pub fn normalize(value: u32, max: u32) -> f32 {
-    let mut result = value as f32 / max as f32;
+pub fn normalize(value: f32, max: u32) -> f32 {
+    let mut result = value / max as f32;
 
-    if value == max {
+    if value == max as f32 {
         result = 0.0;
     } else if result < max as f32 / 2.0 {
-
     }
 
-    if result > -1.0 {
-        return result as f32;
-    } else {
-        return -1.0;
-    }
-}
-
-pub fn size_normalize(value: u32, max: u32) -> f32 {
-    let result = value as f32 / max as f32;
     if result > -1.0 {
         return result as f32;
     } else {

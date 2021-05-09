@@ -78,6 +78,7 @@ where
                     _ => {}
                 }
             }
+            
 
             Event::MainEventsCleared => {
                 logic(&mut renderer, WindowCallbackEvents::During(&input), &window);

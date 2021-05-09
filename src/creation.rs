@@ -145,6 +145,11 @@ impl crate::definitions::Renderer {
         Ok(index)
     }
 
+    /// Allows to modify a shader
+    pub fn get_shader(&mut self, index: usize) -> Result<&mut Shaders, anyhow::Error> {
+        Ok(self.shaders.get_mut(index).unwrap())
+    }
+
     /// Deletes a shader group
     pub fn remove_sahder(&mut self, index: usize) -> Result<(), anyhow::Error> {
         self.shaders.remove(index);
@@ -156,10 +161,9 @@ impl crate::definitions::Renderer {
         &mut self,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
-        instances: std::ops::Range<u32>,
     ) -> Result<usize, anyhow::Error> {
         let vertex_buffers = self
-            .build_vertex_buffers(verticies, indicies, instances)
+            .build_vertex_buffers(verticies, indicies)
             .expect("Couldn't create vertex buffer");
         let index = self.vertex_buffers.len();
         self.vertex_buffers.push(vertex_buffers);
@@ -171,7 +175,6 @@ impl crate::definitions::Renderer {
         &mut self,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
-        instances: std::ops::Range<u32>,
     ) -> Result<VertexBuffers, anyhow::Error> {
         let vertex_buffer = self
             .device
@@ -193,7 +196,6 @@ impl crate::definitions::Renderer {
             vertex_buffer,
             index_buffer,
             length: indicies.len() as u32,
-            instances,
         })
     }
 

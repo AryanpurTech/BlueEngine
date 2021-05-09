@@ -1,5 +1,6 @@
 use crate::definitions::Renderer;
-use anyhow::*;
+use anyhow::Result;
+use wgpu::Features;
 use winit::window::Window;
 
 impl Renderer {
@@ -21,7 +22,7 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    features: wgpu::Features::empty(),
+                    features: Features::NON_FILL_POLYGON_MODE,
                     limits: wgpu::Limits::default(),
                 },
                 None, // Trace path
@@ -172,7 +173,7 @@ impl Renderer {
                 render_pass.set_vertex_buffer(0, buffers.vertex_buffer.slice(..));
                 render_pass
                     .set_index_buffer(buffers.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                render_pass.draw_indexed(0..buffers.length, 0, buffers.instances.clone());
+                render_pass.draw_indexed(0..buffers.length, 0, 0..1);
                 already_loaded_buffer = i.vertex_buffer_index;
             }
         }
