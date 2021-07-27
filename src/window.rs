@@ -18,6 +18,7 @@ pub fn new<F>(settings: WindowDescriptor, mut logic: F) -> Result<(), anyhow::Er
 where
     F: 'static + FnMut(&mut Renderer, WindowCallbackEvents, &Window),
 {
+    env_logger::init();
     // Dimentions of the window, as width and height
     // and then are set as a logical size that the window can accept
     let dimention = winit::dpi::LogicalSize {

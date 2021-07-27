@@ -52,16 +52,17 @@ impl crate::definitions::Renderer {
         self.render_pipelines.remove(index);
         Ok(())
     }
+}
 
+impl crate::definitions::Renderer {
     /// Creates and adds the shaders to render queue
     pub fn build_and_append_shaders(
         &mut self,
         name: &'static str,
-        vertex_shader: Vec<u8>,
-        fragment_shader: Vec<u8>,
+        shader_source: String,
     ) -> Result<usize, anyhow::Error> {
         let shaders = self
-            .build_shaders(name, vertex_shader, fragment_shader)
+            .build_shaders(name, shader_source)
             .expect("Couldn't create shaders");
         let index = self.shaders.len();
         self.shaders.push(shaders);
@@ -71,23 +72,15 @@ impl crate::definitions::Renderer {
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
     pub fn build_shaders(
         &mut self,
-        name: &'static str,
-        vertex_shader: Vec<u8>,
-        fragment_shader: Vec<u8>,
+        name: &str,
+        shader_source: String,
     ) -> Result<Shaders, anyhow::Error> {
-        let vs_module = self
+        let shader = self
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
-                label: Some("Vertex Shader Source"),
-                source: wgpu::util::make_spirv(vertex_shader.as_slice()),
-                flags: wgpu::ShaderFlags::VALIDATION,
-            });
-        let fs_module = self
-            .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
-                label: Some("Fragment Shader Source"),
-                source: wgpu::util::make_spirv(fragment_shader.as_slice()),
-                flags: wgpu::ShaderFlags::VALIDATION,
+                label: Some("Shader"),
+                source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+                flags: wgpu::ShaderFlags::all(),
             });
         let render_pipeline_layout =
             self.device
@@ -106,26 +99,27 @@ impl crate::definitions::Renderer {
                 label: Some(name),
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
-                    module: &vs_module,
+                    module: &shader,
                     entry_point: "main",
                     buffers: &[Vertex::desc()],
                 },
                 fragment: Some(wgpu::FragmentState {
-                    module: &fs_module,
+                    module: &shader,
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                        alpha_blend: wgpu::BlendState::REPLACE,
-                        color_blend: wgpu::BlendState::REPLACE,
+                        format: self.sc_desc.format,
                         write_mask: wgpu::ColorWrite::ALL,
+                        blend: Some(wgpu::BlendState::REPLACE),
                     }],
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
                     strip_index_format: None,
                     front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: wgpu::CullMode::Back,
+                    cull_mode: Some(wgpu::Face::Back),
                     polygon_mode: wgpu::PolygonMode::Fill,
+                    clamp_depth: false,
+                    conservative: false,
                 },
                 depth_stencil: None,
                 multisample: wgpu::MultisampleState {
@@ -155,7 +149,9 @@ impl crate::definitions::Renderer {
         self.shaders.remove(index);
         Ok(())
     }
+}
 
+impl crate::definitions::Renderer {
     /// Creates and adds the vertex buffers to render queue
     pub fn build_and_append_vertex_buffers(
         &mut self,
@@ -214,7 +210,9 @@ impl crate::definitions::Renderer {
         self.vertex_buffers.remove(index);
         Ok(())
     }
+}
 
+impl crate::definitions::Renderer {
     /// Creates and adds the uniform buffers to render queue
     pub fn build_and_append_uniform_buffers(
         &mut self,
@@ -270,11 +268,11 @@ impl crate::definitions::Renderer {
         for i in 0..buffer_vec.len() {
             let descriptor = wgpu::BindGroupEntry {
                 binding: i as u32,
-                resource: wgpu::BindingResource::Buffer {
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                     buffer: &buffer_vec.get(i).unwrap(),
                     offset: 0,
                     size: None,
-                },
+                }),
             };
             buffer_entry.push(descriptor);
             buffer_layout.push(wgpu::BindGroupLayoutEntry {
@@ -321,7 +319,9 @@ impl crate::definitions::Renderer {
         self.uniform_bind_group.remove(index);
         Ok(())
     }
+}
 
+impl crate::definitions::Renderer {
     /// Creates and adds the texture to render queue
     pub fn build_and_append_texture(
         &mut self,
@@ -364,7 +364,7 @@ impl crate::definitions::Renderer {
         let size = wgpu::Extent3d {
             width: dimensions.0,
             height: dimensions.1,
-            depth: 1,
+            depth_or_array_layers: 1,
         };
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some(name),
@@ -377,16 +377,16 @@ impl crate::definitions::Renderer {
         });
 
         self.queue.write_texture(
-            wgpu::TextureCopyView {
+            wgpu::ImageCopyTexture {
                 texture: &texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
             },
             rgba,
-            wgpu::TextureDataLayout {
+            wgpu::ImageDataLayout {
                 offset: 0,
-                bytes_per_row: 4 * dimensions.0,
-                rows_per_image: dimensions.1,
+                bytes_per_row: std::num::NonZeroU32::new(4 * dimensions.0),
+                rows_per_image: std::num::NonZeroU32::new(dimensions.1),
             },
             size,
         );

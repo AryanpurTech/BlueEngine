@@ -1,7 +1,5 @@
-use crate::definitions::Renderer;
-use futures::task::SpawnExt;
-use wgpu::util::DeviceExt;
-use wgpu_glyph::{ab_glyph::FontArc, GlyphBrush, GlyphBrushBuilder, Section};
+use crate::definitions::{Renderer};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy)]
 struct TextData {
@@ -11,103 +9,47 @@ struct TextData {
     scale: f32,
 }
 pub struct Text {
-    brush: GlyphBrush<()>,
-    font: FontArc,
-    texts: Vec<TextData>,
-    bounds: winit::dpi::PhysicalSize<u32>,
-    staging_belt: wgpu::util::StagingBelt,
-    local_pool: futures::executor::LocalPool,
-    local_spawner: futures::executor::LocalSpawner,
+    font: fontdue::Font,
+    char_cache: BTreeMap<char, (fontdue::Metrics, Vec<u8>)>,
+    size: f32,
 }
 
 impl Text {
-    pub fn new(
-        renderer: &Renderer,
-        font: Vec<u8>,
-        bounds: winit::dpi::PhysicalSize<u32>,
-    ) -> anyhow::Result<Self> {
-        let font = FontArc::try_from_vec(font)?;
-        let brush = GlyphBrushBuilder::using_font(font.clone())
-            .build(&renderer.device, wgpu::TextureFormat::Bgra8UnormSrgb);
-            
-        let staging_belt = wgpu::util::StagingBelt::new(1024);
-        let local_pool = futures::executor::LocalPool::new();
-        let local_spawner = local_pool.spawner();
+    pub fn new(font: Vec<u8>, cache_on_size: f32) -> anyhow::Result<Self> {
+        let font =
+            fontdue::Font::from_bytes(font.as_slice(), fontdue::FontSettings::default()).unwrap();
+        let mut char_cache = BTreeMap::<char, (fontdue::Metrics, Vec<u8>)>::new();
+
+        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=/\\?|<>'\"{}[],.~`";
+        for i in characters.chars() {
+            char_cache.insert(i, font.rasterize(i, cache_on_size)); // slap these as bmp textures
+        }
 
         Ok(Self {
-            brush,
             font,
-            texts: Vec::new(),
-            bounds,
-            staging_belt,
-            local_pool,
-            local_spawner,
+            char_cache,
+            size: cache_on_size,
         })
     }
 
-    pub fn new_font(&mut self, renderer: &Renderer, font: Vec<u8>) -> anyhow::Result<()> {
-        self.font = FontArc::try_from_vec(font)?;
-        self.brush = GlyphBrushBuilder::using_font(self.font.clone())
-            .build(&renderer.device, wgpu::TextureFormat::Bgra8UnormSrgb);
-
-        Ok(())
-    }
-
-    pub fn add_text(
+    pub fn draw(
         &mut self,
-        content: &'static str,
-        position: (f32, f32),
-        color: &'static [f32; 4],
-        scale: f32,
+        content: &str,
+        position: (u8, u8),
+        renderer: &mut Renderer,
+        window_size: winit::dpi::PhysicalSize<u32>
     ) -> anyhow::Result<()> {
-        self.texts.push(TextData {
-            content,
-            position,
-            color,
-            scale,
-        });
-        Ok(())
-    }
+        //let mut chars = Vec::<Vertex>::new();
+        for i in content.char_indices() {
+            let character: (fontdue::Metrics, Vec<u8>);
+            match self.char_cache.get(&i.1) {
+                Some(char) => character = char.clone(),
+                None => character = self.font.rasterize(i.1, self.size),
+            }
 
-    pub fn compile(&mut self) -> anyhow::Result<()> {
-        for i in self.texts.clone() {
-            self.brush.queue(Section {
-                bounds: (self.bounds.width as f32, self.bounds.height as f32),
-                screen_position: i.position,
-                text: vec![wgpu_glyph::Text::new(i.content)
-                    .with_color(*i.color)
-                    .with_scale(i.scale)],
-                ..Section::default()
-            });
+            let mut character_shape = super::shapes::square(window_size)?;
+            character_shape.resize(character.0.width as f32, character.0.height as f32);
         }
-
-        Ok(())
-    }
-
-    pub fn render(&mut self, renderer: &Renderer) -> anyhow::Result<()> {
-        let frame = renderer.swap_chain.get_current_frame()?.output;
-        let mut encoder = renderer
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("font redraw"),
-            });
-
-        self.brush
-            .draw_queued(
-                &renderer.device,
-                &mut self.staging_belt,
-                &mut encoder,
-                &frame.view,
-                self.bounds.width,
-                self.bounds.height,
-            )
-            .expect("Draw Queued");
-
-        self.staging_belt.finish();
-        renderer.queue.submit(Some(encoder.finish()));
-        self.local_spawner.spawn(self.staging_belt.recall())?;
-        self.local_pool.run_until_stalled();
-
         Ok(())
     }
 }
