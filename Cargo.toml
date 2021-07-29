@@ -17,9 +17,9 @@ crate-type = ["rlib"]
 [dependencies]
 winit = "0.25.0"
 cgmath = "0.18.0"
-futures = "0.3.15"
+futures = "0.3.16"
 image = "0.23.14"
-bytemuck = { version = "1.7.0", features = [ "derive" ] }
+bytemuck = { version = "1.7.2", features = [ "derive" ] }
 winit_input_helper = "0.10.0"
 anyhow = "1.0.42"
 fontdue = "0.5.2"
