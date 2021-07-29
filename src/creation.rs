@@ -9,12 +9,12 @@ impl crate::definitions::Renderer {
     pub fn build_and_append_pipeline(
         &mut self,
         shader_index: usize,
-        buffer_index: usize,
-        texture_index: Option<usize>,
-        uniform_buffer: Option<usize>,
+        vertex_buffer_index: usize,
+        texture_index: usize,
+        uniform_index: Option<usize>,
     ) -> Result<usize, anyhow::Error> {
         let pipe = self
-            .build_pipeline(shader_index, buffer_index, texture_index, uniform_buffer)
+            .build_pipeline(shader_index, vertex_buffer_index, texture_index, uniform_index)
             .expect("Couldn't Create Render Pipeline");
         self.render_pipelines.push(pipe);
         Ok(self.render_pipelines.len() - 1)
@@ -25,7 +25,7 @@ impl crate::definitions::Renderer {
         &mut self,
         shader_index: usize,
         vertex_buffer_index: usize,
-        texture_index: Option<usize>,
+        texture_index: usize,
         uniform_index: Option<usize>,
     ) -> Result<Pipeline, anyhow::Error> {
         Ok(Pipeline {

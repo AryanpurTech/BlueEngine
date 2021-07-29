@@ -8,7 +8,6 @@ pub struct Vertex {
     /// Contains texture position data for the vertex
     pub texture: [f32; 2],
 }
-// implementing some structure data for the layout configuration later on pipeline
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
@@ -71,10 +70,11 @@ pub mod uniform_type {
 }
 
 // Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
+#[derive(Debug, Clone, Copy)]
 pub struct Pipeline {
     pub shader_index: usize,
     pub vertex_buffer_index: usize,
-    pub texture_index: Option<usize>,
+    pub texture_index: usize,
     pub uniform_index: Option<usize>,
 }
 

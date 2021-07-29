@@ -37,7 +37,8 @@ impl Text {
         content: &str,
         position: (u8, u8),
         renderer: &mut Renderer,
-        window_size: winit::dpi::PhysicalSize<u32>
+        window_size: winit::dpi::PhysicalSize<u32>,
+        camera: crate::utils::camera::Camera,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
         for i in content.char_indices() {
@@ -47,7 +48,7 @@ impl Text {
                 None => character = self.font.rasterize(i.1, self.size),
             }
 
-            let mut character_shape = super::shapes::square(window_size)?;
+            let mut character_shape = super::shapes::square(renderer, window_size, camera)?;
             character_shape.resize(character.0.width as f32, character.0.height as f32);
         }
         Ok(())

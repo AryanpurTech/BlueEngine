@@ -133,17 +133,15 @@ impl Renderer {
                 already_loaded_shader = i.shader_index;
             }
 
-            if i.texture_index.is_some() {
-                let texture_index = i.texture_index.unwrap();
-                if already_loaded_texture != texture_index.clone() || texture_index.clone() == 0 {
+                if already_loaded_texture != i.texture_index.clone() || i.texture_index.clone() == 0 {
                     render_pass.set_bind_group(
                         0,
-                        self.texture_bind_group.get(texture_index.clone()).unwrap(),
+                        self.texture_bind_group.get(i.texture_index.clone()).unwrap(),
                         &[],
                     );
-                    already_loaded_texture = texture_index;
+                    already_loaded_texture = i.texture_index;
                 }
-            }
+
 
             if i.uniform_index.is_some() {
                 let uniform_buffer_index = i.uniform_index.clone().unwrap();

@@ -2,6 +2,7 @@ use crate::definitions::{OPENGL_TO_WGPU_MATRIX, Renderer, uniform_type::Matrix};
 use anyhow::*;
 /// Container for the camera feature. The settings here are needed for
 /// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
+#[derive(Debug, Clone, Copy)]
 pub struct Camera {
     /// The position of the camera in 3D space
     pub eye: cgmath::Point3<f32>,
