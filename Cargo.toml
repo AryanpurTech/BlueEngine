@@ -4,10 +4,11 @@ version = "0.1.3"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Extendable, Secure, And Portable Graphics Engine"
-documentation = "https://github.com/BlueMazar/BlueEngine/wiki"
-repository = "https://github.com/BlueMazar/BlueEngine"
+documentation = "https://github.com/ElhamAryanpur/BlueEngine/wiki"
+repository = "https://github.com/ElhamAryanpur/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D", "game"]
 categories = ["game-development", "gui", "graphics", "rendering"]
+license = "Apache-2.0"
 license-file = "LICENSE.txt"
 
 [lib]

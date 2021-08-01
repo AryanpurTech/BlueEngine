@@ -69,6 +69,12 @@ pub mod uniform_type {
     }
 }
 
+pub struct Engine {
+    pub renderer: Renderer,
+    pub event_loop: winit::event_loop::EventLoop<()>,
+    pub window: winit::window::Window,
+}
+
 // Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
 #[derive(Debug, Clone, Copy)]
 pub struct Pipeline {
@@ -104,13 +110,6 @@ pub struct Renderer {
     pub(crate) texture_bind_group: Vec<Textures>,
     pub(crate) uniform_bind_group: Vec<UniformBuffers>,
     pub(crate) render_pipelines: Vec<Pipeline>,
-}
-
-// Callbacks for renderloop
-pub enum WindowCallbackEvents<'a> {
-    Before,                                           // This will run before the loop
-    During(&'a winit_input_helper::WinitInputHelper), // will be called during the loop
-    After, // will be called after the loop ended. Maybe for cleanup?
 }
 
 /// Descriptor and settings for a window.

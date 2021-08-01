@@ -48,7 +48,7 @@ impl Text {
                 None => character = self.font.rasterize(i.1, self.size),
             }
 
-            let mut character_shape = super::shapes::square(renderer, window_size, camera)?;
+            let mut character_shape = super::objects::square(Some("text"),renderer, window_size, camera)?;
             character_shape.resize(character.0.width as f32, character.0.height as f32);
         }
         Ok(())
