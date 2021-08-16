@@ -9,7 +9,6 @@ repository = "https://github.com/ElhamAryanpur/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D", "game"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
-license-file = "LICENSE.txt"
 
 [lib]
 name = "blue_engine"

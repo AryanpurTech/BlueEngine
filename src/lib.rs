@@ -1,8 +1,7 @@
 /*
- * Blue Engine copyright © Elham Aryanpur
+ * Blue Engine copyright 2021 © Elham Aryanpur
  *
- * Blue Engine provides API and backend details for the projects within the
- * Blue Mazar team. The license is same as the one on the root.
+ * The license is same as the one on the root.
 */
 
 pub(crate) mod creation;
@@ -10,3 +9,4 @@ pub mod definitions;
 pub mod render;
 pub mod utils;
 pub mod window;
+pub mod objects;

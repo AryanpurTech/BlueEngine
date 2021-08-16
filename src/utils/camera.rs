@@ -1,3 +1,9 @@
+/*
+ * Blue Engine copyright 2021 © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 use crate::definitions::{OPENGL_TO_WGPU_MATRIX, Renderer, uniform_type::Matrix};
 use anyhow::*;
 /// Container for the camera feature. The settings here are needed for

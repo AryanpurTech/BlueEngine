@@ -1,4 +1,10 @@
-use crate::definitions::{Renderer};
+/*
+ * Blue Engine copyright 2021 © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
+use crate::{definitions::{}, objects};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -36,8 +42,7 @@ impl Text {
         &mut self,
         content: &str,
         position: (u8, u8),
-        renderer: &mut Renderer,
-        window_size: winit::dpi::PhysicalSize<u32>,
+        engine: &mut crate::definitions::Engine,
         camera: crate::utils::camera::Camera,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
@@ -48,8 +53,9 @@ impl Text {
                 None => character = self.font.rasterize(i.1, self.size),
             }
 
-            let mut character_shape = super::objects::square(Some("text"),renderer, window_size, camera)?;
-            character_shape.resize(character.0.width as f32, character.0.height as f32);
+            let character_shape_index = objects::square(Some("text"), engine, camera)?;
+            let mut character_shape = engine.get_object(character_shape_index)?;
+            character_shape.resize(character.0.width as f32, character.0.height as f32, 0.0);
         }
         Ok(())
     }

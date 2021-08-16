@@ -1,3 +1,9 @@
+/*
+ * Blue Engine copyright © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 use crate::definitions::Renderer;
 use anyhow::Result;
 use wgpu::Features;

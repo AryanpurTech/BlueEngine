@@ -1,7 +1,6 @@
 /*
  * Blue Engine copyright © Elham Aryanpur
  *
- * window.rs provies API for windowing and renderer initialization.
  * The license is same as the one on the root.
 */
 
@@ -16,10 +15,7 @@ use winit_input_helper::WinitInputHelper;
 impl Engine {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
-    pub fn new(
-        settings: WindowDescriptor,
-    ) -> anyhow::Result<Self>
-    {
+    pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
         env_logger::init();
         // Dimentions of the window, as width and height
         // and then are set as a logical size that the window can accept
@@ -51,26 +47,29 @@ impl Engine {
         Ok(Self {
             window,
             event_loop,
-            renderer
+            renderer,
+            objects: Vec::new(),
         })
     }
 
     #[allow(unreachable_code)]
-    pub fn update_loop<F>(
-        self,
-        mut update_function: F
-    ) -> anyhow::Result<()> where F: 'static + FnMut(&mut Renderer, &Window, &WinitInputHelper) {
+    pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
+    where
+        F: 'static + FnMut(&mut Renderer, &Window, &WinitInputHelper),
+    {
         let Self {
             event_loop,
             mut renderer,
             window,
+            mut objects,
         } = self;
+
         // Run the callback of before renderer start
         //logic(&mut renderer, WindowCallbackEvents::Before, &window);
         // and get input events to handle them later
         let mut input = winit_input_helper::WinitInputHelper::new();
         // The main loop
-        event_loop.run( move |event, _, control_flow| {
+        event_loop.run(move |event, _, control_flow| {
             input.update(&event);
             match event {
                 Event::WindowEvent {
@@ -100,8 +99,15 @@ impl Engine {
 
                 Event::MainEventsCleared => {
                     update_function(&mut renderer, &window, &input);
+                    
+
                     match renderer.render() {
-                        Ok(_) => {}
+                        Ok(_) => {objects.iter_mut().for_each(|i| {
+                        if i.changed {
+                            i.no_stretch_update(&mut renderer, window.inner_size())
+                                .expect("Couldn't update objects");
+                        }
+                    });}
                         // Recreate the swap_chain if lost
                         Err(wgpu::SwapChainError::Lost) => renderer.resize(renderer.size),
                         // The system is out of memory, we should probably quit

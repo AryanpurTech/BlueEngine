@@ -1,3 +1,9 @@
+/*
+ * Blue Engine copyright 2021 © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 use crate::definitions::{
     Pipeline, Shaders, Textures, UniformBuffer, UniformBuffers, Vertex, VertexBuffers,
 };
@@ -203,6 +209,11 @@ impl crate::definitions::Renderer {
         let index = self.vertex_buffers.len();
         self.vertex_buffers.push(vertex_buffer);
         Ok(index)
+    }
+
+    /// Allows to modify a vertex buffer
+    pub fn get_vertex_buffer(&mut self, index: usize) -> Result<&mut VertexBuffers, anyhow::Error> {
+        Ok(self.vertex_buffers.get_mut(index).unwrap())
     }
 
     /// Removes vertex and index buffer group

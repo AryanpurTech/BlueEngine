@@ -1,3 +1,9 @@
+/*
+ * Blue Engine copyright 2021 © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -69,10 +75,24 @@ pub mod uniform_type {
     }
 }
 
+pub struct Object {
+    pub name: Option<&'static str>,
+    pub verticies: Vec<Vertex>,
+    pub indicies: Vec<u16>,
+    pub pipeline: Pipeline,
+    pub pipeline_id: Option<usize>,
+    pub window_size: winit::dpi::PhysicalSize<u32>,
+    pub width: f32,
+    pub height: f32,
+    pub depth: f32,
+    pub changed: bool
+}
+
 pub struct Engine {
     pub renderer: Renderer,
     pub event_loop: winit::event_loop::EventLoop<()>,
     pub window: winit::window::Window,
+    pub objects: Vec<Object>,
 }
 
 // Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
