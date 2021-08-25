@@ -54,7 +54,7 @@ impl Text {
             }
 
             let character_shape_index = objects::square(Some("text"), engine, camera)?;
-            let mut character_shape = engine.get_object(character_shape_index)?;
+            let character_shape = engine.get_object(character_shape_index)?;
             character_shape.resize(character.0.width as f32, character.0.height as f32, 0.0);
         }
         Ok(())

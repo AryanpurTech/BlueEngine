@@ -18,12 +18,13 @@ impl Engine {
         camera: crate::utils::camera::Camera,
     ) -> anyhow::Result<usize> {
         let mut normalized_verticies = verticies;
+
         let normalized_width = normalize(100.0, self.window.inner_size().width);
         let normalized_height = normalize(100.0, self.window.inner_size().height);
         let normalized_depth = normalize(100.0, self.window.inner_size().width);
 
         for i in normalized_verticies.iter_mut() {
-            i.position[0] *= normalized_width;
+            i.position[0] *= normalized_width; // ! Fix the size of default not being the size intented
             i.position[1] *= normalized_height;
             i.position[2] *= normalized_depth;
         }
@@ -62,11 +63,13 @@ impl Engine {
             },
             window_size: self.window.inner_size(),
             pipeline_id: None,
-            width: 100.0 * normalized_width,
-            height: 100.0 * normalized_height,
-            depth: 100.0 * normalized_width,
-            changed: true,
+            width: 100.0,
+            height: 100.0,
+            depth: 100.0,
+            changed: false,
         });
+        let item = self.objects.get_mut(index).unwrap();
+        item.pipeline_id = Some(self.renderer.append_pipeline(item.pipeline)?);
 
         Ok(index)
     }
@@ -91,63 +94,35 @@ impl Object {
     }
 
     pub fn resize(&mut self, width: f32, height: f32, depth: f32) {
-        let difference_in_width = normalize(self.width, self.window_size.width)
-            - normalize(width, self.window_size.width);
-        let difference_in_height = normalize(self.height, self.window_size.height)
-            - normalize(height, self.window_size.height);
-        let difference_in_depth = normalize(self.depth, self.window_size.width)
-            - normalize(depth, self.window_size.width);
+        let difference_in_width = if self.width != 0.0 && width != 0.0 {
+            normalize(width, self.window_size.width) / normalize(self.width, self.window_size.width)
+        } else {
+            0.0
+        };
+        let difference_in_height = if self.height != 0.0 && height != 0.0 {
+            normalize(height, self.window_size.height)
+                / normalize(self.height, self.window_size.height)
+        } else {
+            0.0
+        };
+        let difference_in_depth = if self.depth != 0.0 && depth != 0.0 {
+            normalize(depth, self.window_size.width) / normalize(self.depth, self.window_size.width)
+        } else {
+            0.0
+        };
 
-        for i in self.verticies.iter_mut() {
-            i.position[0] *= difference_in_width;
-            i.position[1] *= difference_in_height;
-            i.position[2] *= difference_in_depth;
-        }
-
-        self.width = width;
-        self.height = height;
-        self.depth = depth;
-
-        self.changed = true;
+        self.scale(
+            difference_in_width,
+            difference_in_height,
+            difference_in_depth,
+        );
     }
 
-    pub fn translate(&mut self, x: f32, y: f32, z: f32) {
-        for i in self.verticies.iter_mut() {
-            i.position[0] += x;
-            i.position[1] += y;
-            i.position[2] *= z;
-        }
-
-        self.changed = true;
+    pub fn position(&mut self, x: f32, y: f32, z: f32) {
+        todo!();
     }
 
-    pub fn no_stretch_update(
-        &mut self,
-        renderer: &mut Renderer,
-        window_size: winit::dpi::PhysicalSize<u32>,
-    ) -> anyhow::Result<()> {
-        let normalized_width = normalize(self.width, window_size.width);
-        let normalized_height = normalize(self.height, window_size.height);
-        let normalized_depth = normalize(self.depth, window_size.width);
-
-        for i in self.verticies.iter_mut() {
-            i.position[0] *= normalized_width;
-            i.position[1] *= normalized_height;
-            i.position[2] *= normalized_depth;
-        }
-
-        self.width *= normalized_width;
-        self.height *= normalized_height;
-        self.depth *= normalized_depth;
-        self.window_size = window_size;
-
-        self.update_vertex_buffer(renderer)?;
-        self.changed = false;
-
-        Ok(())
-    }
-
-    pub fn stretch_update(
+    pub fn update(
         &mut self,
         renderer: &mut Renderer,
         window_size: winit::dpi::PhysicalSize<u32>,
@@ -161,18 +136,12 @@ impl Object {
     }
 
     fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
-        if self.pipeline_id.is_none() {
-            self.pipeline_id = Some(renderer.append_pipeline(self.pipeline)?);
-        }
-
-        let index = renderer
-            .get_pipeline(self.pipeline_id.unwrap())?
-            .vertex_buffer_index;
-        let mut updated_buffer = renderer
-            .build_vertex_buffers(self.verticies.clone(), self.indicies.clone())
-            .unwrap();
-        let mut _old_vertex_buffer = renderer.get_vertex_buffer(index)?;
-        _old_vertex_buffer = &mut updated_buffer;
+        let updated_buffer =
+            renderer.build_vertex_buffers(self.verticies.clone(), self.indicies.clone())?;
+        let _ = std::mem::replace(
+            &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
+            updated_buffer,
+        );
 
         Ok(())
     }
@@ -215,23 +184,23 @@ pub fn square<'a>(
         name,
         vec![
             Vertex {
-                position: [-1.0, 1.0, 0.0],
+                position: [1.0, 1.0, 0.0],
                 texture: [1.0, 1.0],
             },
             Vertex {
-                position: [1.0, 1.0, 0.0],
+                position: [1.0, -1.0, 0.0],
                 texture: [1.0, 0.0],
             },
             Vertex {
-                position: [1.0, -1.0, 0.0],
+                position: [-1.0, -1.0, 0.0],
                 texture: [0.0, 1.0],
             },
             Vertex {
-                position: [-1.0, -1.0, 0.0],
+                position: [-1.0, 1.0, 0.0],
                 texture: [0.0, 0.0],
             },
         ],
-        vec![0, 1, 3, 1, 2, 3],
+        vec![2, 1, 0, 2, 0, 3],
         camera,
     )?;
 

@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{Engine, Renderer, WindowDescriptor};
+use crate::definitions::{Engine, Object, Renderer, WindowDescriptor};
 use winit::{
     event::{Event, WindowEvent, *},
     event_loop::{ControlFlow, EventLoop},
@@ -55,7 +55,7 @@ impl Engine {
     #[allow(unreachable_code)]
     pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
     where
-        F: 'static + FnMut(&mut Renderer, &Window, &WinitInputHelper),
+        F: 'static + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper),
     {
         let Self {
             event_loop,
@@ -78,14 +78,6 @@ impl Engine {
                 } if window_id == window.id() => {
                     match event {
                         WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                        WindowEvent::KeyboardInput { input, .. } => match input {
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            } => *control_flow = ControlFlow::Exit,
-                            _ => {}
-                        },
                         WindowEvent::Resized(physical_renderer) => {
                             renderer.resize(*physical_renderer);
                         }
@@ -98,16 +90,16 @@ impl Engine {
                 }
 
                 Event::MainEventsCleared => {
-                    update_function(&mut renderer, &window, &input);
-                    
-
-                    match renderer.render() {
-                        Ok(_) => {objects.iter_mut().for_each(|i| {
+                    update_function(&mut renderer, &window, &mut objects, &input);
+                    objects.iter_mut().for_each(|i| {
                         if i.changed {
-                            i.no_stretch_update(&mut renderer, window.inner_size())
+                            i.update(&mut renderer, window.inner_size())
                                 .expect("Couldn't update objects");
                         }
-                    });}
+                    });
+
+                    match renderer.render() {
+                        Ok(_) => {}
                         // Recreate the swap_chain if lost
                         Err(wgpu::SwapChainError::Lost) => renderer.resize(renderer.size),
                         // The system is out of memory, we should probably quit
