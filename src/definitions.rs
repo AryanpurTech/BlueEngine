@@ -85,7 +85,7 @@ pub struct Object {
     pub width: f32,
     pub height: f32,
     pub depth: f32,
-    pub changed: bool
+    pub changed: bool,
 }
 
 pub struct Engine {
@@ -192,4 +192,11 @@ pub fn normalize(value: f32, max: u32) -> f32 {
     } else {
         return -1.0;
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RotateAxis {
+    X,
+    Y,
+    Z,
 }

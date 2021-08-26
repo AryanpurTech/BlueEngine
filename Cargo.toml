@@ -1,12 +1,12 @@
 [package]
 name = "blue_engine"
-version = "0.1.5"
+version = "0.1.51"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
-description = "General-Purpose, Easy-to-use, Fast, Extendable, Secure, And Portable Graphics Engine"
+description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
 documentation = "https://github.com/ElhamAryanpur/BlueEngine/wiki"
 repository = "https://github.com/ElhamAryanpur/BlueEngine"
-keywords = ["gamedev", "graphics", "3D", "2D", "game"]
+keywords = ["gamedev", "graphics", "3D", "2D", "game", "blue_engine", "blueengine"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
 
@@ -25,7 +25,20 @@ anyhow = "1.0.43"
 fontdue = "0.5.2"
 env_logger = "0.9.0"
 glm = "0.2.3"
+wgpu = "0.9.0"
 
-[dependencies.wgpu]
-version = "0.9.0"
+# ========== EXAMPLES ========== #
 
+# SHAPES
+[[example]]
+name = "triangle"
+path = "examples/shapes/triangle.rs"
+
+[[example]]
+name = "square"
+path = "examples/shapes/square.rs"
+
+# Development ONLY
+[[example]]
+name = "dev"
+path = "examples/dev/dev.rs"

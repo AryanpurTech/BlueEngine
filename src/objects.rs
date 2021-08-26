@@ -5,7 +5,7 @@
 */
 
 use crate::definitions::{
-    normalize, uniform_type, Engine, Object, Pipeline, Renderer, UniformBuffer, Vertex,
+    normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
 
@@ -116,6 +116,24 @@ impl Object {
             difference_in_height,
             difference_in_depth,
         );
+    }
+
+    pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
+        todo!();
+        let mut rotation_matrix = glm::mat4( 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+        rotation_matrix = glm::ext::rotate(&rotation_matrix, angle, match axis {
+            RotateAxis::X => glm::vec3(1.0, 0.0, 0.0),
+            RotateAxis::Y => glm::vec3(0.0, 1.0, 0.0),
+            RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
+        });
+        for i in self.verticies.iter_mut() {
+            let vertex = rotation_matrix * glm::vec4(i.position[0], i.position[1], i.position[2], 1.0);
+            i.position[0] = vertex.x;
+            i.position[1] = vertex.y;
+            i.position[2] = vertex.z;
+        }
+
+        self.changed = true;
     }
 
     pub fn position(&mut self, x: f32, y: f32, z: f32) {
