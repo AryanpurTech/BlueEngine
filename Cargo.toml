@@ -6,7 +6,7 @@ edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
 documentation = "https://github.com/ElhamAryanpur/BlueEngine/wiki"
 repository = "https://github.com/ElhamAryanpur/BlueEngine"
-keywords = ["gamedev", "graphics", "3D", "2D", "game", "blue_engine", "blueengine"]
+keywords = ["gamedev", "graphics", "3D", "2D", "game"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
 
