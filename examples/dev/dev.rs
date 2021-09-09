@@ -1,4 +1,8 @@
-use blue_engine::{definitions::{Engine, RotateAxis, WindowDescriptor}, objects::{square, triangle}, utils::text::Text};
+use blue_engine::{
+    definitions::{Engine, RotateAxis, WindowDescriptor},
+    objects::{square, triangle},
+    utils::text::Text,
+};
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor {
@@ -12,8 +16,8 @@ fn main() {
 
     let camera = blue_engine::utils::camera::Camera::new(&mut engine.renderer)
         .expect("Couldn't create a camera");
-        
-    let mut font = Text::new(
+
+    /*let mut font = Text::new(
         std::fs::read(
             std::env::current_dir()
                 .unwrap()
@@ -23,7 +27,7 @@ fn main() {
         .unwrap(),
         13f32,
     )
-    .unwrap();
+    .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let square_id = square(Some("SQUAREEE"), &mut engine, camera).unwrap();
@@ -43,12 +47,14 @@ fn main() {
             if events.mouse_pressed(0) {
                 let a = objects.get_mut(square_id).unwrap();
                 a.resize(50.0, 50.0, 0.0);
-                
-            }if events.mouse_pressed(1) {
-                objects.get_mut(square_id).unwrap().rotate(25.0, RotateAxis::Y);
-                
+            }
+            if events.mouse_pressed(1) {
+                objects
+                    .get_mut(square_id)
+                    .unwrap()
+                    .rotate(25.0, RotateAxis::Y);
             }
             // warning: Haswell Vulkan support is incomplete
         })
-        .expect("Error during update loop"); 
+        .expect("Error during update loop");
 }

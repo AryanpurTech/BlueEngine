@@ -49,6 +49,42 @@ pub mod uniform_type {
             self.data = uniform.data;
         }
     }
+    impl std::ops::Mul for Matrix {
+        type Output = Matrix;
+
+        fn mul(self, rhs: Self) -> Self::Output {
+            let a = self.data;
+            let b = rhs.data;
+            Matrix {
+                data: [
+                    [
+                        a[0][0] * b[0][0],
+                        a[0][1] * b[1][0],
+                        a[0][2] * b[2][0],
+                        a[0][3] * b[3][0],
+                    ],
+                    [
+                        a[1][0] * b[0][1],
+                        a[1][1] * b[1][1],
+                        a[1][2] * b[2][1],
+                        a[1][3] * b[3][1],
+                    ],
+                    [
+                        a[2][0] * b[0][2],
+                        a[2][1] * b[1][2],
+                        a[2][2] * b[2][2],
+                        a[2][3] * b[3][2],
+                    ],
+                    [
+                        a[3][0] * b[0][3],
+                        a[3][1] * b[1][3],
+                        a[3][2] * b[2][3],
+                        a[3][3] * b[3][3],
+                    ],
+                ],
+            }
+        }
+    }
 
     /// An array with length 4, each 32 bit float value, uniform buffer
     #[repr(C)]

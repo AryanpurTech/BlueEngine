@@ -5,9 +5,12 @@
 */
 
 use crate::definitions::{
-    normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
+    normalize, uniform_type, uniform_type::Matrix, Engine, Object, Pipeline, Renderer, RotateAxis,
+    UniformBuffer, Vertex,
 };
-use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use crate::utils::default_resources::{
+    DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
+};
 
 impl Engine {
     pub fn new_object(
@@ -29,8 +32,18 @@ impl Engine {
             i.position[2] *= normalized_depth;
         }
 
+        let dft = DEFAULT_MATRIX_4.as_array();
+        let default_transformation_matrix = Matrix {
+            data: [
+                *dft[0].as_array(),
+                *dft[1].as_array(),
+                *dft[2].as_array(),
+                *dft[3].as_array(),
+            ],
+        };
+
         let uniform_index = Some(self.renderer.build_and_append_uniform_buffers(Vec::from([
-            UniformBuffer::Matrix("Camera", camera.new_camera_uniform_buffer()?),
+            UniformBuffer::Matrix("View", camera.new_camera_uniform_buffer()? * default_transformation_matrix),
             UniformBuffer::Array(
                 "Color",
                 uniform_type::Array {
@@ -120,14 +133,19 @@ impl Object {
 
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
         todo!();
-        let mut rotation_matrix = glm::mat4( 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-        rotation_matrix = glm::ext::rotate(&rotation_matrix, angle, match axis {
-            RotateAxis::X => glm::vec3(1.0, 0.0, 0.0),
-            RotateAxis::Y => glm::vec3(0.0, 1.0, 0.0),
-            RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
-        });
+        let mut rotation_matrix = DEFAULT_MATRIX_4;
+        rotation_matrix = glm::ext::rotate(
+            &rotation_matrix,
+            angle,
+            match axis {
+                RotateAxis::X => glm::vec3(1.0, 0.0, 0.0),
+                RotateAxis::Y => glm::vec3(0.0, 1.0, 0.0),
+                RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
+            },
+        );
         for i in self.verticies.iter_mut() {
-            let vertex = rotation_matrix * glm::vec4(i.position[0], i.position[1], i.position[2], 1.0);
+            let vertex =
+                rotation_matrix * glm::vec4(i.position[0], i.position[1], i.position[2], 1.0);
             i.position[0] = vertex.x;
             i.position[1] = vertex.y;
             i.position[2] = vertex.z;
@@ -154,6 +172,17 @@ impl Object {
     }
 
     fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        let updated_buffer =
+            renderer.build_vertex_buffers(self.verticies.clone(), self.indicies.clone())?;
+        let _ = std::mem::replace(
+            &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
+            updated_buffer,
+        );
+
+        Ok(())
+    }
+
+    fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer =
             renderer.build_vertex_buffers(self.verticies.clone(), self.indicies.clone())?;
         let _ = std::mem::replace(
