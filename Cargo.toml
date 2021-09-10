@@ -16,7 +16,6 @@ crate-type = ["rlib"]
 
 [dependencies]
 winit = "0.25.0"
-cgmath = "0.18.0"
 futures = "0.3.16"
 image = "0.23.14"
 bytemuck = { version = "1.7.2", features = [ "derive" ] }

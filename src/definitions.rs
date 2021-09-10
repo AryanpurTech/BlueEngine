@@ -48,6 +48,18 @@ pub mod uniform_type {
         pub fn update(&mut self, uniform: Matrix) {
             self.data = uniform.data;
         }
+
+        pub fn from_glm(matrix: glm::Matrix4<f32>) -> Matrix {
+            let mtx = matrix.as_array();
+            Matrix {
+                data: [
+                    [mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3]],
+                    [mtx[1][0], mtx[1][1], mtx[1][2], mtx[1][3]],
+                    [mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3]],
+                    [mtx[3][0], mtx[3][1], mtx[3][2], mtx[3][3]],
+                ],
+            }
+        }
     }
     impl std::ops::Mul for Matrix {
         type Output = Matrix;
@@ -122,6 +134,8 @@ pub struct Object {
     pub height: f32,
     pub depth: f32,
     pub changed: bool,
+    pub transformation_matrix: uniform_type::Matrix,
+    pub color: uniform_type::Array,
 }
 
 pub struct Engine {
@@ -207,13 +221,15 @@ pub enum UniformBuffer {
     Float(&'static str, uniform_type::Float),
 }
 
+/*
 #[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
-    1.0, 0.0, 0.0, 0.0, 
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.0, 0.0, 0.5, 1.0
-);
+pub const OPENGL_TO_WGPU_MATRIX: glm::Matrix4<f32> = glm::Matrix4{
+    c0: glm::Vector4{ x: 1., y: 0., z: 0., w: 0. },
+    c1: glm::Vector4{ x: 0., y: 1., z: 0., w: 0. },
+    c2: glm::Vector4{ x: 0., y: 0., z: 0.5, w: 0. },
+    c3: glm::Vector4{ x: 0., y: 0., z: 0.5, w: 1. }
+};
+*/
 
 pub fn normalize(value: f32, max: u32) -> f32 {
     let mut result = value / max as f32;

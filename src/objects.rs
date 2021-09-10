@@ -5,8 +5,7 @@
 */
 
 use crate::definitions::{
-    normalize, uniform_type, uniform_type::Matrix, Engine, Object, Pipeline, Renderer, RotateAxis,
-    UniformBuffer, Vertex,
+    normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
 use crate::utils::default_resources::{
     DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
@@ -32,18 +31,8 @@ impl Engine {
             i.position[2] *= normalized_depth;
         }
 
-        let dft = DEFAULT_MATRIX_4.as_array();
-        let default_transformation_matrix = Matrix {
-            data: [
-                *dft[0].as_array(),
-                *dft[1].as_array(),
-                *dft[2].as_array(),
-                *dft[3].as_array(),
-            ],
-        };
-
         let uniform_index = Some(self.renderer.build_and_append_uniform_buffers(Vec::from([
-            UniformBuffer::Matrix("View", camera.new_camera_uniform_buffer()? * default_transformation_matrix),
+            UniformBuffer::Matrix("View", camera.new_camera_uniform_buffer()?),
             UniformBuffer::Array(
                 "Color",
                 uniform_type::Array {
@@ -80,6 +69,10 @@ impl Engine {
             height: 100.0,
             depth: 100.0,
             changed: false,
+            transformation_matrix: camera.new_camera_uniform_buffer()?,
+            color: uniform_type::Array {
+                data: DEFAULT_COLOR,
+            },
         });
         let item = self.objects.get_mut(index).unwrap();
         item.pipeline_id = Some(self.renderer.append_pipeline(item.pipeline)?);
