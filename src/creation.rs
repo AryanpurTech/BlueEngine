@@ -20,7 +20,12 @@ impl crate::definitions::Renderer {
         uniform_index: Option<usize>,
     ) -> Result<usize, anyhow::Error> {
         let pipe = self
-            .build_pipeline(shader_index, vertex_buffer_index, texture_index, uniform_index)
+            .build_pipeline(
+                shader_index,
+                vertex_buffer_index,
+                texture_index,
+                uniform_index,
+            )
             .expect("Couldn't Create Render Pipeline");
         self.render_pipelines.push(pipe);
         Ok(self.render_pipelines.len() - 1)
@@ -88,12 +93,14 @@ impl crate::definitions::Renderer {
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
                 flags: wgpu::ShaderFlags::all(),
             });
+
         let render_pipeline_layout =
             self.device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
                     bind_group_layouts: &[
                         &self.texture_bind_group_layout,
+                        &self.default_uniform_bind_group_layout,
                         &self.uniform_bind_group_layout,
                     ],
                     push_constant_ranges: &[],

@@ -77,6 +77,33 @@ impl Renderer {
                 entries: &[],
             });
 
+        let default_uniform_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("uniform dynamic bind group layout"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                ],
+            });
+
         Self {
             surface,
             device,
@@ -87,6 +114,7 @@ impl Renderer {
 
             texture_bind_group_layout,
             uniform_bind_group_layout,
+            default_uniform_bind_group_layout,
 
             shaders: Vec::new(),
             vertex_buffers: Vec::new(),
@@ -124,13 +152,33 @@ impl Renderer {
             depth_stencil_attachment: None,
         });
 
-        let mut already_loaded_shader: usize = 5;
+        let mut already_loaded_shader: usize = 0;
         let mut already_loaded_buffer: usize = 5;
-        let mut already_loaded_texture: usize = 5;
-        let mut already_loaded_uniform_buffer: usize = 5;
+        let mut already_loaded_texture: usize = 0;
+        let mut already_loaded_uniform_buffer: usize = 0;
+
+        render_pass.set_bind_group(
+            1,
+            self.uniform_bind_group
+                .get(0)
+                .expect("Couldn't find the camera uniform data"),
+            &[],
+        );
+        render_pass.set_pipeline(
+            self.shaders
+                .get(0)
+                .expect("Couldn't find the default shader"),
+        );
+        render_pass.set_bind_group(
+            0,
+            self.texture_bind_group
+                .get(0)
+                .expect("Couldn't find the default texture"),
+            &[],
+        );
 
         for i in self.render_pipelines.iter() {
-            if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() == 0 {
+            if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() >= 1 {
                 render_pass.set_pipeline(
                     self.shaders.get(i.shader_index.clone()).expect(
                         format!("Couldn't find shader at index: {}", i.shader_index).as_str(),
@@ -139,15 +187,16 @@ impl Renderer {
                 already_loaded_shader = i.shader_index;
             }
 
-                if already_loaded_texture != i.texture_index.clone() || i.texture_index.clone() == 0 {
-                    render_pass.set_bind_group(
-                        0,
-                        self.texture_bind_group.get(i.texture_index.clone()).unwrap(),
-                        &[],
-                    );
-                    already_loaded_texture = i.texture_index;
-                }
-
+            if already_loaded_texture != i.texture_index.clone() || i.texture_index.clone() >= 1 {
+                render_pass.set_bind_group(
+                    1,
+                    self.texture_bind_group
+                        .get(i.texture_index.clone())
+                        .unwrap(),
+                    &[],
+                );
+                already_loaded_texture = i.texture_index;
+            }
 
             if i.uniform_index.is_some() {
                 let uniform_buffer_index = i.uniform_index.clone().unwrap();
@@ -162,9 +211,9 @@ impl Renderer {
                         .as_str(),
                     );
                     if already_loaded_uniform_buffer != uniform_buffer_index.clone()
-                        || uniform_buffer_index.clone() == 0
+                        || uniform_buffer_index.clone() == 1
                     {
-                        render_pass.set_bind_group(1, uniform_buffer, &[]);
+                        render_pass.set_bind_group(2, uniform_buffer, &[]);
                         already_loaded_uniform_buffer = uniform_buffer_index;
                     }
                 }

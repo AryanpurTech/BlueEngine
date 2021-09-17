@@ -4,28 +4,11 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{uniform_type::Matrix, Renderer};
-use anyhow::*;
-/// Container for the camera feature. The settings here are needed for
-/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
-#[derive(Debug, Clone, Copy)]
-pub struct Camera {
-    /// The position of the camera in 3D space
-    pub eye: glm::Vector3<f32>,
-    /// The target at which the camera should be looking
-    pub target: glm::Vector3<f32>,
-    pub up: glm::Vector3<f32>,
-    pub aspect: f32,
-    /// The field of view of the camera
-    pub fovy: f32,
-    /// The closest view of camera
-    pub znear: f32,
-    /// The furthest view of camera
-    pub zfar: f32,
-}
+use crate::definitions::{uniform_type::Matrix, Camera, Renderer};
+use anyhow::Result;
 
 impl Camera {
-    pub fn new(renderer: &mut Renderer) -> Result<Self> {
+    pub fn new(renderer: &Renderer) -> Result<Self> {
         Ok(Self {
             eye: glm::vec3(0.0, 0.0, 1.4),
             target: glm::vec3(0.0, 0.0, 0.0).into(),
@@ -55,6 +38,7 @@ impl Camera {
         view_proj.data = Matrix::from_glm(
             self.build_view_projection_matrix()
                 .expect("Couldn't build view projection matrix"),
-        ).data;
+        )
+        .data;
     }
 }

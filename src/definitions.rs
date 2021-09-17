@@ -125,8 +125,8 @@ pub mod uniform_type {
 
 pub struct Object {
     pub name: Option<&'static str>,
-    pub verticies: Vec<Vertex>,
-    pub indicies: Vec<u16>,
+    pub vertices: Vec<Vertex>,
+    pub indices: Vec<u16>,
     pub pipeline: Pipeline,
     pub pipeline_id: Option<usize>,
     pub window_size: winit::dpi::PhysicalSize<u32>,
@@ -134,7 +134,7 @@ pub struct Object {
     pub height: f32,
     pub depth: f32,
     pub changed: bool,
-    pub transformation_matrix: uniform_type::Matrix,
+    pub transformation_matrix: glm::Matrix4<f32>,
     pub color: uniform_type::Array,
 }
 
@@ -143,6 +143,7 @@ pub struct Engine {
     pub event_loop: winit::event_loop::EventLoop<()>,
     pub window: winit::window::Window,
     pub objects: Vec<Object>,
+    pub camera: Camera,
 }
 
 // Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
@@ -175,6 +176,7 @@ pub struct Renderer {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) uniform_bind_group_layout: wgpu::BindGroupLayout,
+    pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) shaders: Vec<Shaders>,
     pub(crate) vertex_buffers: Vec<VertexBuffers>,
     pub(crate) texture_bind_group: Vec<Textures>,
@@ -195,17 +197,35 @@ pub struct WindowDescriptor {
     /// Should the window be resizable
     pub resizable: bool,
 }
-impl WindowDescriptor {
+impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
-    pub fn default() -> Result<Self, anyhow::Error> {
-        Ok(Self {
+    fn default() -> Self {
+        Self {
             width: 800.0,
             height: 600.0,
-            title: "Blue Engine by Blue Mazar",
+            title: "Blue Engine",
             decorations: true,
             resizable: true,
-        })
+        }
     }
+}
+
+/// Container for the camera feature. The settings here are needed for
+/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
+#[derive(Debug, Clone, Copy)]
+pub struct Camera {
+    /// The position of the camera in 3D space
+    pub eye: glm::Vector3<f32>,
+    /// The target at which the camera should be looking
+    pub target: glm::Vector3<f32>,
+    pub up: glm::Vector3<f32>,
+    pub aspect: f32,
+    /// The field of view of the camera
+    pub fovy: f32,
+    /// The closest view of camera
+    pub znear: f32,
+    /// The furthest view of camera
+    pub zfar: f32,
 }
 
 /// The mouse button identifier
@@ -220,16 +240,6 @@ pub enum UniformBuffer {
     Array(&'static str, uniform_type::Array),
     Float(&'static str, uniform_type::Float),
 }
-
-/*
-#[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: glm::Matrix4<f32> = glm::Matrix4{
-    c0: glm::Vector4{ x: 1., y: 0., z: 0., w: 0. },
-    c1: glm::Vector4{ x: 0., y: 1., z: 0., w: 0. },
-    c2: glm::Vector4{ x: 0., y: 0., z: 0.5, w: 0. },
-    c3: glm::Vector4{ x: 0., y: 0., z: 0.5, w: 1. }
-};
-*/
 
 pub fn normalize(value: f32, max: u32) -> f32 {
     let mut result = value / max as f32;

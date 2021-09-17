@@ -43,7 +43,6 @@ impl Text {
         content: &str,
         position: (u8, u8),
         engine: &mut crate::definitions::Engine,
-        camera: crate::utils::camera::Camera,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
         for i in content.char_indices() {
@@ -53,7 +52,7 @@ impl Text {
                 None => character = self.font.rasterize(i.1, self.size),
             }
 
-            let character_shape_index = objects::square(Some("text"), engine, camera)?;
+            let character_shape_index = objects::square(Some("text"), engine)?;
             let character_shape = engine.get_object(character_shape_index)?;
             character_shape.resize(character.0.width as f32, character.0.height as f32, 0.0);
         }

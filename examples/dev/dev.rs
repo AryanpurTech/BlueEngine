@@ -14,9 +14,6 @@ fn main() {
     })
     .expect("win");
 
-    let camera = blue_engine::utils::camera::Camera::new(&mut engine.renderer)
-        .expect("Couldn't create a camera");
-
     /*let mut font = Text::new(
         std::fs::read(
             std::env::current_dir()
@@ -30,7 +27,7 @@ fn main() {
     .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
-    let square_id = square(Some("SQUAREEE"), &mut engine, camera).unwrap();
+    let square_id = square(Some("SQUAREEE"), &mut engine).unwrap();
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();

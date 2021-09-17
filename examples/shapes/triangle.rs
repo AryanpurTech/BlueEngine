@@ -1,22 +1,19 @@
+/*
+ * Blue Engine copyright 2021 © Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 use blue_engine::{
     definitions::{Engine, WindowDescriptor},
     objects::triangle,
 };
 
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor {
-        width: 500.0,
-        height: 500.0,
-        title: "triangle",
-        decorations: true,
-        resizable: false,
-    })
+    let mut engine = Engine::new(WindowDescriptor::default())
     .expect("win");
 
-    let camera = blue_engine::utils::camera::Camera::new(&mut engine.renderer)
-        .expect("Couldn't create a camera");
-
-    let _ = triangle(Some("Triangle"), &mut engine, camera).unwrap();
+    let _ = triangle(Some("Triangle"), &mut engine).unwrap();
 
     engine
         .update_loop(move |_, _, _, _| {})

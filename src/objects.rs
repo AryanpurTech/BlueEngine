@@ -13,11 +13,10 @@ use crate::utils::default_resources::{
 
 impl Engine {
     pub fn new_object(
-        &mut self,
+        &mut self, 
         name: Option<&'static str>,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
-        camera: crate::utils::camera::Camera,
     ) -> anyhow::Result<usize> {
         let mut normalized_verticies = verticies;
 
@@ -26,42 +25,24 @@ impl Engine {
         let normalized_depth = normalize(100.0, self.window.inner_size().width);
 
         for i in normalized_verticies.iter_mut() {
-            i.position[0] *= normalized_width; // ! Fix the size of default not being the size intented
+            i.position[0] *= normalized_width;
             i.position[1] *= normalized_height;
             i.position[2] *= normalized_depth;
         }
-
-        let uniform_index = Some(self.renderer.build_and_append_uniform_buffers(Vec::from([
-            UniformBuffer::Matrix("View", camera.new_camera_uniform_buffer()?),
-            UniformBuffer::Array(
-                "Color",
-                uniform_type::Array {
-                    data: DEFAULT_COLOR,
-                },
-            ),
-        ]))?);
-        let shader_index = self
-            .renderer
-            .build_and_append_shaders("Default Shader", DEFAULT_SHADER.to_string())?;
         let vertex_buffer_index = self
             .renderer
             .build_and_append_vertex_buffers(normalized_verticies.clone(), indicies.clone())?;
-        let texture_index = self.renderer.build_and_append_texture(
-            "Default Texture",
-            Vec::from(DEFAULT_TEXTURE),
-            "clamp",
-        )?;
 
         let index = self.objects.len();
         self.objects.push(Object {
             name,
-            verticies: normalized_verticies,
-            indicies,
+            vertices: normalized_verticies,
+            indices: indicies,
             pipeline: Pipeline {
-                shader_index,
                 vertex_buffer_index,
-                texture_index,
-                uniform_index,
+                shader_index: 0,
+                texture_index: 0,
+                uniform_index: None,
             },
             window_size: self.window.inner_size(),
             pipeline_id: None,
@@ -69,7 +50,7 @@ impl Engine {
             height: 100.0,
             depth: 100.0,
             changed: false,
-            transformation_matrix: camera.new_camera_uniform_buffer()?,
+            transformation_matrix: DEFAULT_MATRIX_4,
             color: uniform_type::Array {
                 data: DEFAULT_COLOR,
             },
@@ -86,7 +67,7 @@ impl Engine {
 }
 impl Object {
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
-        for i in self.verticies.iter_mut() {
+        for i in self.vertices.iter_mut() {
             i.position[0] *= x;
             i.position[1] *= y;
             i.position[2] *= z;
@@ -136,7 +117,7 @@ impl Object {
                 RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
             },
         );
-        for i in self.verticies.iter_mut() {
+        for i in self.vertices.iter_mut() {
             let vertex =
                 rotation_matrix * glm::vec4(i.position[0], i.position[1], i.position[2], 1.0);
             i.position[0] = vertex.x;
@@ -166,7 +147,7 @@ impl Object {
 
     fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer =
-            renderer.build_vertex_buffers(self.verticies.clone(), self.indicies.clone())?;
+            renderer.build_vertex_buffers(self.vertices.clone(), self.indices.clone())?;
         let _ = std::mem::replace(
             &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
             updated_buffer,
@@ -177,7 +158,7 @@ impl Object {
 
     fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer =
-            renderer.build_vertex_buffers(self.verticies.clone(), self.indicies.clone())?;
+            renderer.build_vertex_buffers(self.vertices.clone(), self.indices.clone())?;
         let _ = std::mem::replace(
             &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
             updated_buffer,
@@ -190,7 +171,6 @@ impl Object {
 pub fn triangle(
     name: Option<&'static str>,
     engine: &mut Engine,
-    camera: crate::utils::camera::Camera,
 ) -> Result<usize, anyhow::Error> {
     let new_triangle = engine.new_object(
         name,
@@ -209,16 +189,14 @@ pub fn triangle(
             },
         ],
         vec![0, 1, 2],
-        camera,
     )?;
 
     Ok(new_triangle)
 }
 
-pub fn square<'a>(
+pub fn square(
     name: Option<&'static str>,
     engine: &mut Engine,
-    camera: crate::utils::camera::Camera,
 ) -> Result<usize, anyhow::Error> {
     let new_square = engine.new_object(
         name,
@@ -241,7 +219,6 @@ pub fn square<'a>(
             },
         ],
         vec![2, 1, 0, 2, 0, 3],
-        camera,
     )?;
 
     Ok(new_square)

@@ -4,9 +4,13 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{Engine, Object, Renderer, WindowDescriptor};
+use crate::definitions::{
+    uniform_type, Camera, Engine, Object, Renderer, UniformBuffer, WindowDescriptor,
+};
+use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use wgpu::util::DeviceExt;
 use winit::{
-    event::{Event, WindowEvent, *},
+    event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
@@ -42,13 +46,45 @@ impl Engine {
         let window = new_window.build(&event_loop).unwrap();
 
         // The renderer init on current window
-        let renderer = futures::executor::block_on(Renderer::new(&window));
+        let mut renderer = futures::executor::block_on(Renderer::new(&window));
+
+        let camera = Camera::new(&renderer)?;
+
+        let _ = renderer.build_and_append_shaders("Default Shader", DEFAULT_SHADER.to_string())?;
+        let _ = renderer.build_and_append_texture(
+            "Default Texture",
+            Vec::from(DEFAULT_TEXTURE),
+            "clamp",
+        )?;
+
+        let camera_buffer = renderer
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Camera Buffer"),
+                contents: bytemuck::cast_slice(&[uniform_type::Matrix::from_glm(
+                    camera.build_view_projection_matrix()?,
+                )]),
+                usage: wgpu::BufferUsage::UNIFORM,
+            });
+
+        let default_color_buffer = renderer
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Default Color Buffer"),
+                contents: bytemuck::cast_slice(&[uniform_type::Array {
+                    data: DEFAULT_COLOR,
+                }]),
+                usage: wgpu::BufferUsage::UNIFORM,
+            });
+
+        
 
         Ok(Self {
             window,
             event_loop,
             renderer,
             objects: Vec::new(),
+            camera,
         })
     }
 
@@ -62,6 +98,7 @@ impl Engine {
             mut renderer,
             window,
             mut objects,
+            camera,
         } = self;
 
         // Run the callback of before renderer start

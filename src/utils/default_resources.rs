@@ -82,5 +82,15 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-const CLEAN_VECTOR_4: glm::Vector4<f32> = glm::Vector4{ x: 1.0, y: 1.0, z: 1.0, w: 1.0 };
-pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4{ c0: CLEAN_VECTOR_4, c1: CLEAN_VECTOR_4, c2: CLEAN_VECTOR_4, c3: CLEAN_VECTOR_4 };
+const CLEAN_VECTOR_4: glm::Vector4<f32> = glm::Vector4 {
+    x: 1.0,
+    y: 1.0,
+    z: 1.0,
+    w: 1.0,
+};
+pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4 {
+    c0: CLEAN_VECTOR_4,
+    c1: CLEAN_VECTOR_4,
+    c2: CLEAN_VECTOR_4,
+    c3: CLEAN_VECTOR_4,
+};
