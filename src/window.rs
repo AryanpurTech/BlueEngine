@@ -8,7 +8,6 @@ use crate::definitions::{
     uniform_type, Camera, Engine, Object, Renderer, UniformBuffer, WindowDescriptor,
 };
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
-use wgpu::util::DeviceExt;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -50,34 +49,32 @@ impl Engine {
 
         let camera = Camera::new(&renderer)?;
 
-        let _ = renderer.build_and_append_shaders("Default Shader", DEFAULT_SHADER.to_string())?;
         let _ = renderer.build_and_append_texture(
             "Default Texture",
             Vec::from(DEFAULT_TEXTURE),
             "clamp",
         )?;
 
-        let camera_buffer = renderer
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Camera Buffer"),
-                contents: bytemuck::cast_slice(&[uniform_type::Matrix::from_glm(
-                    camera.build_view_projection_matrix()?,
-                )]),
-                usage: wgpu::BufferUsage::UNIFORM,
-            });
+        let _ = renderer
+            .build_and_append_uniform_buffers(vec![
+                UniformBuffer::Matrix(
+                    "Camera Uniform",
+                    uniform_type::Matrix::from_glm(camera.build_view_projection_matrix()?),
+                ),
+                UniformBuffer::Array(
+                    "Default Color",
+                    uniform_type::Array {
+                        data: DEFAULT_COLOR,
+                    },
+                ),
+            ])?
+            .1;
 
-        let default_color_buffer = renderer
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Default Color Buffer"),
-                contents: bytemuck::cast_slice(&[uniform_type::Array {
-                    data: DEFAULT_COLOR,
-                }]),
-                usage: wgpu::BufferUsage::UNIFORM,
-            });
-
-        
+        let _ = renderer.build_and_append_shaders(
+            "Default Shader",
+            DEFAULT_SHADER.to_string(),
+            None,
+        )?;
 
         Ok(Self {
             window,
@@ -91,14 +88,14 @@ impl Engine {
     #[allow(unreachable_code)]
     pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
     where
-        F: 'static + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper),
+        F: 'static + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper, &mut Camera),
     {
         let Self {
             event_loop,
             mut renderer,
             window,
             mut objects,
-            camera,
+            mut camera,
         } = self;
 
         // Run the callback of before renderer start
@@ -127,7 +124,7 @@ impl Engine {
                 }
 
                 Event::MainEventsCleared => {
-                    update_function(&mut renderer, &window, &mut objects, &input);
+                    update_function(&mut renderer, &window, &mut objects, &input, &mut camera);
                     objects.iter_mut().for_each(|i| {
                         if i.changed {
                             i.update(&mut renderer, window.inner_size())

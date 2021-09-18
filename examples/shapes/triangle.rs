@@ -10,12 +10,11 @@ use blue_engine::{
 };
 
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor::default())
-    .expect("win");
+    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     let _ = triangle(Some("Triangle"), &mut engine).unwrap();
 
     engine
-        .update_loop(move |_, _, _, _| {})
+        .update_loop(move |_, _, _, _, _| {})
         .expect("Error during update loop");
 }

@@ -8,7 +8,7 @@ use crate::definitions::{
     Pipeline, Shaders, Textures, UniformBuffer, UniformBuffers, Vertex, VertexBuffers,
 };
 use image::GenericImageView;
-use wgpu::util::DeviceExt;
+use wgpu::{util::DeviceExt, BindGroupLayout};
 
 impl crate::definitions::Renderer {
     /// Creates and adds the pipeline to render queue
@@ -71,9 +71,10 @@ impl crate::definitions::Renderer {
         &mut self,
         name: &'static str,
         shader_source: String,
+        uniform_layout: Option<&BindGroupLayout>,
     ) -> Result<usize, anyhow::Error> {
         let shaders = self
-            .build_shaders(name, shader_source)
+            .build_shaders(name, shader_source, uniform_layout)
             .expect("Couldn't create shaders");
         let index = self.shaders.len();
         self.shaders.push(shaders);
@@ -85,6 +86,7 @@ impl crate::definitions::Renderer {
         &mut self,
         name: &str,
         shader_source: String,
+        uniform_layout: Option<&BindGroupLayout>,
     ) -> Result<Shaders, anyhow::Error> {
         let shader = self
             .device
@@ -94,15 +96,16 @@ impl crate::definitions::Renderer {
                 flags: wgpu::ShaderFlags::all(),
             });
 
+        let mut bind_group_layouts = vec![&self.texture_bind_group_layout, &self.default_uniform_bind_group_layout];
+        if uniform_layout.is_some() {
+            bind_group_layouts.push(uniform_layout.unwrap())
+        }
+
         let render_pipeline_layout =
             self.device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[
-                        &self.texture_bind_group_layout,
-                        &self.default_uniform_bind_group_layout,
-                        &self.uniform_bind_group_layout,
-                    ],
+                    bind_group_layouts: &bind_group_layouts.as_slice(),
                     push_constant_ranges: &[],
                 });
 
@@ -235,20 +238,20 @@ impl crate::definitions::Renderer {
     pub fn build_and_append_uniform_buffers(
         &mut self,
         uniforms: Vec<UniformBuffer>,
-    ) -> Result<usize, anyhow::Error> {
+    ) -> Result<(usize, BindGroupLayout), anyhow::Error> {
         let uniform_buffers = self
             .build_uniform_buffer(uniforms)
             .expect("Couldn't create uniform buffer");
         let index = self.shaders.len();
-        self.uniform_bind_group.push(uniform_buffers);
-        Ok(index)
+        self.uniform_bind_group.push(uniform_buffers.0);
+        Ok((index, uniform_buffers.1))
     }
 
     /// Creates a new uniform buffer group, according to a list of types
     pub fn build_uniform_buffer(
         &mut self,
         uniforms: Vec<UniformBuffer>,
-    ) -> Result<UniformBuffers, anyhow::Error> {
+    ) -> Result<(UniformBuffers, BindGroupLayout), anyhow::Error> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
         let mut buffer_vec = Vec::<wgpu::Buffer>::new();
@@ -311,15 +314,14 @@ impl crate::definitions::Renderer {
                     label: Some("uniform dynamic bind group layout"),
                     entries: &buffer_layout.as_slice(),
                 });
-        self.uniform_bind_group_layout = uniform_bind_group_layout;
 
         let uniform_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Uniform Bind Groups"),
-            layout: &self.uniform_bind_group_layout,
+            layout: &uniform_bind_group_layout,
             entries: &buffer_entry.as_slice(),
         });
 
-        Ok(uniform_bind_group)
+        Ok((uniform_bind_group, uniform_bind_group_layout))
     }
 
     /// Appends a uniform buffer to render queue

@@ -71,12 +71,6 @@ impl Renderer {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let uniform_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("uniform dynamic bind group layout"),
-                entries: &[],
-            });
-
         let default_uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("uniform dynamic bind group layout"),
@@ -113,7 +107,6 @@ impl Renderer {
             size,
 
             texture_bind_group_layout,
-            uniform_bind_group_layout,
             default_uniform_bind_group_layout,
 
             shaders: Vec::new(),

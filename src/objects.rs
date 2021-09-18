@@ -8,7 +8,7 @@ use crate::definitions::{
     normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
 use crate::utils::default_resources::{
-    DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
+    DEFAULT_COLOR, DEFAULT_MATRIX_4,
 };
 
 impl Engine {

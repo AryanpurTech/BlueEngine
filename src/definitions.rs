@@ -175,7 +175,6 @@ pub struct Renderer {
     pub(crate) swap_chain: wgpu::SwapChain,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
-    pub(crate) uniform_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) shaders: Vec<Shaders>,
     pub(crate) vertex_buffers: Vec<VertexBuffers>,
