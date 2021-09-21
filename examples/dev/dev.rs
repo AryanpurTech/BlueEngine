@@ -1,13 +1,13 @@
 use blue_engine::{
-    definitions::{Engine, RotateAxis, WindowDescriptor},
+    header::{uniform_type::Matrix, Engine, RotateAxis, WindowDescriptor},
     objects::{square, triangle},
     utils::text::Text,
 };
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor {
-        width: 500.0,
-        height: 500.0,
+        width: 800.0,
+        height: 600.0,
         title: "title",
         decorations: true,
         resizable: false,
@@ -28,6 +28,10 @@ fn main() {
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let square_id = square(Some("SQUAREEE"), &mut engine).unwrap();
+    {
+        let a = engine.objects.get_mut(square_id).unwrap();
+        a.resize(800.0, 600.0, 1.0);
+    }
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
@@ -39,11 +43,18 @@ fn main() {
     //)
     //.unwrap();
 
+    let radius = 2f32;
+    let start = std::time::SystemTime::now();
+
     engine
-        .update_loop(move |renderer, window, objects, events| {
+        .update_loop(move |renderer, window, objects, events, camera| {
+            let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
+            let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
+            camera.set_eye([camx, 0.0, camz]);
+
             if events.mouse_pressed(0) {
                 let a = objects.get_mut(square_id).unwrap();
-                a.resize(50.0, 50.0, 0.0);
+                //a.resize(50.0, 50.0, 0.0);
             }
             if events.mouse_pressed(1) {
                 objects
@@ -51,7 +62,6 @@ fn main() {
                     .unwrap()
                     .rotate(25.0, RotateAxis::Y);
             }
-            // warning: Haswell Vulkan support is incomplete
         })
         .expect("Error during update loop");
 }

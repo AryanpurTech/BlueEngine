@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::{definitions::{}, objects};
+use crate::{header::{}, objects};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy)]
@@ -42,7 +42,7 @@ impl Text {
         &mut self,
         content: &str,
         position: (u8, u8),
-        engine: &mut crate::definitions::Engine,
+        engine: &mut crate::header::Engine,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
         for i in content.char_indices() {

@@ -5,8 +5,8 @@
 */
 
 pub(crate) mod creation;
-pub mod definitions;
+pub mod header;
+pub mod objects;
 pub mod render;
 pub mod utils;
 pub mod window;
-pub mod objects;

@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{
+use crate::header::{
     normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
 use crate::utils::default_resources::{

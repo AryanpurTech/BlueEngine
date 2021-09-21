@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{
+use crate::header::{
     uniform_type, Camera, Engine, Object, Renderer, UniformBuffer, WindowDescriptor,
 };
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -57,10 +57,7 @@ impl Engine {
 
         let _ = renderer
             .build_and_append_uniform_buffers(vec![
-                UniformBuffer::Matrix(
-                    "Camera Uniform",
-                    uniform_type::Matrix::from_glm(camera.build_view_projection_matrix()?),
-                ),
+                UniformBuffer::Matrix("Camera Uniform", camera.camera_uniform_buffer()?),
                 UniformBuffer::Array(
                     "Default Color",
                     uniform_type::Array {
@@ -88,7 +85,8 @@ impl Engine {
     #[allow(unreachable_code)]
     pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
     where
-        F: 'static + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper, &mut Camera),
+        F: 'static
+            + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper, &mut Camera),
     {
         let Self {
             event_loop,
@@ -125,6 +123,7 @@ impl Engine {
 
                 Event::MainEventsCleared => {
                     update_function(&mut renderer, &window, &mut objects, &input, &mut camera);
+                    camera.update_view_projection(&mut renderer).expect("Couldn't update camera");
                     objects.iter_mut().for_each(|i| {
                         if i.changed {
                             i.update(&mut renderer, window.inner_size())

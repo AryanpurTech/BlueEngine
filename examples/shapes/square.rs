@@ -5,7 +5,7 @@
 */
 
 use blue_engine::{
-    definitions::{Engine, WindowDescriptor, Vertex},
+    header::{Engine, WindowDescriptor, Vertex},
 };
 
 pub fn square(

@@ -4,13 +4,13 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::{
+use crate::header::{
     Pipeline, Shaders, Textures, UniformBuffer, UniformBuffers, Vertex, VertexBuffers,
 };
 use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout};
 
-impl crate::definitions::Renderer {
+impl crate::header::Renderer {
     /// Creates and adds the pipeline to render queue
     pub fn build_and_append_pipeline(
         &mut self,
@@ -65,7 +65,7 @@ impl crate::definitions::Renderer {
     }
 }
 
-impl crate::definitions::Renderer {
+impl crate::header::Renderer {
     /// Creates and adds the shaders to render queue
     pub fn build_and_append_shaders(
         &mut self,
@@ -132,7 +132,7 @@ impl crate::definitions::Renderer {
                     topology: wgpu::PrimitiveTopology::TriangleList,
                     strip_index_format: None,
                     front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
+                    cull_mode: None,//Some(wgpu::Face::Back),
                     polygon_mode: wgpu::PolygonMode::Fill,
                     clamp_depth: false,
                     conservative: false,
@@ -167,7 +167,7 @@ impl crate::definitions::Renderer {
     }
 }
 
-impl crate::definitions::Renderer {
+impl crate::header::Renderer {
     /// Creates and adds the vertex buffers to render queue
     pub fn build_and_append_vertex_buffers(
         &mut self,
@@ -233,7 +233,7 @@ impl crate::definitions::Renderer {
     }
 }
 
-impl crate::definitions::Renderer {
+impl crate::header::Renderer {
     /// Creates and adds the uniform buffers to render queue
     pub fn build_and_append_uniform_buffers(
         &mut self,
@@ -341,7 +341,7 @@ impl crate::definitions::Renderer {
     }
 }
 
-impl crate::definitions::Renderer {
+impl crate::header::Renderer {
     /// Creates and adds the texture to render queue
     pub fn build_and_append_texture(
         &mut self,

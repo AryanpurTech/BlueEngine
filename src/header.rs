@@ -60,6 +60,16 @@ pub mod uniform_type {
                 ],
             }
         }
+
+        pub fn to_glm(matrix: Self) -> glm::Matrix4<f32> {
+            let mtx = matrix.data;
+            glm::Matrix4::new(
+                glm::vec4(mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3]),
+                glm::vec4(mtx[1][0], mtx[1][1], mtx[1][2], mtx[1][3]),
+                glm::vec4(mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3]),
+                glm::vec4(mtx[3][0], mtx[3][1], mtx[3][2], mtx[3][3]),
+            )
+        }
     }
     impl std::ops::Mul for Matrix {
         type Output = Matrix;
@@ -225,6 +235,10 @@ pub struct Camera {
     pub znear: f32,
     /// The furthest view of camera
     pub zfar: f32,
+    /// The final data that will be sent to GPU
+    pub view_data: glm::Matrix4<f32>,
+    // For checking and rebuilding it's uniform buffer
+    pub(crate) changed: bool,
 }
 
 /// The mouse button identifier

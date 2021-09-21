@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::definitions::Renderer;
+use crate::header::Renderer;
 use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;

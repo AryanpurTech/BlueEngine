@@ -5,7 +5,7 @@
 */
 
 use blue_engine::{
-    definitions::{Engine, WindowDescriptor},
+    header::{Engine, WindowDescriptor},
     objects::triangle,
 };
 
