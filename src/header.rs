@@ -229,11 +229,11 @@ pub struct Camera {
     pub up: glm::Vector3<f32>,
     pub aspect: f32,
     /// The field of view of the camera
-    pub fovy: f32,
+    pub fov: f32,
     /// The closest view of camera
-    pub znear: f32,
+    pub near: f32,
     /// The furthest view of camera
-    pub zfar: f32,
+    pub far: f32,
     /// The final data that will be sent to GPU
     pub view_data: glm::Matrix4<f32>,
     // For checking and rebuilding it's uniform buffer

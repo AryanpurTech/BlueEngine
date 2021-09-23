@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.1.87"
+version = "0.1.89"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"

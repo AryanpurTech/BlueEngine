@@ -22,9 +22,9 @@ impl Camera {
             target: glm::vec3(0.0, 0.0, 0.0).into(),
             up: glm::vec3(0.0, 1.0, 0.0),
             aspect: renderer.config.width as f32 / renderer.config.height as f32,
-            fovy: 45.0,
-            znear: 0.1,
-            zfar: 100.0,
+            fov: 45.0,
+            near: 0.1,
+            far: 100.0,
             view_data: DEFAULT_MATRIX_4,
             changed: true,
         };
@@ -35,7 +35,7 @@ impl Camera {
 
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
         let view = glm::ext::look_at_rh(self.eye, self.target, self.up);
-        let proj = glm::ext::perspective::<f32>(self.fovy, self.aspect, self.znear, self.zfar);
+        let proj = glm::ext::perspective::<f32>(self.fov, self.aspect, self.near, self.far);
         self.view_data = proj * view;
         self.changed = true;
 
@@ -43,10 +43,7 @@ impl Camera {
     }
 
     pub fn camera_uniform_buffer(&self) -> Result<Matrix> {
-        let view = glm::ext::look_at_rh(self.eye, self.target, self.up);
-        let proj = glm::ext::perspective::<f32>(self.fovy, self.aspect, self.znear, self.zfar);
-        let camera_matrix = proj * view;
-        Ok(Matrix::from_glm(camera_matrix))
+        Ok(Matrix::from_glm(self.view_data))
     }
 
     pub fn set_eye(&mut self, new_eye: [f32; 3]) -> Result<()> {
@@ -65,6 +62,34 @@ impl Camera {
 
     pub fn set_up(&mut self, new_up: [f32; 3]) -> Result<()> {
         self.up = glm::vec3(new_up[0], new_up[1], new_up[2]);
+        self.build_view_projection_matrix()?;
+
+        Ok(())
+    }
+
+    pub fn set_fov(&mut self, new_fov: f32) -> Result<()> {
+        self.fov = new_fov;
+        self.build_view_projection_matrix()?;
+
+        Ok(())
+    }
+
+    pub fn set_far(&mut self, new_far: f32) -> Result<()> {
+        self.far = new_far;
+        self.build_view_projection_matrix()?;
+
+        Ok(())
+    }
+
+    pub fn set_near(&mut self, new_near: f32) -> Result<()> {
+        self.near = new_near;
+        self.build_view_projection_matrix()?;
+
+        Ok(())
+    }
+
+    pub fn set_aspect(&mut self, new_aspect: f32) -> Result<()> {
+        self.aspect = new_aspect;
         self.build_view_projection_matrix()?;
 
         Ok(())
