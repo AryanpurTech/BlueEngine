@@ -134,9 +134,9 @@ impl Engine {
                     match renderer.render() {
                         Ok(_) => {}
                         // Recreate the swap_chain if lost
-                        Err(wgpu::SwapChainError::Lost) => renderer.resize(renderer.size),
+                        Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
                         // The system is out of memory, we should probably quit
-                        Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                        Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                         // All other errors (Outdated, Timeout) should be resolved by the next frame
                         Err(e) => eprintln!("{:?}", e),
                     }

@@ -93,7 +93,7 @@ impl crate::header::Renderer {
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
-                flags: wgpu::ShaderFlags::all(),
+                //flags: wgpu::ShaderFlags::all(),
             });
 
         let mut bind_group_layouts = vec![&self.texture_bind_group_layout, &self.default_uniform_bind_group_layout];
@@ -123,8 +123,8 @@ impl crate::header::Renderer {
                     module: &shader,
                     entry_point: "main",
                     targets: &[wgpu::ColorTargetState {
-                        format: self.sc_desc.format,
-                        write_mask: wgpu::ColorWrite::ALL,
+                        format: self.config.format,
+                        write_mask: wgpu::ColorWrites::ALL,
                         blend: Some(wgpu::BlendState::REPLACE),
                     }],
                 }),
@@ -193,7 +193,7 @@ impl crate::header::Renderer {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
                 contents: bytemuck::cast_slice(verticies.as_slice()),
-                usage: wgpu::BufferUsage::VERTEX,
+                usage: wgpu::BufferUsages::VERTEX,
             });
 
         let index_buffer = self
@@ -201,7 +201,7 @@ impl crate::header::Renderer {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
                 contents: bytemuck::cast_slice(indicies.as_slice()),
-                usage: wgpu::BufferUsage::INDEX,
+                usage: wgpu::BufferUsages::INDEX,
             });
 
         Ok(VertexBuffers {
@@ -262,7 +262,7 @@ impl crate::header::Renderer {
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(*name),
                             contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsage::UNIFORM,
+                            usage: wgpu::BufferUsages::UNIFORM,
                         },
                     ));
                 }
@@ -271,7 +271,7 @@ impl crate::header::Renderer {
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(*name),
                             contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsage::UNIFORM,
+                            usage: wgpu::BufferUsages::UNIFORM,
                         },
                     ));
                 }
@@ -280,7 +280,7 @@ impl crate::header::Renderer {
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(*name),
                             contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST,
+                            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
                         },
                     ));
                 }
@@ -298,7 +298,7 @@ impl crate::header::Renderer {
             buffer_entry.push(descriptor);
             buffer_layout.push(wgpu::BindGroupLayoutEntry {
                 binding: i as u32,
-                visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
@@ -393,7 +393,7 @@ impl crate::header::Renderer {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
         });
 
         self.queue.write_texture(
@@ -401,7 +401,7 @@ impl crate::header::Renderer {
                 texture: &texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
-                //aspect: wgpu::TextureAspect::All,
+                aspect: wgpu::TextureAspect::All,
             },
             rgba,
             wgpu::ImageDataLayout {

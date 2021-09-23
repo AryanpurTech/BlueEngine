@@ -9,6 +9,7 @@ repository = "https://github.com/ElhamAryanpur/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D", "game"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
+resolver = "2"
 
 [lib]
 name = "blue_engine"
@@ -16,15 +17,16 @@ crate-type = ["rlib"]
 
 [dependencies]
 winit = "0.25.0"
-futures = "0.3.16"
+futures = "0.3.17"
 image = "0.23.14"
 bytemuck = { version = "1.7.2", features = [ "derive" ] }
 winit_input_helper = "0.10.0"
-anyhow = "1.0.43"
+anyhow = "1.0.44"
 fontdue = "0.5.2"
 env_logger = "0.9.0"
 glm = "0.2.3"
-wgpu = "0.9.0"
+wgpu = "0.10.1"
+
 
 # ========== EXAMPLES ========== #
 

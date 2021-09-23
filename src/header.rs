@@ -18,7 +18,7 @@ impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
+            step_mode: wgpu::VertexStepMode::Vertex,
             attributes: &[
                 wgpu::VertexAttribute {
                     offset: 0,
@@ -181,8 +181,7 @@ pub struct Renderer {
     pub(crate) surface: wgpu::Surface,
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
-    pub(crate) sc_desc: wgpu::SwapChainDescriptor,
-    pub(crate) swap_chain: wgpu::SwapChain,
+    pub(crate) config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,

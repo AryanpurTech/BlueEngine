@@ -21,7 +21,7 @@ impl Camera {
             eye: glm::vec3(0.0, 0.0, 0.0),
             target: glm::vec3(0.0, 0.0, 0.0).into(),
             up: glm::vec3(0.0, 1.0, 0.0),
-            aspect: renderer.sc_desc.width as f32 / renderer.sc_desc.height as f32,
+            aspect: renderer.config.width as f32 / renderer.config.height as f32,
             fovy: 45.0,
             znear: 0.1,
             zfar: 100.0,

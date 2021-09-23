@@ -14,7 +14,7 @@ impl Renderer {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -36,21 +36,21 @@ impl Renderer {
             .await
             .unwrap();
 
-        let sc_desc = wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: wgpu::TextureFormat::Bgra8UnormSrgb,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-        let swap_chain = device.create_swap_chain(&surface, &sc_desc);
+        surface.configure(&device, &config);
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStage::FRAGMENT,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Texture {
                             sample_type: wgpu::TextureSampleType::Float { filterable: true },
                             view_dimension: wgpu::TextureViewDimension::D2,
@@ -60,7 +60,7 @@ impl Renderer {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStage::FRAGMENT,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Sampler {
                             comparison: false,
                             filtering: true,
@@ -77,7 +77,7 @@ impl Renderer {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -87,7 +87,7 @@ impl Renderer {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStage::VERTEX | wgpu::ShaderStage::FRAGMENT,
+                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -102,8 +102,7 @@ impl Renderer {
             surface,
             device,
             queue,
-            sc_desc,
-            swap_chain,
+            config,
             size,
 
             texture_bind_group_layout,
@@ -119,13 +118,17 @@ impl Renderer {
 
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.size = new_size;
-        self.sc_desc.width = new_size.width;
-        self.sc_desc.height = new_size.height;
-        self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
+        self.config.width = new_size.width;
+        self.config.height = new_size.height;
+        self.surface.configure(&self.device, &self.config);
     }
 
-    pub(crate) fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
-        let frame = self.swap_chain.get_current_frame()?.output;
+    pub(crate) fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let frame = self.surface.get_current_frame()?.output;
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -135,7 +138,7 @@ impl Renderer {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render pass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &frame.view,
+                view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
