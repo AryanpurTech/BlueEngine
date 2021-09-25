@@ -19,7 +19,7 @@ impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(renderer: &Renderer) -> Result<Self> {
         let mut camera = Self {
-            eye: glm::vec3(0.0, 0.0, 0.0),
+            eye: glm::vec3(0.0, 0.0, 1.0),
             target: glm::vec3(0.0, 0.0, 0.0).into(),
             up: glm::vec3(0.0, 1.0, 0.0),
             aspect: renderer.config.width as f32 / renderer.config.height as f32,

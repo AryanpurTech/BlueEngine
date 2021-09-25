@@ -10,3 +10,7 @@ Blue Engine is a general-purpose, easy-to-use, fast, extendable, secure, and por
 * [Join our discord server](https://discord.gg/s7xsj9q)
 
 * [WIP] Learn more at [wiki](https://github.com/BlueMazar/BlueEngine/wiki)
+
+---
+
+**NOTE:** You need to add `resolver = "2"` on your `Cargo.toml` under `[package]` section. This is because of migration to newer versions of Rust and dependencies of this engine.

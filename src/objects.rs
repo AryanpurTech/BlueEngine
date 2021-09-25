@@ -7,13 +7,11 @@
 use crate::header::{
     normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
-use crate::utils::default_resources::{
-    DEFAULT_COLOR, DEFAULT_MATRIX_4,
-};
+use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
 
 impl Engine {
     pub fn new_object(
-        &mut self, 
+        &mut self,
         name: Option<&'static str>,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
@@ -32,6 +30,19 @@ impl Engine {
         let vertex_buffer_index = self
             .renderer
             .build_and_append_vertex_buffers(normalized_verticies.clone(), indicies.clone())?;
+        
+        let uniform_index =
+            self.renderer
+                .build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
+                    "Transformation Matrix",
+                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
+                )])?;
+
+        let shader_index = self.renderer.build_and_append_shaders(
+            name.unwrap_or("Object"),
+            DEFAULT_SHADER.to_string(),
+            Some(&uniform_index.1),
+        )?;
 
         let index = self.objects.len();
         self.objects.push(Object {
@@ -40,9 +51,9 @@ impl Engine {
             indices: indicies,
             pipeline: Pipeline {
                 vertex_buffer_index,
-                shader_index: 0,
+                shader_index: shader_index,
                 texture_index: 0,
-                uniform_index: None,
+                uniform_index: Some(uniform_index.0),
             },
             window_size: self.window.inner_size(),
             pipeline_id: None,
@@ -106,8 +117,7 @@ impl Object {
     }
 
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
-        todo!();
-        let mut rotation_matrix = DEFAULT_MATRIX_4;
+        let mut rotation_matrix = self.transformation_matrix;
         rotation_matrix = glm::ext::rotate(
             &rotation_matrix,
             angle,
@@ -117,13 +127,7 @@ impl Object {
                 RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
             },
         );
-        for i in self.vertices.iter_mut() {
-            let vertex =
-                rotation_matrix * glm::vec4(i.position[0], i.position[1], i.position[2], 1.0);
-            i.position[0] = vertex.x;
-            i.position[1] = vertex.y;
-            i.position[2] = vertex.z;
-        }
+        
 
         self.changed = true;
     }
@@ -168,10 +172,7 @@ impl Object {
     }
 }
 
-pub fn triangle(
-    name: Option<&'static str>,
-    engine: &mut Engine,
-) -> Result<usize, anyhow::Error> {
+pub fn triangle(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
     let new_triangle = engine.new_object(
         name,
         vec![
@@ -194,10 +195,7 @@ pub fn triangle(
     Ok(new_triangle)
 }
 
-pub fn square(
-    name: Option<&'static str>,
-    engine: &mut Engine,
-) -> Result<usize, anyhow::Error> {
+pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
     let new_square = engine.new_object(
         name,
         vec![

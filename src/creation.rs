@@ -100,6 +100,7 @@ impl crate::header::Renderer {
         if uniform_layout.is_some() {
             bind_group_layouts.push(uniform_layout.unwrap())
         }
+        println!("number of bindings for {}: {}", name, bind_group_layouts.len());
 
         let render_pipeline_layout =
             self.device

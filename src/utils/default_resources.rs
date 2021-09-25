@@ -8,11 +8,18 @@ pub const DEFAULT_SHADER: &str = r#"
 // Vertex Stage
 
 [[block]]
-struct VertexUniforms {
+struct CameraUniforms {
     camera_matrix: mat4x4<f32>;
 };
 [[group(1), binding(0)]]
-var<uniform> vertex_uniform: VertexUniforms;
+var<uniform> camera_uniform: CameraUniforms;
+
+[[block]]
+struct TransformationUniforms {
+    transform_matrix: mat4x4<f32>;
+};
+[[group(2), binding(0)]]
+var<uniform> transform_uniform: TransformationUniforms;
 
 struct VertexInput {
     [[location(0)]] position: vec3<f32>;
@@ -27,7 +34,7 @@ struct VertexOutput {
 [[stage(vertex)]]
 fn main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
-    out.position = vertex_uniform.camera_matrix * vec4<f32>(input.position, 1.0);
+    out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));
     out.texture_coordinates = input.texture_coordinates;
     return out;
 }
@@ -82,15 +89,29 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-const CLEAN_VECTOR_4: glm::Vector4<f32> = glm::Vector4 {
-    x: 1.0,
-    y: 1.0,
-    z: 1.0,
-    w: 1.0,
-};
 pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4 {
-    c0: CLEAN_VECTOR_4,
-    c1: CLEAN_VECTOR_4,
-    c2: CLEAN_VECTOR_4,
-    c3: CLEAN_VECTOR_4,
+    c0: glm::Vector4 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+        w: 0.0,
+    },
+    c1: glm::Vector4 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+        w: 0.0,
+    },
+    c2: glm::Vector4 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+        w: 0.0,
+    },
+    c3: glm::Vector4 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        w: 1.0,
+    },
 };

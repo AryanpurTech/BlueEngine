@@ -4,6 +4,7 @@
  * The license is same as the one on the root.
 */
 
+extern crate glm;
 use blue_engine::{
     header::{Engine, WindowDescriptor},
     objects::square,

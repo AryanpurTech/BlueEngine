@@ -185,7 +185,7 @@ impl Renderer {
 
             if already_loaded_texture != i.texture_index.clone() || i.texture_index.clone() >= 1 {
                 render_pass.set_bind_group(
-                    1,
+                    0,
                     self.texture_bind_group
                         .get(i.texture_index.clone())
                         .unwrap(),

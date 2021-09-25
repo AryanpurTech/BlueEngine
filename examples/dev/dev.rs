@@ -50,9 +50,10 @@ fn main() {
         .update_loop(move |renderer, window, objects, events, camera| {
             let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
             let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
-            camera.set_eye([camx, 0.0, camz]);
+            //camera.set_eye([camx, 0.0, camz]);
 
             if events.mouse_pressed(0) {
+                camera.set_eye([1.0, 0.0, 1.0]);
                 let a = objects.get_mut(square_id).unwrap();
                 //a.resize(50.0, 50.0, 0.0);
             }

@@ -7,7 +7,9 @@
 use crate::header::{
     uniform_type, Camera, Engine, Object, Renderer, UniformBuffer, WindowDescriptor,
 };
-use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use crate::utils::default_resources::{
+    DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
+};
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -55,22 +57,27 @@ impl Engine {
             "clamp",
         )?;
 
-        let _ = renderer
-            .build_and_append_uniform_buffers(vec![
-                UniformBuffer::Matrix("Camera Uniform", camera.camera_uniform_buffer()?),
-                UniformBuffer::Array(
-                    "Default Color",
-                    uniform_type::Array {
-                        data: DEFAULT_COLOR,
-                    },
-                ),
-            ])?
+        let _ = renderer.build_and_append_uniform_buffers(vec![
+            UniformBuffer::Matrix("Camera Uniform", camera.camera_uniform_buffer()?),
+            UniformBuffer::Array(
+                "Default Color",
+                uniform_type::Array {
+                    data: DEFAULT_COLOR,
+                },
+            ),
+        ])?;
+
+        let default_uniform = renderer
+            .build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
+                "Transformation Matrix",
+                uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
+            )])?
             .1;
 
         let _ = renderer.build_and_append_shaders(
             "Default Shader",
             DEFAULT_SHADER.to_string(),
-            None,
+            Some(&default_uniform),
         )?;
 
         Ok(Self {
@@ -96,10 +103,10 @@ impl Engine {
             mut camera,
         } = self;
 
-        // Run the callback of before renderer start
-        //logic(&mut renderer, WindowCallbackEvents::Before, &window);
         // and get input events to handle them later
         let mut input = winit_input_helper::WinitInputHelper::new();
+        let mut current_window_size = window.inner_size();
+
         // The main loop
         event_loop.run(move |event, _, control_flow| {
             input.update(&event);
@@ -107,23 +114,22 @@ impl Engine {
                 Event::WindowEvent {
                     ref event,
                     window_id,
-                } if window_id == window.id() => {
-                    match event {
-                        WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                        WindowEvent::Resized(physical_renderer) => {
-                            renderer.resize(*physical_renderer);
-                        }
-                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            // new_inner_renderer is &&mut so we have to dereference it twice
-                            renderer.resize(**new_inner_size);
-                        }
-                        _ => {}
-                    }
-                }
+                } if window_id == window.id() => match event {
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    _ => {}
+                },
 
                 Event::MainEventsCleared => {
+                    let new_window_size = window.inner_size();
+                    if new_window_size != current_window_size {
+                        renderer.resize(new_window_size);
+                        current_window_size = new_window_size;
+                    }
+
                     update_function(&mut renderer, &window, &mut objects, &input, &mut camera);
-                    camera.update_view_projection(&mut renderer).expect("Couldn't update camera");
+                    camera
+                        .update_view_projection(&mut renderer)
+                        .expect("Couldn't update camera");
                     objects.iter_mut().for_each(|i| {
                         if i.changed {
                             i.update(&mut renderer, window.inner_size())
