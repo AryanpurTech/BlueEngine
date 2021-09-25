@@ -7,7 +7,9 @@
 use crate::header::{
     normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
-use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use crate::utils::default_resources::{
+    DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
+};
 
 impl Engine {
     pub fn new_object(
@@ -30,7 +32,7 @@ impl Engine {
         let vertex_buffer_index = self
             .renderer
             .build_and_append_vertex_buffers(normalized_verticies.clone(), indicies.clone())?;
-        
+
         let uniform_index =
             self.renderer
                 .build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
@@ -122,18 +124,21 @@ impl Object {
             &rotation_matrix,
             angle,
             match axis {
-                RotateAxis::X => glm::vec3(1.0, 0.0, 0.0),
-                RotateAxis::Y => glm::vec3(0.0, 1.0, 0.0),
-                RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
+                RotateAxis::X => glm::vec3(0.0, 1.0, 0.0),
+                RotateAxis::Y => glm::vec3(1.0, 0.0, 0.0),
             },
         );
-        
+        self.transformation_matrix = rotation_matrix;
 
         self.changed = true;
     }
 
-    pub fn position(&mut self, x: f32, y: f32, z: f32) {
-        todo!();
+    pub fn translate(&mut self, x: f32, y: f32, z: f32) {
+        let mut position_matrix = self.transformation_matrix;
+        position_matrix = glm::ext::translate(&position_matrix, glm::vec3(x, y, z));
+        self.transformation_matrix = position_matrix;
+
+        self.changed = true;
     }
 
     pub fn update(
@@ -142,6 +147,7 @@ impl Object {
         window_size: winit::dpi::PhysicalSize<u32>,
     ) -> anyhow::Result<()> {
         self.update_vertex_buffer(renderer)?;
+        self.update_uniform_buffer(renderer)?;
 
         self.window_size = window_size;
         self.changed = false;
@@ -149,7 +155,7 @@ impl Object {
         Ok(())
     }
 
-    fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+    pub(crate) fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer =
             renderer.build_vertex_buffers(self.vertices.clone(), self.indices.clone())?;
         let _ = std::mem::replace(
@@ -160,11 +166,16 @@ impl Object {
         Ok(())
     }
 
-    fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
-        let updated_buffer =
-            renderer.build_vertex_buffers(self.vertices.clone(), self.indices.clone())?;
+    pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        let updated_buffer = renderer
+            .build_uniform_buffer(vec![UniformBuffer::Matrix(
+                "Transformation Matrix",
+                uniform_type::Matrix::from_glm(self.transformation_matrix),
+            )])?
+            .0;
+
         let _ = std::mem::replace(
-            &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
+            &mut renderer.uniform_bind_group[self.pipeline.uniform_index.unwrap()],
             updated_buffer,
         );
 

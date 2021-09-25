@@ -30,7 +30,7 @@ fn main() {
     let square_id = square(Some("SQUAREEE"), &mut engine).unwrap();
     {
         let a = engine.objects.get_mut(square_id).unwrap();
-        a.resize(800.0, 600.0, 1.0);
+        //a.resize(800.0, 600.0, 1.0);
     }
     //let square = engine.objects.get_mut(square_id).unwrap();
 
@@ -53,15 +53,19 @@ fn main() {
             //camera.set_eye([camx, 0.0, camz]);
 
             if events.mouse_pressed(0) {
-                camera.set_eye([1.0, 0.0, 1.0]);
-                let a = objects.get_mut(square_id).unwrap();
+                //camera.set_eye([1.0, 0.0, 1.0]);
+                //let a = objects.get_mut(square_id).unwrap();
                 //a.resize(50.0, 50.0, 0.0);
+                objects
+                    .get_mut(square_id)
+                    .unwrap()
+                    .translate(0.1, -0.1, 0.0);
             }
             if events.mouse_pressed(1) {
                 objects
                     .get_mut(square_id)
                     .unwrap()
-                    .rotate(25.0, RotateAxis::Y);
+                    .rotate(25.0, RotateAxis::X);
             }
         })
         .expect("Error during update loop");

@@ -312,5 +312,4 @@ pub fn normalize(value: f32, max: u32) -> f32 {
 pub enum RotateAxis {
     X,
     Y,
-    Z,
 }
