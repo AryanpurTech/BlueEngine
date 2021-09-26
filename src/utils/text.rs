@@ -52,9 +52,10 @@ impl Text {
                 None => character = self.font.rasterize(i.1, self.size),
             }
 
+            let window_size = engine.window.inner_size();
             let character_shape_index = objects::square(Some("text"), engine)?;
             let character_shape = engine.get_object(character_shape_index)?;
-            character_shape.resize(character.0.width as f32, character.0.height as f32, 0.0);
+            character_shape.resize(character.0.width as f32, character.0.height as f32, 0.0, window_size);
         }
         Ok(())
     }

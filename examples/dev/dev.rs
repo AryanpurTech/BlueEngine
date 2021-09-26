@@ -59,13 +59,13 @@ fn main() {
                 objects
                     .get_mut(square_id)
                     .unwrap()
-                    .translate(0.1, -0.1, 0.0);
+                    .position(10.0, 10.0, 0.0, window.inner_size());
             }
             if events.mouse_pressed(1) {
                 objects
                     .get_mut(square_id)
                     .unwrap()
-                    .rotate(25.0, RotateAxis::X);
+                    .position(100.0, 100.0, 0.0, window.inner_size());
             }
         })
         .expect("Error during update loop");

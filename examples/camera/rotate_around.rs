@@ -16,7 +16,7 @@ fn main() {
     let square_id = square(Some("Rotating Square"), &mut engine).unwrap();
     {
         let sq = engine.objects.get_mut(square_id).unwrap();
-        sq.resize(800.0, 600.0, 1.0);
+        sq.resize(500.0, 500.0, 1.0, engine.window.inner_size());
     }
 
     let radius = 2f32;

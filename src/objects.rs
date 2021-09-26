@@ -7,9 +7,7 @@
 use crate::header::{
     normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
 };
-use crate::utils::default_resources::{
-    DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
-};
+use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER};
 
 impl Engine {
     pub fn new_object(
@@ -51,17 +49,17 @@ impl Engine {
             name,
             vertices: normalized_verticies,
             indices: indicies,
-            pipeline: Pipeline {
-                vertex_buffer_index,
-                shader_index: shader_index,
-                texture_index: 0,
-                uniform_index: Some(uniform_index.0),
-            },
-            window_size: self.window.inner_size(),
-            pipeline_id: None,
-            width: 100.0,
-            height: 100.0,
-            depth: 100.0,
+            pipeline: (
+                Pipeline {
+                    vertex_buffer_index,
+                    shader_index: shader_index,
+                    texture_index: 0,
+                    uniform_index: Some(uniform_index.0),
+                },
+                None,
+            ),
+            size: (100.0, 100.0, 100.0),
+            position: (0.0, 0.0, 0.0),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4,
             color: uniform_type::Array {
@@ -69,7 +67,10 @@ impl Engine {
             },
         });
         let item = self.objects.get_mut(index).unwrap();
-        item.pipeline_id = Some(self.renderer.append_pipeline(item.pipeline)?);
+        item.pipeline = (
+            item.pipeline.0,
+            Some(self.renderer.append_pipeline(item.pipeline.0)?),
+        );
 
         Ok(index)
     }
@@ -86,27 +87,32 @@ impl Object {
             i.position[2] *= z;
         }
 
-        self.width *= x;
-        self.height *= y;
-        self.depth *= z;
+        self.size.0 *= x;
+        self.size.1 *= y;
+        self.size.2 *= z;
 
         self.changed = true;
     }
 
-    pub fn resize(&mut self, width: f32, height: f32, depth: f32) {
-        let difference_in_width = if self.width != 0.0 && width != 0.0 {
-            normalize(width, self.window_size.width) / normalize(self.width, self.window_size.width)
+    pub fn resize(
+        &mut self,
+        width: f32,
+        height: f32,
+        depth: f32,
+        window_size: winit::dpi::PhysicalSize<u32>,
+    ) {
+        let difference_in_width = if self.size.0 != 0.0 && width != 0.0 {
+            normalize(width, window_size.width) / normalize(self.size.0, window_size.width)
         } else {
             0.0
         };
-        let difference_in_height = if self.height != 0.0 && height != 0.0 {
-            normalize(height, self.window_size.height)
-                / normalize(self.height, self.window_size.height)
+        let difference_in_height = if self.size.1 != 0.0 && height != 0.0 {
+            normalize(height, window_size.height) / normalize(self.size.1, window_size.height)
         } else {
             0.0
         };
-        let difference_in_depth = if self.depth != 0.0 && depth != 0.0 {
-            normalize(depth, self.window_size.width) / normalize(self.depth, self.window_size.width)
+        let difference_in_depth = if self.size.2 != 0.0 && depth != 0.0 {
+            normalize(depth, window_size.width) / normalize(self.size.2, window_size.width)
         } else {
             0.0
         };
@@ -141,15 +147,58 @@ impl Object {
         self.changed = true;
     }
 
-    pub fn update(
-        &mut self,
-        renderer: &mut Renderer,
-        window_size: winit::dpi::PhysicalSize<u32>,
-    ) -> anyhow::Result<()> {
+    pub fn position(&mut self, x: f32, y: f32, z: f32, window_size: winit::dpi::PhysicalSize<u32>) {
+        let difference = glm::sqrt(
+            glm::pow(self.position.0 - x, 2.0)
+                + glm::pow(self.position.1 - y, 2.0)
+                + glm::pow(self.position.2 - z, 2.0),
+        );
+
+        let normalized_target_x = if (self.position.0 - x) == 0.0 {
+            0.0
+        } else {
+            let new_difference = normalize(difference, window_size.width);
+            if self.position.0 > x {
+                new_difference * -1.0
+            } else {
+                new_difference
+            }
+        };
+        let normalized_target_y = if (self.position.1 - y) == 0.0 {
+            0.0
+        } else {
+            let new_difference = normalize(difference, window_size.height);
+            if self.position.1 > y {
+                new_difference * -1.0
+            } else {
+                new_difference
+            }
+        };
+        let normalized_target_z = if (self.position.2 - z) == 0.0 {
+            0.0
+        } else {
+            let new_difference = normalize(difference, window_size.width);
+            if self.position.2 > z {
+                new_difference * -1.0
+            } else {
+                new_difference
+            }
+        };
+
+        self.position.0 = x;
+        self.position.1 = y;
+        self.position.2 = z;
+
+        self.translate(
+            normalized_target_x,
+            normalized_target_y,
+            normalized_target_z,
+        );
+    }
+
+    pub fn update(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
-
-        self.window_size = window_size;
         self.changed = false;
 
         Ok(())
@@ -159,7 +208,7 @@ impl Object {
         let updated_buffer =
             renderer.build_vertex_buffers(self.vertices.clone(), self.indices.clone())?;
         let _ = std::mem::replace(
-            &mut renderer.vertex_buffers[self.pipeline.vertex_buffer_index],
+            &mut renderer.vertex_buffers[self.pipeline.0.vertex_buffer_index],
             updated_buffer,
         );
 
@@ -175,7 +224,7 @@ impl Object {
             .0;
 
         let _ = std::mem::replace(
-            &mut renderer.uniform_bind_group[self.pipeline.uniform_index.unwrap()],
+            &mut renderer.uniform_bind_group[self.pipeline.0.uniform_index.unwrap()],
             updated_buffer,
         );
 

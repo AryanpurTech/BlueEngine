@@ -132,7 +132,7 @@ impl Engine {
                         .expect("Couldn't update camera");
                     objects.iter_mut().for_each(|i| {
                         if i.changed {
-                            i.update(&mut renderer, window.inner_size())
+                            i.update(&mut renderer)
                                 .expect("Couldn't update objects");
                         }
                     });
