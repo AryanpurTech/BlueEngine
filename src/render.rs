@@ -9,12 +9,13 @@ use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;
 
+#[cfg(not(target_feature = "NON_FILL_POLYGON_MODE"))]
 fn get_render_features() -> Features {
-    if std::cfg!(macos) {
-        Features::empty()
-    } else {
-        Features::NON_FILL_POLYGON_MODE
-    }
+    Features::empty()
+}
+#[cfg(target_feature = "NON_FILL_POLYGON_MODE")]
+fn get_render_features() -> Features {
+    Features::NON_FILL_POLYGON_MODE
 }
 
 impl Renderer {
