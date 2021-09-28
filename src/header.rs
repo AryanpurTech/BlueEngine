@@ -45,10 +45,12 @@ pub mod uniform_type {
         pub data: [[f32; 4]; 4],
     }
     impl Matrix {
+        /// Replaces it's values by the new values provided
         pub fn update(&mut self, uniform: Matrix) {
             self.data = uniform.data;
         }
 
+        /// Converts GLM Matrix4 to the Blue Engine Matrix
         pub fn from_glm(matrix: glm::Matrix4<f32>) -> Matrix {
             let mtx = matrix.as_array();
             Matrix {
@@ -61,6 +63,7 @@ pub mod uniform_type {
             }
         }
 
+        /// Converts Blue Engine Matrix to GLM Matrix4
         pub fn to_glm(matrix: Self) -> glm::Matrix4<f32> {
             let mtx = matrix.data;
             glm::Matrix4::new(
@@ -133,15 +136,29 @@ pub mod uniform_type {
     }
 }
 
+/// Objects make it easier to work with Blue Engine, it automates most of work needed for
+/// creating 3D objects and showing them on screen. A range of default objects are available
+/// as well as ability to customize each of them and even create your own! You can also
+/// customize almost everything there is about them!
 pub struct Object {
+    /// Give your object a name, which can help later on for debugging.
     pub name: Option<&'static str>,
+    /// A list of Vertex
     pub vertices: Vec<Vertex>,
+    /// A list of indices that dictates the order that vertices appear
     pub indices: Vec<u16>,
+    /// Pipeline holds all the data that is sent to GPU, including shaders and textures
     pub pipeline: (Pipeline, Option<usize>),
+    /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
+    /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
-    pub changed: bool,
+    // flags the object to be updated until next frame
+    pub(crate) changed: bool,
+    /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
     pub transformation_matrix: glm::Matrix4<f32>,
+    /// The color of your object, A.K.A. albedo sometimes
     pub color: uniform_type::Array,
 }
 

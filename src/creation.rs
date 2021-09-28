@@ -10,6 +10,8 @@ use crate::header::{
 use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout};
 
+// ============= PIPELINE ============= //
+
 impl crate::header::Renderer {
     /// Creates and adds the pipeline to render queue
     pub fn build_and_append_pipeline(
@@ -64,6 +66,8 @@ impl crate::header::Renderer {
         Ok(())
     }
 }
+
+// ============= SHADERS ============= //
 
 impl crate::header::Renderer {
     /// Creates and adds the shaders to render queue
@@ -167,6 +171,8 @@ impl crate::header::Renderer {
     }
 }
 
+// ============= VERTEX BUFFER ============= //
+
 impl crate::header::Renderer {
     /// Creates and adds the vertex buffers to render queue
     pub fn build_and_append_vertex_buffers(
@@ -232,6 +238,8 @@ impl crate::header::Renderer {
         Ok(())
     }
 }
+
+// ============= UNIFORM BUFFER ============= //
 
 impl crate::header::Renderer {
     /// Creates and adds the uniform buffers to render queue
@@ -340,6 +348,8 @@ impl crate::header::Renderer {
         Ok(())
     }
 }
+
+// ============= TEXTURE ============= //
 
 impl crate::header::Renderer {
     /// Creates and adds the texture to render queue

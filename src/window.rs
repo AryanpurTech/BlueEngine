@@ -89,6 +89,11 @@ impl Engine {
         })
     }
 
+    /// Runs the block of code that you pass to it every frame. The update code is used
+    /// to modify the engine on the fly thus creating interactive graphics and making things
+    /// happy in the engine!
+    ///
+    /// Renderer, window, vec of objects, events, and camera are passed to the update code.
     #[allow(unreachable_code)]
     pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
     where
@@ -109,6 +114,7 @@ impl Engine {
 
         // The main loop
         event_loop.run(move |event, _, control_flow| {
+            // updates the data on what events happened before the frame start
             input.update(&event);
             match event {
                 Event::WindowEvent {
@@ -132,8 +138,7 @@ impl Engine {
                         .expect("Couldn't update camera");
                     objects.iter_mut().for_each(|i| {
                         if i.changed {
-                            i.update(&mut renderer)
-                                .expect("Couldn't update objects");
+                            i.update(&mut renderer).expect("Couldn't update objects");
                         }
                     });
 

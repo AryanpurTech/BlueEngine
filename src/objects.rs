@@ -10,6 +10,7 @@ use crate::header::{
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER};
 
 impl Engine {
+    /// Creates a new object
     pub fn new_object(
         &mut self,
         name: Option<&'static str>,
@@ -80,6 +81,7 @@ impl Engine {
     }
 }
 impl Object {
+    /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
         for i in self.vertices.iter_mut() {
             i.position[0] *= x;
@@ -94,6 +96,7 @@ impl Object {
         self.changed = true;
     }
 
+    /// Resizes an object in pixels which are relative to the window
     pub fn resize(
         &mut self,
         width: f32,
@@ -124,6 +127,7 @@ impl Object {
         );
     }
 
+    /// Rotates the object in the axis you specify
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
         let mut rotation_matrix = self.transformation_matrix;
         rotation_matrix = glm::ext::rotate(
@@ -139,6 +143,7 @@ impl Object {
         self.changed = true;
     }
 
+    /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, x: f32, y: f32, z: f32) {
         let mut position_matrix = self.transformation_matrix;
         position_matrix = glm::ext::translate(&position_matrix, glm::vec3(x, y, z));
@@ -147,6 +152,7 @@ impl Object {
         self.changed = true;
     }
 
+    /// Sets the position of the object in 3D space relative to the window
     pub fn position(&mut self, x: f32, y: f32, z: f32, window_size: winit::dpi::PhysicalSize<u32>) {
         let difference = glm::sqrt(
             glm::pow(self.position.0 - x, 2.0)
@@ -196,6 +202,7 @@ impl Object {
         );
     }
 
+    /// Update and apply changes done to an object
     pub fn update(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
@@ -232,6 +239,7 @@ impl Object {
     }
 }
 
+/// Creates a 2D triangle
 pub fn triangle(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
     let new_triangle = engine.new_object(
         name,
@@ -255,6 +263,7 @@ pub fn triangle(name: Option<&'static str>, engine: &mut Engine) -> Result<usize
     Ok(new_triangle)
 }
 
+/// Creates a 2D square
 pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
     let new_square = engine.new_object(
         name,
