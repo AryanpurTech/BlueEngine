@@ -9,6 +9,14 @@ use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;
 
+fn get_render_features() -> Features {
+    if std::cfg!(macos) {
+        Features::empty()
+    } else {
+        Features::NON_FILL_POLYGON_MODE
+    }
+}
+
 impl Renderer {
     pub(crate) async fn new(window: &Window) -> Self {
         let size = window.inner_size();
@@ -28,7 +36,7 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    features: Features::NON_FILL_POLYGON_MODE,
+                    features: get_render_features(),
                     limits: wgpu::Limits::default(),
                 },
                 None, // Trace path
