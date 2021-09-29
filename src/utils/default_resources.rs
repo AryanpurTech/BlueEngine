@@ -45,7 +45,7 @@ fn main(input: VertexInput) -> VertexOutput {
 struct FragmentUniforms {
     color: vec4<f32>;
 };
-[[group(1), binding(1)]]
+[[group(2), binding(1)]]
 var<uniform> fragment_uniforms: FragmentUniforms;
 
 [[group(0), binding(0)]]

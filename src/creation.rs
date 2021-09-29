@@ -5,7 +5,8 @@
 */
 
 use crate::header::{
-    Pipeline, Shaders, Textures, UniformBuffer, UniformBuffers, Vertex, VertexBuffers,
+    Pipeline, Shaders, TextureFormat, TextureMode, Textures, UniformBuffer, UniformBuffers, Vertex,
+    VertexBuffers,
 };
 use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout};
@@ -100,7 +101,10 @@ impl crate::header::Renderer {
                 //flags: wgpu::ShaderFlags::all(),
             });
 
-        let mut bind_group_layouts = vec![&self.texture_bind_group_layout, &self.default_uniform_bind_group_layout];
+        let mut bind_group_layouts = vec![
+            &self.texture_bind_group_layout,
+            &self.default_uniform_bind_group_layout,
+        ];
         if uniform_layout.is_some() {
             bind_group_layouts.push(uniform_layout.unwrap())
         }
@@ -136,7 +140,7 @@ impl crate::header::Renderer {
                     topology: wgpu::PrimitiveTopology::TriangleList,
                     strip_index_format: None,
                     front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: None,//Some(wgpu::Face::Back),
+                    cull_mode: None, //Some(wgpu::Face::Back),
                     polygon_mode: wgpu::PolygonMode::Fill,
                     clamp_depth: false,
                     conservative: false,
@@ -356,11 +360,12 @@ impl crate::header::Renderer {
     pub fn build_and_append_texture(
         &mut self,
         name: &'static str,
-        diffuse_bytes: Vec<u8>,
-        mode: &'static str,
+        diffuse_bytes: &[u8],
+        texture_mode: TextureMode,
+        texture_format: TextureFormat,
     ) -> Result<usize, anyhow::Error> {
         let textures = self
-            .build_texture(name, diffuse_bytes, mode)
+            .build_texture(name, diffuse_bytes, texture_mode, texture_format)
             .expect("Couldn't create shaders");
         let index = self.texture_bind_group.len();
         self.texture_bind_group.push(textures);
@@ -371,20 +376,26 @@ impl crate::header::Renderer {
     pub fn build_texture(
         &mut self,
         name: &'static str,
-        diffuse_bytes: Vec<u8>,
-        mode: &'static str,
+        diffuse_bytes: &[u8],
+        texture_mode: TextureMode,
+        texture_format: TextureFormat,
     ) -> Result<Textures, ()> {
-        let _mode: wgpu::AddressMode;
-        if mode == "repeat" {
-            _mode = wgpu::AddressMode::Repeat;
-        } else if mode == "mirror_repeat" {
-            _mode = wgpu::AddressMode::MirrorRepeat;
-        } else {
-            _mode = wgpu::AddressMode::ClampToEdge;
+        let mode: wgpu::AddressMode;
+        match texture_mode {
+            TextureMode::Clamp => mode = wgpu::AddressMode::Repeat,
+            TextureMode::Repeat => mode = wgpu::AddressMode::MirrorRepeat,
+            TextureMode::MirrorRepeat => mode = wgpu::AddressMode::ClampToEdge,
+        }
+
+        let img_format = match texture_format {
+            TextureFormat::PNG => image::ImageFormat::Png,
+            TextureFormat::BMP => image::ImageFormat::Bmp,
+            TextureFormat::JPEG => image::ImageFormat::Jpeg,
+            TextureFormat::PNM => image::ImageFormat::Pnm,
         };
 
-        let img = image::load_from_memory(diffuse_bytes.as_slice())
-            .expect("Couldn't Load Image For Texture");
+        let img = image::load_from_memory_with_format(diffuse_bytes, img_format)
+            .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str());
 
         let rgba = img
             .as_rgba8()
@@ -424,9 +435,9 @@ impl crate::header::Renderer {
 
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: _mode,
-            address_mode_v: _mode,
-            address_mode_w: _mode,
+            address_mode_u: mode,
+            address_mode_v: mode,
+            address_mode_w: mode,
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Nearest,
             mipmap_filter: wgpu::FilterMode::Nearest,

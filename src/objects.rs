@@ -4,9 +4,8 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{
-    normalize, uniform_type, Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex,
-};
+use crate::header::uniform_type::Array;
+use crate::header::{Engine, Object, Pipeline, Renderer, RotateAxis, TextureMode, UniformBuffer, Vertex, normalize, uniform_type};
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER};
 
 impl Engine {
@@ -17,27 +16,22 @@ impl Engine {
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
     ) -> anyhow::Result<usize> {
-        let mut normalized_verticies = verticies;
-
-        let normalized_width = normalize(100.0, self.window.inner_size().width);
-        let normalized_height = normalize(100.0, self.window.inner_size().height);
-        let normalized_depth = normalize(100.0, self.window.inner_size().width);
-
-        for i in normalized_verticies.iter_mut() {
-            i.position[0] *= normalized_width;
-            i.position[1] *= normalized_height;
-            i.position[2] *= normalized_depth;
-        }
         let vertex_buffer_index = self
             .renderer
-            .build_and_append_vertex_buffers(normalized_verticies.clone(), indicies.clone())?;
+            .build_and_append_vertex_buffers(verticies.clone(), indicies.clone())?;
 
-        let uniform_index =
-            self.renderer
-                .build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
-                    "Transformation Matrix",
-                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
-                )])?;
+        let uniform_index = self.renderer.build_and_append_uniform_buffers(vec![
+            UniformBuffer::Matrix(
+                "Transformation Matrix",
+                uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
+            ),
+            UniformBuffer::Array(
+                "Color",
+                uniform_type::Array {
+                    data: DEFAULT_COLOR,
+                },
+            ),
+        ])?;
 
         let shader_index = self.renderer.build_and_append_shaders(
             name.unwrap_or("Object"),
@@ -48,7 +42,7 @@ impl Engine {
         let index = self.objects.len();
         self.objects.push(Object {
             name,
-            vertices: normalized_verticies,
+            vertices: verticies,
             indices: indicies,
             pipeline: (
                 Pipeline {
@@ -59,23 +53,26 @@ impl Engine {
                 },
                 None,
             ),
-            size: (100.0, 100.0, 100.0),
+            size: (self.window.inner_size().width as f32, self.window.inner_size().height as f32, 0f32),
             position: (0.0, 0.0, 0.0),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4,
             color: uniform_type::Array {
                 data: DEFAULT_COLOR,
             },
+            object_index: self.objects.len()
         });
-        let item = self.objects.get_mut(index).unwrap();
-        item.pipeline = (
-            item.pipeline.0,
-            Some(self.renderer.append_pipeline(item.pipeline.0)?),
+        let object = self.objects.get_mut(index).unwrap();
+        object.pipeline = (
+            object.pipeline.0,
+            Some(self.renderer.append_pipeline(object.pipeline.0)?),
         );
+        object.scale(0.1, 0.1, 0.1);
 
         Ok(index)
     }
 
+    /// Returns mutable object
     pub fn get_object(&mut self, index: usize) -> anyhow::Result<&mut Object> {
         Ok(self.objects.get_mut(index).unwrap())
     }
@@ -202,11 +199,46 @@ impl Object {
         );
     }
 
+    /// Changes the color of the object. If textures exist, the color of textures will change
+    pub fn change_color(
+        &mut self,
+        red: f32,
+        green: f32,
+        blue: f32,
+        alpha: f32,
+    ) -> anyhow::Result<()> {
+        self.color = Array {
+            data: [red, green, blue, alpha],
+        };
+        self.changed = true;
+
+        Ok(())
+    }
+
+    /// Replaces the object's texture with provided one
+    pub fn change_texture(&mut self, texture_index: usize) -> anyhow::Result<()> {
+        self.pipeline.0.texture_index = texture_index;
+        self.changed = true;
+        
+        Ok(())
+    }
+
     /// Update and apply changes done to an object
     pub fn update(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
+        self.update_pipeline(renderer)?;
         self.changed = false;
+
+        Ok(())
+    }
+
+    pub(crate) fn update_pipeline(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        //let pipeline = renderer.get_pipeline(self.pipeline.1.unwrap())?;
+        let _ = std::mem::replace(
+            renderer.get_pipeline(self.pipeline.1.unwrap())?,
+            self.pipeline.0,
+        );
 
         Ok(())
     }
@@ -224,10 +256,13 @@ impl Object {
 
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer
-            .build_uniform_buffer(vec![UniformBuffer::Matrix(
-                "Transformation Matrix",
-                uniform_type::Matrix::from_glm(self.transformation_matrix),
-            )])?
+            .build_uniform_buffer(vec![
+                UniformBuffer::Matrix(
+                    "Transformation Matrix",
+                    uniform_type::Matrix::from_glm(self.transformation_matrix),
+                ),
+                UniformBuffer::Array("Color", self.color),
+            ])?
             .0;
 
         let _ = std::mem::replace(

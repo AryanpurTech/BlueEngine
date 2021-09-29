@@ -115,12 +115,6 @@ impl Camera {
                         self.camera_uniform_buffer()
                             .expect("Couldn't build camera projection"),
                     ),
-                    UniformBuffer::Array(
-                        "Default Color",
-                        uniform_type::Array {
-                            data: DEFAULT_COLOR,
-                        },
-                    ),
                 ])
                 .expect("Couldn't update the camera uniform buffer")
                 .0;

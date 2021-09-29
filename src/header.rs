@@ -160,6 +160,8 @@ pub struct Object {
     pub transformation_matrix: glm::Matrix4<f32>,
     /// The color of your object, A.K.A. albedo sometimes
     pub color: uniform_type::Array,
+    /// The index of the object in the queue
+    pub object_index: usize,
 }
 
 /// The engine is the main starting point of using the Blue Engine. Everything that runs on Blue Engine will be under this struct.
@@ -248,9 +250,9 @@ pub struct Renderer {
 /// Descriptor and settings for a window.
 pub struct WindowDescriptor {
     /// The width of the window
-    pub width: f64,
+    pub width: u32,
     /// The height of the window
-    pub height: f64,
+    pub height: u32,
     /// The title of the window
     pub title: &'static str,
     /// Should the window contain the keys like minimize, maximize, or resize?
@@ -262,8 +264,8 @@ impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
     fn default() -> Self {
         Self {
-            width: 800.0,
-            height: 600.0,
+            width: 800,
+            height: 600,
             title: "Blue Engine",
             decorations: true,
             resizable: true,
@@ -326,4 +328,22 @@ pub fn normalize(value: f32, max: u32) -> f32 {
 pub enum RotateAxis {
     X,
     Y,
+}
+
+/// Defines how the borders of texture would look like
+pub enum TextureMode {
+    /// Expands the texture to fit the object
+    Clamp,
+    /// Repeats the texture instead of stretching
+    Repeat,
+    /// Repeats the texture, but mirrors it on edges
+    MirrorRepeat,
+}
+
+/// Defines file format of the texture to load
+pub enum TextureFormat {
+    PNG,
+    BMP,
+    JPEG,
+    PNM,
 }

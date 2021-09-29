@@ -24,13 +24,13 @@ impl Engine {
         env_logger::init();
         // Dimentions of the window, as width and height
         // and then are set as a logical size that the window can accept
-        let dimention = winit::dpi::LogicalSize {
+        let dimention = winit::dpi::PhysicalSize {
             width: settings.width,   // Which sets the width of the window
             height: settings.height, // And sets the height of the window
         };
 
         // Here the size is finally made according to the dimentions we set earlier
-        let size = winit::dpi::Size::Logical(dimention);
+        let size = winit::dpi::Size::Physical(dimention);
 
         // And we will create a new window and set all the options we stored
         let new_window = WindowBuilder::new()
@@ -53,25 +53,29 @@ impl Engine {
 
         let _ = renderer.build_and_append_texture(
             "Default Texture",
-            Vec::from(DEFAULT_TEXTURE),
-            "clamp",
+            DEFAULT_TEXTURE,
+            crate::header::TextureMode::Clamp,
+            crate::header::TextureFormat::PNG
         )?;
 
-        let _ = renderer.build_and_append_uniform_buffers(vec![
-            UniformBuffer::Matrix("Camera Uniform", camera.camera_uniform_buffer()?),
-            UniformBuffer::Array(
-                "Default Color",
-                uniform_type::Array {
-                    data: DEFAULT_COLOR,
-                },
-            ),
-        ])?;
+        let _ = renderer.build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
+            "Camera Uniform",
+            camera.camera_uniform_buffer()?,
+        )])?;
 
         let default_uniform = renderer
-            .build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(
-                "Transformation Matrix",
-                uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
-            )])?
+            .build_and_append_uniform_buffers(vec![
+                UniformBuffer::Matrix(
+                    "Transformation Matrix",
+                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
+                ),
+                UniformBuffer::Array(
+                    "Color",
+                    uniform_type::Array {
+                        data: DEFAULT_COLOR,
+                    },
+                ),
+            ])?
             .1;
 
         let _ = renderer.build_and_append_shaders(
