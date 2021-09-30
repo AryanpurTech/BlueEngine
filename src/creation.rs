@@ -362,10 +362,10 @@ impl crate::header::Renderer {
         name: &'static str,
         diffuse_bytes: &[u8],
         texture_mode: TextureMode,
-        texture_format: TextureFormat,
+        //texture_format: TextureFormat,
     ) -> Result<usize, anyhow::Error> {
         let textures = self
-            .build_texture(name, diffuse_bytes, texture_mode, texture_format)
+            .build_texture(name, diffuse_bytes, texture_mode)
             .expect("Couldn't create shaders");
         let index = self.texture_bind_group.len();
         self.texture_bind_group.push(textures);
@@ -378,7 +378,7 @@ impl crate::header::Renderer {
         name: &'static str,
         diffuse_bytes: &[u8],
         texture_mode: TextureMode,
-        texture_format: TextureFormat,
+        //texture_format: TextureFormat,
     ) -> Result<Textures, ()> {
         let mode: wgpu::AddressMode;
         match texture_mode {
@@ -387,14 +387,14 @@ impl crate::header::Renderer {
             TextureMode::MirrorRepeat => mode = wgpu::AddressMode::ClampToEdge,
         }
 
-        let img_format = match texture_format {
+        /*let img_format = match texture_format {
             TextureFormat::PNG => image::ImageFormat::Png,
             TextureFormat::BMP => image::ImageFormat::Bmp,
             TextureFormat::JPEG => image::ImageFormat::Jpeg,
             TextureFormat::PNM => image::ImageFormat::Pnm,
-        };
+        };*/
 
-        let img = image::load_from_memory_with_format(diffuse_bytes, img_format)
+        let img = image::load_from_memory(diffuse_bytes)
             .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str());
 
         let rgba = img

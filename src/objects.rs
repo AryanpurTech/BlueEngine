@@ -131,6 +131,7 @@ impl Object {
             &rotation_matrix,
             angle,
             match axis {
+                RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
                 RotateAxis::X => glm::vec3(0.0, 1.0, 0.0),
                 RotateAxis::Y => glm::vec3(1.0, 0.0, 0.0),
             },
@@ -219,6 +220,7 @@ impl Object {
     pub fn change_texture(&mut self, texture_index: usize) -> anyhow::Result<()> {
         self.pipeline.0.texture_index = texture_index;
         self.changed = true;
+
         
         Ok(())
     }
@@ -229,14 +231,13 @@ impl Object {
         self.update_uniform_buffer(renderer)?;
         self.update_pipeline(renderer)?;
         self.changed = false;
-
         Ok(())
     }
 
     pub(crate) fn update_pipeline(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         //let pipeline = renderer.get_pipeline(self.pipeline.1.unwrap())?;
         let _ = std::mem::replace(
-            renderer.get_pipeline(self.pipeline.1.unwrap())?,
+            &mut renderer.render_pipelines[self.pipeline.1.unwrap()],
             self.pipeline.0,
         );
 
@@ -305,11 +306,11 @@ pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, 
         vec![
             Vertex {
                 position: [1.0, 1.0, 0.0],
-                texture: [1.0, 1.0],
+                texture: [1.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, 0.0],
-                texture: [1.0, 0.0],
+                texture: [1.0, 1.0],
             },
             Vertex {
                 position: [-1.0, -1.0, 0.0],

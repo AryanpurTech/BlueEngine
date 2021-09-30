@@ -55,7 +55,7 @@ impl Engine {
             "Default Texture",
             DEFAULT_TEXTURE,
             crate::header::TextureMode::Clamp,
-            crate::header::TextureFormat::PNG
+            //crate::header::TextureFormat::PNG
         )?;
 
         let _ = renderer.build_and_append_uniform_buffers(vec![UniformBuffer::Matrix(

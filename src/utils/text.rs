@@ -37,7 +37,7 @@ impl Text {
                 "charTest",
                 character.1.as_slice(),
                 crate::header::TextureMode::Clamp,
-                crate::header::TextureFormat::PNM,
+                //crate::header::TextureFormat::PNM,
             )?;
             char_cache.insert(i, (character.0, index)); // slap these as bmp textures
         }
@@ -67,7 +67,7 @@ impl Text {
                             "charTest",
                             character.1.as_slice(),
                             crate::header::TextureMode::Clamp,
-                            crate::header::TextureFormat::BMP,
+                            //crate::header::TextureFormat::BMP,
                         )?;
                         (character.0, index)
                     }

@@ -14,27 +14,39 @@ fn main() {
     })
     .expect("win");
 
-    let mut font = Text::new(
+    /*let mut font = Text::new(
         include_bytes!("resource/JetBrainsMono-Medium.ttf"),
         13f32,
         &mut engine.renderer
     )
-    .unwrap();
+    .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let square_id = square(Some("SQUAREEE"), &mut engine).unwrap();
     let window_size = engine.window.inner_size();
+    /*let change_texture = engine
+        .renderer
+        .build_and_append_texture(
+            "name",
+            include_bytes!("resource/BlueLogoDiscord.png"),
+            blue_engine::header::TextureMode::Clamp,
+            //blue_engine::header::TextureFormat::PNG,
+        )
+        .unwrap();*/
+
     let square = engine.get_object(square_id).unwrap();
-    square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
+    //square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
+    //square.change_texture(change_texture);
     //square.resize(100.0, 100.0, 0.0, window_size);
 
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
-    font.draw("H", (50, 50), &mut engine).unwrap();
+    //font.draw("H", (50, 50), &mut engine).unwrap();
 
     let radius = 2f32;
     let start = std::time::SystemTime::now();
+    let mut rotation = 0f32;
 
     engine
         .update_loop(move |renderer, window, objects, events, camera| {
@@ -55,7 +67,11 @@ fn main() {
             if events.mouse_pressed(2) {
                 let square = objects.get_mut(square_id).unwrap();
                 square.position(0.0, 0.0, 0.0, window.inner_size());
-                square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
+                //square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
+
+                rotation += 0.5;
+                println!("rotation: {}", rotation);
+                square.rotate(rotation, RotateAxis::Z);
             }
         })
         .expect("Error during update loop");
