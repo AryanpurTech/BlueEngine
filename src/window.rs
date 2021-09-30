@@ -4,9 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{
-    uniform_type, Camera, Engine, Object, Renderer, UniformBuffer, WindowDescriptor,
-};
+use crate::header::{Camera, Engine, Object, Renderer, TextureData, UniformBuffer, WindowDescriptor, uniform_type};
 use crate::utils::default_resources::{
     DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
 };
@@ -53,7 +51,7 @@ impl Engine {
 
         let _ = renderer.build_and_append_texture(
             "Default Texture",
-            DEFAULT_TEXTURE,
+            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
         )?;

@@ -6,10 +6,9 @@
 
 use crate::{
     header::{
-        uniform_type::{self, Matrix},
+        uniform_type::{Matrix},
         Camera, Renderer, UniformBuffer,
     },
-    utils::default_resources::DEFAULT_COLOR,
 };
 use anyhow::Result;
 

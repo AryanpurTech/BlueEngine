@@ -4,9 +4,12 @@
  * The license is same as the one on the root.
 */
 
-use image::EncodableLayout;
+use image::{EncodableLayout, GenericImageView};
 
-use crate::{header::Renderer, objects};
+use crate::{
+    header::{percentage, Renderer, TextureData},
+    objects,
+};
 use std::{collections::BTreeMap, io::Write};
 
 #[derive(Debug, Clone, Copy)]
@@ -29,13 +32,23 @@ impl Text {
 
         let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=/\\?|<>'\"{}[],.~`";
         for i in characters.chars() {
-            let mut character = font.rasterize(i, cache_on_size);
-            let mut character_image =
-                image::RgbImage::new(character.0.width as u32, character.0.height as u32);
+            let character = font.rasterize(i, cache_on_size);
+
+            let mut char_image =
+                image::RgbaImage::new(character.0.width as u32, character.0.height as u32);
+
+            let mut char_length: usize = 0;
+            for pixel in char_image.pixels_mut() {
+                //let pixel_value = percentage(character.1[char_length] as f32, 255f32);]
+                let pixel_value = character.1[char_length];
+                pixel.0 = [pixel_value, pixel_value, pixel_value, 255];
+
+                char_length += 1;
+            }
 
             let index = renderer.build_and_append_texture(
-                "charTest",
-                character.1.as_slice(),
+                "Character Cache",
+                TextureData::Image(image::DynamicImage::ImageRgba8(char_image)),
                 crate::header::TextureMode::Clamp,
                 //crate::header::TextureFormat::PNM,
             )?;
@@ -52,7 +65,7 @@ impl Text {
     pub fn draw(
         &mut self,
         content: &str,
-        position: (u8, u8),
+        position: (usize, usize),
         engine: &mut crate::header::Engine,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
@@ -63,9 +76,22 @@ impl Text {
                 None => {
                     character = {
                         let character = self.font.rasterize(i.1, self.size);
+                        let mut char_image = image::RgbaImage::new(
+                            character.0.width as u32,
+                            character.0.height as u32,
+                        );
+
+                        let mut char_length: usize = 0;
+                        for pixel in char_image.pixels_mut() {
+                            //let pixel_value = percentage(character.1[char_length] as f32, 255f32);]
+                            let pixel_value = character.1[char_length];
+                            pixel.0 = [pixel_value, pixel_value, pixel_value, 255];
+
+                            char_length += 1;
+                        }
                         let index = engine.renderer.build_and_append_texture(
                             "charTest",
-                            character.1.as_slice(),
+                            TextureData::Image(image::DynamicImage::ImageRgba8(char_image)),
                             crate::header::TextureMode::Clamp,
                             //crate::header::TextureFormat::BMP,
                         )?;
@@ -84,6 +110,7 @@ impl Text {
                 window_size,
             );
             character_shape.change_texture(character.1)?;
+            character_shape.position((position.0 * i.0) as f32, position.1 as f32, 0.0, window_size);
         }
         Ok(())
     }

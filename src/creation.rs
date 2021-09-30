@@ -5,7 +5,7 @@
 */
 
 use crate::header::{
-    Pipeline, Shaders, TextureFormat, TextureMode, Textures, UniformBuffer, UniformBuffers, Vertex,
+    Pipeline, Shaders, TextureData, TextureMode, Textures, UniformBuffer, UniformBuffers, Vertex,
     VertexBuffers,
 };
 use image::GenericImageView;
@@ -360,12 +360,12 @@ impl crate::header::Renderer {
     pub fn build_and_append_texture(
         &mut self,
         name: &'static str,
-        diffuse_bytes: &[u8],
+        texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
     ) -> Result<usize, anyhow::Error> {
         let textures = self
-            .build_texture(name, diffuse_bytes, texture_mode)
+            .build_texture(name, texture_data, texture_mode)
             .expect("Couldn't create shaders");
         let index = self.texture_bind_group.len();
         self.texture_bind_group.push(textures);
@@ -376,7 +376,7 @@ impl crate::header::Renderer {
     pub fn build_texture(
         &mut self,
         name: &'static str,
-        diffuse_bytes: &[u8],
+        texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
     ) -> Result<Textures, ()> {
@@ -394,8 +394,11 @@ impl crate::header::Renderer {
             TextureFormat::PNM => image::ImageFormat::Pnm,
         };*/
 
-        let img = image::load_from_memory(diffuse_bytes)
-            .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str());
+        let img = match texture_data {
+            TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
+                .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str()),
+            TextureData::Image(data) => data,
+        };
 
         let rgba = img
             .as_rgba8()

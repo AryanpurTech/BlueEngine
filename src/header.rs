@@ -324,11 +324,23 @@ pub fn normalize(value: f32, max: u32) -> f32 {
     }
 }
 
+/// Returns
+pub fn percentage(amount: f32, of: f32) -> f32 {
+    let result = amount / of;
+
+    return result;
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RotateAxis {
     X,
     Y,
     Z,
+}
+
+pub enum TextureData {
+    Bytes(Vec<u8>),
+    Image(image::DynamicImage),
 }
 
 /// Defines how the borders of texture would look like

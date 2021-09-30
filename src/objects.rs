@@ -5,7 +5,7 @@
 */
 
 use crate::header::uniform_type::Array;
-use crate::header::{Engine, Object, Pipeline, Renderer, RotateAxis, TextureMode, UniformBuffer, Vertex, normalize, uniform_type};
+use crate::header::{Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex, normalize, uniform_type};
 use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER};
 
 impl Engine {
