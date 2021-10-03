@@ -4,13 +4,11 @@
  * The license is same as the one on the root.
 */
 
-use image::{EncodableLayout, GenericImageView};
-
 use crate::{
-    header::{percentage, Renderer, TextureData},
+    header::{normalize, ObjectSettings, Renderer, TextureData},
     objects,
 };
-use std::{collections::BTreeMap, io::Write};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy)]
 struct TextData {
@@ -65,7 +63,7 @@ impl Text {
     pub fn draw(
         &mut self,
         content: &str,
-        position: (usize, usize),
+        position: (isize, isize),
         engine: &mut crate::header::Engine,
     ) -> anyhow::Result<()> {
         //let mut chars = Vec::<Vertex>::new();
@@ -100,17 +98,20 @@ impl Text {
                 }
             }
 
-            let window_size = engine.window.inner_size();
-            let character_shape_index = objects::square(Some("text"), engine)?;
-            let character_shape = engine.get_object(character_shape_index)?;
-            character_shape.resize(
-                character.0.width as f32,
-                character.0.height as f32,
-                0.0,
-                window_size,
-            );
-            character_shape.change_texture(character.1)?;
-            character_shape.position((position.0 * i.0) as f32, position.1 as f32, 0.0, window_size);
+            let window_width = engine.window.inner_size().width;
+            let character_shape_index = objects::two_dimensions::square(
+                ObjectSettings {
+                    name: Some("text"),
+                    size: (character.0.width as f32, character.0.height as f32, 0f32),
+                    texture_index: character.1,
+                    position: (position.0 as f32, position.1 as f32, 0.0),
+                    camera_effect: false,
+                    ..Default::default()
+                },
+                engine,
+            )?;
+            let character_shape = engine.get_object(character_shape_index).unwrap();
+            character_shape.translate(normalize((position.0 * i.0 as isize) as f32, window_width), 0.0, 0.0);
         }
         Ok(())
     }

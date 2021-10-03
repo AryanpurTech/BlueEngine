@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -38,6 +38,10 @@ path = "examples/shapes/triangle.rs"
 [[example]]
 name = "square"
 path = "examples/shapes/square.rs"
+
+[[example]]
+name = "cube"
+path = "examples/shapes/cube.rs"
 
 # CAMERA
 [[example]]

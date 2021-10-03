@@ -1,6 +1,6 @@
 use blue_engine::{
     header::{uniform_type::Matrix, Engine, RotateAxis, WindowDescriptor},
-    objects::{square, triangle},
+    objects::two_dimensions::{square, triangle},
     utils::text::Text,
 };
 
@@ -42,7 +42,7 @@ fn main() {
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
-    font.draw("Hello_World", (50, 50), &mut engine).unwrap();
+    font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
 
     let radius = 2f32;
     let start = std::time::SystemTime::now();

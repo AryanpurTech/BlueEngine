@@ -5,16 +5,20 @@
 */
 
 use crate::header::uniform_type::Array;
-use crate::header::{Engine, Object, Pipeline, Renderer, RotateAxis, UniformBuffer, Vertex, normalize, uniform_type};
-use crate::utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER};
+use crate::header::{
+    normalize, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
+    UniformBuffer, Vertex,
+};
+use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER};
+pub mod two_dimensions;
 
 impl Engine {
     /// Creates a new object
     pub fn new_object(
         &mut self,
-        name: Option<&'static str>,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
+        settings: ObjectSettings,
     ) -> anyhow::Result<usize> {
         let vertex_buffer_index = self
             .renderer
@@ -25,42 +29,41 @@ impl Engine {
                 "Transformation Matrix",
                 uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
             ),
-            UniformBuffer::Array(
-                "Color",
-                uniform_type::Array {
-                    data: DEFAULT_COLOR,
-                },
-            ),
+            UniformBuffer::Array("Color", settings.color),
         ])?;
 
         let shader_index = self.renderer.build_and_append_shaders(
-            name.unwrap_or("Object"),
+            settings.name.unwrap_or("Object"),
             DEFAULT_SHADER.to_string(),
             Some(&uniform_index.1),
         )?;
 
         let index = self.objects.len();
         self.objects.push(Object {
-            name,
+            name: settings.name,
             vertices: verticies,
             indices: indicies,
             pipeline: (
                 Pipeline {
                     vertex_buffer_index,
                     shader_index: shader_index,
-                    texture_index: 0,
+                    texture_index: settings.texture_index,
                     uniform_index: Some(uniform_index.0),
                 },
                 None,
             ),
-            size: (self.window.inner_size().width as f32, self.window.inner_size().height as f32, 0f32),
-            position: (0.0, 0.0, 0.0),
+            uniform_layout: uniform_index.1,
+            size: (
+                self.window.inner_size().width as f32,
+                self.window.inner_size().height as f32,
+                0f32,
+            ),
+            position: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4,
-            color: uniform_type::Array {
-                data: DEFAULT_COLOR,
-            },
-            object_index: self.objects.len()
+            color: settings.color,
+            object_index: self.objects.len(),
+            camera_effect: settings.camera_effect,
         });
         let object = self.objects.get_mut(index).unwrap();
         object.pipeline = (
@@ -68,15 +71,28 @@ impl Engine {
             Some(self.renderer.append_pipeline(object.pipeline.0)?),
         );
         object.scale(0.1, 0.1, 0.1);
+        object.resize(
+            settings.size.0,
+            settings.size.1,
+            settings.size.2,
+            self.window.inner_size(),
+        );
+        object.position(
+            settings.position.0,
+            settings.position.1,
+            settings.position.2,
+            self.window.inner_size(),
+        );
+        //object.update(&mut self.renderer)?;
 
         Ok(index)
     }
 
     /// Returns mutable object
-    pub fn get_object(&mut self, index: usize) -> anyhow::Result<&mut Object> {
-        Ok(self.objects.get_mut(index).unwrap())
+    pub fn get_object(&mut self, index: usize) -> Option<&mut Object> {
+        self.objects.get_mut(index)
     }
-}
+} // ? make the Shader Builder, add customizations to the objects, and fix bugs boi
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
@@ -221,7 +237,6 @@ impl Object {
         self.pipeline.0.texture_index = texture_index;
         self.changed = true;
 
-        
         Ok(())
     }
 
@@ -230,6 +245,7 @@ impl Object {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
         self.update_pipeline(renderer)?;
+        self.update_shader(renderer)?;
         self.changed = false;
         Ok(())
     }
@@ -255,6 +271,20 @@ impl Object {
         Ok(())
     }
 
+    pub(crate) fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        let updated_shader = renderer.build_shaders(
+            self.name.unwrap_or("Object"),
+            self.build_shader(),
+            Some(&self.uniform_layout),
+        )?;
+        let _ = std::mem::replace(
+            &mut renderer.shaders[self.pipeline.0.shader_index],
+            updated_shader,
+        );
+
+        Ok(())
+    }
+
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer
             .build_uniform_buffer(vec![
@@ -273,56 +303,87 @@ impl Object {
 
         Ok(())
     }
-}
 
-/// Creates a 2D triangle
-pub fn triangle(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
-    let new_triangle = engine.new_object(
-        name,
-        vec![
-            Vertex {
-                position: [0.0, 1.0, 0.0],
-                texture: [0.5, 0.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, 0.0],
-                texture: [0.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, 0.0],
-                texture: [1.0, 1.0],
-            },
-        ],
-        vec![0, 1, 2],
-    )?;
+    pub(crate) fn build_shader(&self) -> String {
+        // step 1 define blocks
+        let blocks = format!(
+            "\n{}\n{}\n{}",
+            r#"[[block]]
+struct TransformationUniforms {
+    transform_matrix: mat4x4<f32>;
+};
+[[group(2), binding(0)]]
+var<uniform> transform_uniform: TransformationUniforms;"#,
+            r#"[[block]]
+struct FragmentUniforms {
+    color: vec4<f32>;
+};
+[[group(2), binding(1)]]
+var<uniform> fragment_uniforms: FragmentUniforms;"#,
+            if self.camera_effect {
+                r#"[[block]]
+struct CameraUniforms {
+    camera_matrix: mat4x4<f32>;
+};
+[[group(1), binding(0)]]
+var<uniform> camera_uniform: CameraUniforms;"#
+            } else {
+                ""
+            }
+        );
 
-    Ok(new_triangle)
-}
+        // step 2 define input and output for vertex
+        let input_and_output = format!(
+            "\n{}",
+            r#"struct VertexInput {
+    [[location(0)]] position: vec3<f32>;
+    [[location(1)]] texture_coordinates: vec2<f32>;
+};
 
-/// Creates a 2D square
-pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
-    let new_square = engine.new_object(
-        name,
-        vec![
-            Vertex {
-                position: [1.0, 1.0, 0.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, 0.0],
-                texture: [1.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, 0.0],
-                texture: [0.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, 0.0],
-                texture: [0.0, 0.0],
-            },
-        ],
-        vec![2, 1, 0, 2, 0, 3],
-    )?;
+struct VertexOutput {
+    [[builtin(position)]] position: vec4<f32>;
+    [[location(0)]] texture_coordinates: vec2<f32>;
+};"#
+        );
 
-    Ok(new_square)
+        // step 3 define texture data
+        let texture_data = format!(
+            "\n{}",
+            r#"[[group(0), binding(0)]]
+var texture_diffuse: texture_2d<f32>;
+
+[[group(0), binding(1)]]
+var sampler_diffuse: sampler;"#
+        );
+
+        // step 4 vertex stage according to data before
+        let vertex_stage = format!(
+            "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
+            r#"[[stage(vertex)]]
+fn main(input: VertexInput) -> VertexOutput {
+    var out: VertexOutput;
+    out.texture_coordinates = input.texture_coordinates;"#,
+            if self.camera_effect {
+                "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
+            } else {
+                "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
+            },
+            r#"return out;
+}"#
+        );
+
+        // step 5 fragment stage
+        let fragment_stage = format!(
+            "\n// ===== Fragment STAGE ===== //\n{}",
+            r#"[[stage(fragment)]]
+fn main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
+    return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
+}"#
+        );
+
+        format!(
+            "{}{}{}{}{}",
+            blocks, input_and_output, texture_data, vertex_stage, fragment_stage
+        )
+    }
 }

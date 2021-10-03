@@ -4,15 +4,12 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{
-    header::{Engine, WindowDescriptor},
-    objects::triangle,
-};
+use blue_engine::{header::{Engine, ObjectSettings, WindowDescriptor}, objects::two_dimensions::triangle};
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let _ = triangle(Some("Triangle"), &mut engine).unwrap();
+    let _ = triangle(ObjectSettings::default(), &mut engine).unwrap();
 
     engine
         .update_loop(move |_, _, _, _, _| {})

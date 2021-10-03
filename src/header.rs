@@ -147,6 +147,7 @@ pub struct Object {
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
     pub indices: Vec<u16>,
+    pub uniform_layout: wgpu::BindGroupLayout,
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures
     pub pipeline: (Pipeline, Option<usize>),
     /// Dictates the size of your object in pixels
@@ -162,6 +163,37 @@ pub struct Object {
     pub color: uniform_type::Array,
     /// The index of the object in the queue
     pub object_index: usize,
+    /// Should it be affected by camera?
+    pub camera_effect: bool,
+}
+
+pub struct ObjectSettings {
+    /// Give your object a name, which can help later on for debugging.
+    pub name: Option<&'static str>,
+    /// Dictates the size of your object in pixels
+    pub size: (f32, f32, f32),
+    /// Dictates the position of your object in pixels
+    pub position: (f32, f32, f32),
+    /// The color of your object, A.K.A. albedo sometimes
+    pub color: uniform_type::Array,
+    /// Should it be affected by camera?
+    pub camera_effect: bool,
+    /// Custom texture index
+    pub texture_index: usize,
+}
+impl Default for ObjectSettings {
+    fn default() -> Self {
+        Self {
+            name: Some("Object!"),
+            size: (100f32, 100f32, 100f32),
+            position: (0f32, 0f32, 0f32),
+            color: uniform_type::Array {
+                data: crate::utils::default_resources::DEFAULT_COLOR,
+            },
+            camera_effect: true,
+            texture_index: 0,
+        }
+    }
 }
 
 /// The engine is the main starting point of using the Blue Engine. Everything that runs on Blue Engine will be under this struct.
