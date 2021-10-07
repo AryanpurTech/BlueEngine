@@ -1,5 +1,5 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */

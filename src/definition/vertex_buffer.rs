@@ -1,5 +1,10 @@
-use wgpu::util::DeviceExt;
+/*
+ * Blue Engine by Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
 
+use wgpu::util::DeviceExt;
 use crate::header::{Vertex, VertexBuffers};
 
 impl crate::header::Renderer {

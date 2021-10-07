@@ -1,4 +1,10 @@
-use crate::header::{Shaders, Vertex};
+/*
+ * Blue Engine by Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
+use crate::header::{ShaderSettings, Shaders, Vertex};
 use wgpu::BindGroupLayout;
 
 impl crate::header::Renderer {
@@ -8,9 +14,10 @@ impl crate::header::Renderer {
         name: &'static str,
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
+        settings: ShaderSettings,
     ) -> Result<usize, anyhow::Error> {
         let shaders = self
-            .build_shaders(name, shader_source, uniform_layout)
+            .build_shaders(name, shader_source, uniform_layout, settings)
             .expect("Couldn't create shaders");
         let index = self.shaders.len();
         self.shaders.push(shaders);
@@ -23,13 +30,13 @@ impl crate::header::Renderer {
         name: &str,
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
+        settings: ShaderSettings,
     ) -> Result<Shaders, anyhow::Error> {
         let shader = self
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
-                //flags: wgpu::ShaderFlags::all(),
             });
 
         let mut bind_group_layouts = vec![
@@ -68,19 +75,25 @@ impl crate::header::Renderer {
                     }],
                 }),
                 primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: None, //Some(wgpu::Face::Back),
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    clamp_depth: false,
-                    conservative: false,
+                    topology: settings.topology,
+                    strip_index_format: settings.strip_index_format,
+                    front_face: settings.front_face,
+                    cull_mode: settings.cull_mode, //Some(wgpu::Face::Back),
+                    polygon_mode: settings.polygon_mode,
+                    clamp_depth: settings.clamp_depth,
+                    conservative: settings.conservative,
                 },
-                depth_stencil: None,
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: Self::DEPTH_FORMAT,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::Less,
+                    stencil: wgpu::StencilState::default(),
+                    bias: wgpu::DepthBiasState::default(),
+                }),
                 multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
+                    count: settings.count,
+                    mask: settings.mask,
+                    alpha_to_coverage_enabled: settings.alpha_to_coverage_enabled,
                 },
             });
 

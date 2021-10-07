@@ -1,3 +1,11 @@
+/*
+ * Blue Engine by Elham Aryanpur
+ *
+ * 
+ *
+ * The license is same as the one on the root.
+*/
+
 use crate::header::Pipeline;
 
 impl crate::header::Renderer {

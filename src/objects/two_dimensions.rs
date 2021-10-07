@@ -1,3 +1,9 @@
+/*
+ * Blue Engine by Elham Aryanpur
+ *
+ * The license is same as the one on the root.
+*/
+
 use crate::header::{Engine, ObjectSettings, Vertex};
 
 /// Creates a 2D triangle

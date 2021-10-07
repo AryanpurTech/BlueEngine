@@ -1,5 +1,7 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
+ *
+ * Triangle example using pre-defined shapes
  *
  * The license is same as the one on the root.
 */

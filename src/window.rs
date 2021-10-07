@@ -1,10 +1,13 @@
 /*
- * Blue Engine copyright © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */
 
-use crate::header::{Camera, Engine, Object, Renderer, TextureData, UniformBuffer, WindowDescriptor, uniform_type};
+use crate::header::{
+    uniform_type, Camera, Engine, Object, Renderer, ShaderSettings, TextureData, UniformBuffer,
+    WindowDescriptor,
+};
 use crate::utils::default_resources::{
     DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE,
 };
@@ -80,6 +83,7 @@ impl Engine {
             "Default Shader",
             DEFAULT_SHADER.to_string(),
             Some(&default_uniform),
+            ShaderSettings::default(),
         )?;
 
         Ok(Self {

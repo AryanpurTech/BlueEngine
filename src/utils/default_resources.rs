@@ -1,9 +1,9 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */
-// ? Create a shader builder
+
 pub const DEFAULT_SHADER: &str = r#"
 // Vertex Stage
 

@@ -1,5 +1,5 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */
@@ -36,6 +36,7 @@ impl Engine {
             settings.name.unwrap_or("Object"),
             DEFAULT_SHADER.to_string(),
             Some(&uniform_index.1),
+            settings.shader_settings,
         )?;
 
         let index = self.objects.len();
@@ -64,6 +65,7 @@ impl Engine {
             color: settings.color,
             object_index: self.objects.len(),
             camera_effect: settings.camera_effect,
+            shader_settings: settings.shader_settings,
         });
         let object = self.objects.get_mut(index).unwrap();
         object.pipeline = (
@@ -276,6 +278,7 @@ impl Object {
             self.name.unwrap_or("Object"),
             self.build_shader(),
             Some(&self.uniform_layout),
+            self.shader_settings,
         )?;
         let _ = std::mem::replace(
             &mut renderer.shaders[self.pipeline.0.shader_index],

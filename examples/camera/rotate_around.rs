@@ -6,25 +6,32 @@
 
 extern crate glm;
 use blue_engine::{
-    header::{Engine, ObjectSettings, WindowDescriptor},
+    header::{Engine, ObjectSettings, ShaderSettings, WindowDescriptor},
     objects::two_dimensions::square,
 };
 
 fn main() {
+    // Create the engine
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let square_id = square(
+    // create a square
+    let _ = square(
         ObjectSettings {
+            // let's give it a name
             name: Some("Rotating Square"),
+            // and set the size
+            size: (500f32, 500f32, 1f32),
+            // we need it to not cull it's back face so that it's visible on both side
+            shader_settings: ShaderSettings {
+                cull_mode: None,
+                ..Default::default()
+            },
+            // and have default settings for the rest
             ..Default::default()
         },
         &mut engine,
     )
     .unwrap();
-    {
-        let sq = engine.objects.get_mut(square_id).unwrap();
-        sq.resize(500.0, 500.0, 1.0, engine.window.inner_size());
-    }
 
     let radius = 2f32;
     let start = std::time::SystemTime::now();

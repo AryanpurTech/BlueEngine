@@ -1,5 +1,5 @@
 /*
- * Blue Engine copyright © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */
@@ -83,19 +83,19 @@ impl Renderer {
         let default_uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("uniform dynamic bind group layout"),
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
                     },
-                ],
+                    count: None,
+                }],
             });
+
+        let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
         Self {
             surface,
@@ -106,6 +106,7 @@ impl Renderer {
 
             texture_bind_group_layout,
             default_uniform_bind_group_layout,
+            depth_buffer,
 
             shaders: Vec::new(),
             vertex_buffers: Vec::new(),
@@ -120,6 +121,7 @@ impl Renderer {
         self.config.width = new_size.width;
         self.config.height = new_size.height;
         self.surface.configure(&self.device, &self.config);
+        self.depth_buffer = Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
     }
 
     pub(crate) fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -144,7 +146,14 @@ impl Renderer {
                     store: true,
                 },
             }],
-            depth_stencil_attachment: None,
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: &self.depth_buffer.1,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: true,
+                }),
+                stencil_ops: None,
+            }),
         });
 
         let mut already_loaded_shader: usize = 0;

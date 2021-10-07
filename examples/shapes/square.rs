@@ -1,5 +1,7 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
+ *
+ * Square example by defining custom vertices and indices
  *
  * The license is same as the one on the root.
 */

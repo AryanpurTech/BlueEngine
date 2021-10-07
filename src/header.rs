@@ -1,5 +1,5 @@
 /*
- * Blue Engine copyright 2021 © Elham Aryanpur
+ * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
 */
@@ -140,6 +140,7 @@ pub mod uniform_type {
 /// creating 3D objects and showing them on screen. A range of default objects are available
 /// as well as ability to customize each of them and even create your own! You can also
 /// customize almost everything there is about them!
+#[derive(Debug)]
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
     pub name: Option<&'static str>,
@@ -165,8 +166,12 @@ pub struct Object {
     pub object_index: usize,
     /// Should it be affected by camera?
     pub camera_effect: bool,
+    /// Shader settings
+    pub shader_settings: ShaderSettings,
 }
 
+/// Extra settings to customize objects on time of creation
+#[derive(Debug, Clone, Copy)]
 pub struct ObjectSettings {
     /// Give your object a name, which can help later on for debugging.
     pub name: Option<&'static str>,
@@ -180,6 +185,8 @@ pub struct ObjectSettings {
     pub camera_effect: bool,
     /// Custom texture index
     pub texture_index: usize,
+    /// Shader Settings
+    pub shader_settings: ShaderSettings,
 }
 impl Default for ObjectSettings {
     fn default() -> Self {
@@ -192,6 +199,7 @@ impl Default for ObjectSettings {
             },
             camera_effect: true,
             texture_index: 0,
+            shader_settings: ShaderSettings::default(),
         }
     }
 }
@@ -268,10 +276,10 @@ pub struct Renderer {
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
     pub(crate) config: wgpu::SurfaceConfiguration,
-    /// This is the resolution that the renderer works with
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub(crate) size: winit::dpi::PhysicalSize<u32>,
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,
+    pub(crate) depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
     pub(crate) shaders: Vec<Shaders>,
     pub(crate) vertex_buffers: Vec<VertexBuffers>,
     pub(crate) texture_bind_group: Vec<Textures>,
@@ -280,6 +288,7 @@ pub struct Renderer {
 }
 
 /// Descriptor and settings for a window.
+#[derive(Debug, Clone, Copy)]
 pub struct WindowDescriptor {
     /// The width of the window
     pub width: u32,
@@ -370,12 +379,14 @@ pub enum RotateAxis {
     Z,
 }
 
+#[derive(Debug, Clone)]
 pub enum TextureData {
     Bytes(Vec<u8>),
     Image(image::DynamicImage),
 }
 
 /// Defines how the borders of texture would look like
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TextureMode {
     /// Expands the texture to fit the object
     Clamp,
@@ -391,4 +402,80 @@ pub enum TextureFormat {
     BMP,
     JPEG,
     PNM,
+}
+
+pub type ShaderPrimitive = wgpu::PrimitiveTopology;
+pub type IndexFormat = wgpu::IndexFormat;
+pub type FrontFace = wgpu::FrontFace;
+pub type CullMode = wgpu::Face;
+pub type PolygonMode = wgpu::PolygonMode;
+
+// ? These definitions are taken from wgpu API docs
+#[derive(Debug, Clone, Copy)]
+pub struct ShaderSettings {
+    // ===== PRIMITIVE ===== //
+    /// The primitive topology used to interpret vertices
+    pub topology: ShaderPrimitive,
+    /// When drawing strip topologies with indices, this is the
+    /// required format for the index buffer. This has no effect
+    /// on non-indexed or non-strip draws.
+    pub strip_index_format: Option<IndexFormat>,
+    /// The face to consider the front for the purpose of
+    /// culling and stencil operations.
+    pub front_face: FrontFace,
+    /// The face culling mode
+    pub cull_mode: Option<CullMode>,
+    /// Controls the way each polygon is rasterized. Can be
+    /// either `Fill` (default), `Line` or `Point`
+    ///
+    /// Setting this to something other than `Fill` requires
+    /// `NON_FILL_POLYGON_MODE` feature to be enabled
+    pub polygon_mode: PolygonMode,
+    /// If set to true, the polygon depth is clamped to 0-1
+    /// range instead of being clipped.
+    ///
+    /// Enabling this requires the `DEPTH_CLAMPING` feature
+    /// to be enabled
+    pub clamp_depth: bool,
+    /// If set to true, the primitives are rendered with
+    /// conservative overestimation. I.e. any rastered
+    /// pixel touched by it is filled. Only valid for PolygonMode::Fill!
+    ///
+    /// Enabling this requires `CONSERVATIVE_RASTERIZATION`
+    /// features to be enabled.
+    pub conservative: bool,
+
+    // ===== Multisample ===== //
+    /// The number of samples calculated per pixel (for MSAA).
+    /// For non-multisampled textures, this should be `1`
+    pub count: u32,
+    /// Bitmask that restricts the samples of a pixel modified
+    /// by this pipeline. All samples can be enabled using the
+    /// value `!0`
+    pub mask: u64,
+    /// When enabled, produces another sample mask per pixel
+    /// based on the alpha output value, that is ANDed with the
+    /// sample_mask and the primitive coverage to restrict the
+    /// set of samples affected by a primitive.
+
+    /// The implicit mask produced for alpha of zero is guaranteed
+    /// to be zero, and for alpha of one is guaranteed to be all
+    /// 1-s.
+    pub alpha_to_coverage_enabled: bool,
+}
+impl Default for ShaderSettings {
+    fn default() -> Self {
+        Self {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: Some(wgpu::Face::Back),
+            polygon_mode: wgpu::PolygonMode::Fill,
+            clamp_depth: false,
+            conservative: false,
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        }
+    }
 }
