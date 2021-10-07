@@ -8,7 +8,7 @@ Blue Engine is a general-purpose, easy-to-use, fast, extendable, secure, and por
 
 * [Join our discord server](https://discord.gg/s7xsj9q)
 
-* [WIP] Learn more at [wiki](https://github.com/BlueMazar/BlueEngine/wiki)
+* [WIP] [Documentation](https://elhamaryanpur.github.io/BlueEngineDocs/)
 
 * Check out the [examples](https://github.com/ElhamAryanpur/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
