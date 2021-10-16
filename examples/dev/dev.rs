@@ -57,6 +57,9 @@ fn main() {
     let start = std::time::SystemTime::now();
     let mut rotation = 0f32;
 
+    let mat = nalgebra::matrix![1, 2, 3; 4, 5, 6];
+    println!("{:?}", mat.as_slice());
+
     engine
         .update_loop(move |renderer, window, objects, events, camera| {
             let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
