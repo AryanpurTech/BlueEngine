@@ -6,6 +6,7 @@
  * The license is same as the one on the root.
 */
 
+extern crate nalgebra_glm as glm;
 use blue_engine::header::{Engine, ObjectSettings, Vertex, WindowDescriptor};
 
 pub fn cube(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
