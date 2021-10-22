@@ -66,10 +66,7 @@ impl Engine {
 
         let default_uniform = renderer
             .build_and_append_uniform_buffers(vec![
-                UniformBuffer::Matrix(
-                    "Transformation Matrix",
-                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
-                ),
+                UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
                 UniformBuffer::Array(
                     "Color",
                     uniform_type::Array {

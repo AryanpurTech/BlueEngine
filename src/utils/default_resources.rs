@@ -89,7 +89,20 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4 {
+pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
+    crate::header::uniform_type::Matrix {
+        data: [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    };
+
+/*pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::mat4(
+    1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+);*/
+/* {
     c0: glm::Vector4 {
         x: 1.0,
         y: 0.0,
@@ -114,4 +127,4 @@ pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4 {
         z: 0.0,
         w: 1.0,
     },
-};
+};*/

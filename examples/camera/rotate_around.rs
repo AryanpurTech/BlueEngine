@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-extern crate glm;
+extern crate nalgebra_glm as glm;
 use blue_engine::{
     header::{Engine, ObjectSettings, ShaderSettings, WindowDescriptor},
     objects::two_dimensions::square,
