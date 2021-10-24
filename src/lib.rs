@@ -6,12 +6,12 @@
 
 extern crate nalgebra_glm as glm;
 
-#[cfg(target_feature = "debug")]
-pub fn debug<T>(debug_text: T) {
-    println!("{:?}", T);
+#[cfg(feature = "debug")]
+pub fn debug<T: std::fmt::Debug>(_debug_text: T) {
+    println!("{:?}", _debug_text);
 }
-#[cfg(not(target_feature = "debug"))]
-pub fn debug<T>(_debug_text: T) {}
+#[cfg(not(feature = "debug"))]
+pub fn debug<T: std::fmt::Debug>(_debug_text: _debug_text) {}
 
 pub(crate) mod definition;
 pub mod header;

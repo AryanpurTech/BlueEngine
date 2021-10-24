@@ -29,7 +29,7 @@ impl Renderer {
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::LowPower,
                 compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
+                //force_fallback_adapter: false,
             })
             .await
             .unwrap();
@@ -126,7 +126,7 @@ impl Renderer {
     }
 
     pub(crate) fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        let frame = self.surface.get_current_texture()?;
+        let frame = self.surface.get_current_frame()?.output;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
