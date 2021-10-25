@@ -82,6 +82,7 @@ impl Engine {
             settings.position.2,
             self.window.inner_size(),
         );
+        //object.rotate(90f32, RotateAxis::Y);
         //object.update(&mut self.renderer)?;
 
         Ok(index)

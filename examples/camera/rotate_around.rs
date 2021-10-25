@@ -38,10 +38,10 @@ fn main() {
 
     engine
         .update_loop(move |_, _, _, _, camera| {
-            let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
-            let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
             camera
-                .set_eye([camx, 0.0, camz])
+                .set_eye(camx, 0.0, camz)
                 .expect("Couldn't update the camera eye");
         })
         .expect("Error during update loop");

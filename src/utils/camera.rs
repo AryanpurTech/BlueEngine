@@ -13,8 +13,8 @@ impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(renderer: &Renderer) -> Result<Self> {
         let mut camera = Self {
-            eye: glm::vec3(0.0, 0.0, 1.0),
-            target: glm::vec3(0.0, 0.0, 0.0),
+            eye: glm::vec3(0.0, 0.0, -2.0),
+            target: glm::vec3(0.0, 0.0, 0.0).into(),
             up: glm::vec3(0.0, 1.0, 0.0),
             aspect: renderer.config.width as f32 / renderer.config.height as f32,
             fov: 45.0,
@@ -30,7 +30,7 @@ impl Camera {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
-        let view = glm::look_at(&self.eye, &self.target, &self.up);
+        let view = glm::look_at_rh(&self.eye, &self.target, &self.up);
         let proj = glm::perspective(self.aspect, self.fov, self.near, self.far);
         self.view_data = proj * view;
         self.changed = true;
