@@ -40,20 +40,15 @@ impl Engine {
             .with_decorations(settings.decorations) // sets if the window should have borders
             .with_resizable(settings.resizable); // sets the window to be resizable
 
-        crate::debug("Created the window starting settings");
-
         // will create the main event loop of the window.
         // and will contain all the callbacks and button press
         // also will allow graphics API
         let event_loop = EventLoop::new();
-        crate::debug("Created the event loop");
         // bind the loop to window
         let window = new_window.build(&event_loop).unwrap();
-        crate::debug("Create the window");
 
         // The renderer init on current window
-        let mut renderer = pollster::block_on(Renderer::new(&window));
-        crate::debug("Created the renderer");
+        let mut renderer = futures::executor::block_on(Renderer::new(&window));
 
         let camera = Camera::new(&renderer)?;
 
@@ -71,7 +66,10 @@ impl Engine {
 
         let default_uniform = renderer
             .build_and_append_uniform_buffers(vec![
-                UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
+                UniformBuffer::Matrix(
+                    "Transformation Matrix",
+                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
+                ),
                 UniformBuffer::Array(
                     "Color",
                     uniform_type::Array {
@@ -87,8 +85,6 @@ impl Engine {
             Some(&default_uniform),
             ShaderSettings::default(),
         )?;
-
-        crate::debug("Created the default content");
 
         Ok(Self {
             window,
@@ -118,13 +114,9 @@ impl Engine {
             mut camera,
         } = self;
 
-        crate::debug("Update loop pre init");
-
         // and get input events to handle them later
         let mut input = winit_input_helper::WinitInputHelper::new();
         let mut current_window_size = window.inner_size();
-
-        crate::debug("Update loop pre init done. Starting the update loop");
 
         // The main loop
         event_loop.run(move |event, _, control_flow| {

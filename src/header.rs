@@ -50,26 +50,27 @@ pub mod uniform_type {
             self.data = uniform.data;
         }
 
-        /// Converts nalgebra Matrix4 to the Blue Engine Matrix
-        pub fn from_im(matrix: glm::Mat4) -> Matrix {
-            let mtx = matrix.as_slice();
+        /// Converts GLM Matrix4 to the Blue Engine Matrix
+        pub fn from_im(matrix: ultraviolet::Mat4) -> Matrix {
+            let mtx = matrix.as_array();
             Matrix {
                 data: [
-                    [mtx[0], mtx[4], mtx[8], mtx[12]],
-                    [mtx[1], mtx[5], mtx[9], mtx[13]],
-                    [mtx[2], mtx[6], mtx[10], mtx[14]],
-                    [mtx[3], mtx[7], mtx[11], mtx[15]],
+                    [mtx[0], mtx[1], mtx[2], mtx[3]],
+                    [mtx[4], mtx[5], mtx[6], mtx[7]],
+                    [mtx[8], mtx[9], mtx[10], mtx[11]],
+                    [mtx[12], mtx[13], mtx[14], mtx[15]],
                 ],
             }
         }
 
-        /// Converts Blue Engine Matrix to nalgebra Matrix4
-        pub fn to_im(&self) -> glm::Mat4 {
+        /// Converts Blue Engine Matrix to GLM Matrix4
+        pub fn to_im(&self) -> ultraviolet::Mat4 {
             let mtx = self.data;
-            glm::mat4(
-                mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3], mtx[1][0], mtx[1][1], mtx[1][2],
-                mtx[1][3], mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3], mtx[3][0], mtx[3][1],
-                mtx[3][2], mtx[3][3],
+            ultraviolet::Mat4::new(
+                ultraviolet::Vec4::new(mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3]),
+                ultraviolet::Vec4::new(mtx[1][0], mtx[1][1], mtx[1][2], mtx[1][3]),
+                ultraviolet::Vec4::new(mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3]),
+                ultraviolet::Vec4::new(mtx[3][0], mtx[3][1], mtx[3][2], mtx[3][3]),
             )
         }
     }
@@ -158,7 +159,7 @@ pub struct Object {
     pub(crate) changed: bool,
     /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub transformation_matrix: glm::Mat4,
+    pub transformation_matrix: glm::Matrix4<f32>,
     /// The color of your object, A.K.A. albedo sometimes
     pub color: uniform_type::Array,
     /// The index of the object in the queue
@@ -318,10 +319,10 @@ impl std::default::Default for WindowDescriptor {
 #[derive(Debug, Clone, Copy)]
 pub struct Camera {
     /// The position of the camera in 3D space
-    pub eye: glm::Vec3,
+    pub position: glm::Vector3<f32>,
     /// The target at which the camera should be looking
-    pub target: glm::Vec3,
-    pub up: glm::Vec3,
+    pub target: glm::Vector3<f32>,
+    pub up: glm::Vector3<f32>,
     pub aspect: f32,
     /// The field of view of the camera
     pub fov: f32,
@@ -330,7 +331,7 @@ pub struct Camera {
     /// The furthest view of camera
     pub far: f32,
     /// The final data that will be sent to GPU
-    pub view_data: glm::Mat4,
+    pub view_data: glm::Matrix4<f32>,
     // For checking and rebuilding it's uniform buffer
     pub(crate) changed: bool,
 }
@@ -468,7 +469,7 @@ impl Default for ShaderSettings {
             topology: wgpu::PrimitiveTopology::TriangleList,
             strip_index_format: None,
             front_face: wgpu::FrontFace::Ccw,
-            cull_mode: None, //Some(wgpu::Face::Front),
+            cull_mode: Some(wgpu::Face::Back),
             polygon_mode: wgpu::PolygonMode::Fill,
             clamp_depth: false,
             conservative: false,

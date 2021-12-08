@@ -12,8 +12,6 @@ Blue Engine is a general-purpose, easy-to-use, fast, extendable, secure, and por
 
 * Check out the [examples](https://github.com/ElhamAryanpur/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
-* This project is under heavy work, not recommended for production use. The API is a bit unstable too.
-
 ---
 
 **NOTE:** You need to add `resolver = "2"` on your `Cargo.toml` under `[package]` section. This is because of migration to newer versions of Rust and dependencies of this engine.

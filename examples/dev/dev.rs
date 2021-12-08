@@ -51,22 +51,17 @@ fn main() {
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
-    //font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
+    font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
 
     let radius = 2f32;
     let start = std::time::SystemTime::now();
     let mut rotation = 0f32;
+
     engine
         .update_loop(move |renderer, window, objects, events, camera| {
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-            camera.set_eye(camx, 0.0, camz);
-
-            if events.mouse_pressed(0) {
-                let a = objects.get_mut(square_id).unwrap();
-
-                a.rotate(1f32, RotateAxis::Y);
-            };
+            //camera.set_eye([camx, 0.0, camz]);
         })
         .expect("Error during update loop");
 }
