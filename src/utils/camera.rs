@@ -32,7 +32,7 @@ impl Camera {
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
         let view = self.build_camera_lookat(); //glm::ext::look_at_rh(self.eye, self.target, self.up);
         let proj = self.build_camera_projection(); //glm::ext::perspective::<f32>(self.fov, self.aspect, self.near, self.far);
-        self.view_data = proj * view;
+        self.view_data = Matrix::from_im(proj * view);
         self.changed = true;
 
         Ok(())
@@ -92,7 +92,7 @@ impl Camera {
 
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
     pub fn camera_uniform_buffer(&self) -> Result<Matrix> {
-        Ok(Matrix::from_glm(self.view_data))
+        Ok(self.view_data)
     }
 
     /// Sets the eye of camera

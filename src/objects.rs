@@ -44,7 +44,7 @@ impl Engine {
             pipeline: (
                 Pipeline {
                     vertex_buffer_index,
-                    shader_index: shader_index,
+                    shader_index,
                     texture_index: settings.texture_index,
                     uniform_index: Some(uniform_index.0),
                 },
@@ -142,7 +142,7 @@ impl Object {
     /// Rotates the object in the axis you specify
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
         let mut rotation_matrix = self.transformation_matrix;
-        rotation_matrix = glm::ext::rotate(
+        /*rotation_matrix = glm::ext::rotate(
             &rotation_matrix,
             angle,
             match axis {
@@ -150,7 +150,7 @@ impl Object {
                 RotateAxis::X => glm::vec3(0.0, 1.0, 0.0),
                 RotateAxis::Y => glm::vec3(1.0, 0.0, 0.0),
             },
-        );
+        );*/
         self.transformation_matrix = rotation_matrix;
 
         self.changed = true;
@@ -159,7 +159,7 @@ impl Object {
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, x: f32, y: f32, z: f32) {
         let mut position_matrix = self.transformation_matrix;
-        position_matrix = glm::ext::translate(&position_matrix, glm::vec3(x, y, z));
+        //position_matrix = glm::ext::translate(&position_matrix, glm::vec3(x, y, z));
         self.transformation_matrix = position_matrix;
 
         self.changed = true;
@@ -167,11 +167,10 @@ impl Object {
 
     /// Sets the position of the object in 3D space relative to the window
     pub fn position(&mut self, x: f32, y: f32, z: f32, window_size: winit::dpi::PhysicalSize<u32>) {
-        let difference = glm::sqrt(
-            glm::pow(self.position.0 - x, 2.0)
-                + glm::pow(self.position.1 - y, 2.0)
-                + glm::pow(self.position.2 - z, 2.0),
-        );
+        let difference = ((self.position.0 - x).powf(2.0)
+            + (self.position.1 - y).powf(2.0)
+            + (self.position.2 - z).powf(2.0))
+        .sqrt();
 
         let normalized_target_x = if (self.position.0 - x) == 0.0 {
             0.0
@@ -290,7 +289,7 @@ impl Object {
             .build_uniform_buffer(vec![
                 UniformBuffer::Matrix(
                     "Transformation Matrix",
-                    uniform_type::Matrix::from_glm(self.transformation_matrix),
+                    uniform_type::Matrix::from_im(self.transformation_matrix),
                 ),
                 UniformBuffer::Array("Color", self.color),
             ])?
