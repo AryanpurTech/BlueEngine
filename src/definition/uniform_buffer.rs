@@ -4,8 +4,8 @@
  * The license is same as the one on the root.
 */
 
-use wgpu::{BindGroupLayout, util::DeviceExt};
 use crate::header::{UniformBuffer, UniformBuffers};
+use wgpu::{util::DeviceExt, BindGroupLayout};
 
 impl crate::header::Renderer {
     /// Creates and adds the uniform buffers to render queue

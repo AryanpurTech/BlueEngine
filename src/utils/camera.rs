@@ -4,7 +4,12 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{uniform_type::Matrix, Camera, Renderer, UniformBuffer};
+use crate::{
+    header::{
+        uniform_type::{Matrix},
+        Camera, Renderer, UniformBuffer,
+    },
+};
 use anyhow::Result;
 
 use super::default_resources::DEFAULT_MATRIX_4;
@@ -13,7 +18,7 @@ impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(renderer: &Renderer) -> Result<Self> {
         let mut camera = Self {
-            position: glm::vec3(0.0, 0.0, 1.0),
+            eye: glm::vec3(0.0, 0.0, 1.0),
             target: glm::vec3(0.0, 0.0, 0.0).into(),
             up: glm::vec3(0.0, 1.0, 0.0),
             aspect: renderer.config.width as f32 / renderer.config.height as f32,
@@ -30,90 +35,38 @@ impl Camera {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
-        let view = self.build_camera_lookat(); //glm::ext::look_at_rh(self.eye, self.target, self.up);
-        let proj = self.build_camera_projection(); //glm::ext::perspective::<f32>(self.fov, self.aspect, self.near, self.far);
-        self.view_data = Matrix::from_im(proj * view);
+        let view = glm::ext::look_at_rh(self.eye, self.target, self.up);
+        let proj = glm::ext::perspective::<f32>(self.fov, self.aspect, self.near, self.far);
+        self.view_data = proj * view;
         self.changed = true;
 
         Ok(())
     }
 
-    fn build_camera_lookat(&self) -> glm::Mat4 {
-        let uv_eye = ultraviolet::Vec3::new(self.position.x, self.position.y, self.position.z);
-        let uv_center = ultraviolet::Vec3::new(self.target.x, self.target.y, self.target.z);
-        let uv_up = ultraviolet::Vec3::new(self.up.x, self.up.y, self.up.z);
-
-        let z = (uv_eye - uv_center).normalized();
-        let x = z.cross(uv_up).normalized();
-        let y = x.cross(z);
-
-        glm::mat4(
-            x.x,
-            y.x,
-            -z.x,
-            0f32,
-            x.y,
-            y.y,
-            -z.y,
-            0f32,
-            x.z,
-            y.z,
-            -z.z,
-            0f32,
-            -x.dot(uv_eye),
-            -y.dot(uv_eye),
-            -z.dot(uv_eye),
-            1f32,
-        )
-    }
-
-    fn build_camera_projection(&self) -> glm::Mat4 {
-        // give fov
-        let f = 1f32 / (self.fov / 2f32).tan();
-        glm::mat4(
-            f / self.aspect,
-            0f32,
-            0f32,
-            0f32,
-            0f32,
-            f,
-            0f32,
-            0f32,
-            0f32,
-            0f32,
-            (self.near + self.far) / (self.near - self.far),
-            -1f32,
-            0f32,
-            0f32,
-            ((2f32 * self.near) * self.far) / (self.near - self.far),
-            0f32,
-        )
-    }
-
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
     pub fn camera_uniform_buffer(&self) -> Result<Matrix> {
-        Ok(self.view_data)
+        Ok(Matrix::from_glm(self.view_data))
     }
 
     /// Sets the eye of camera
-    pub fn set_position(&mut self, x: f32, y: f32, z: f32) -> Result<()> {
-        self.position = glm::vec3(x, y, z);
+    pub fn set_eye(&mut self, new_eye: [f32; 3]) -> Result<()> {
+        self.eye = glm::vec3(new_eye[0], new_eye[1], new_eye[2]);
         self.build_view_projection_matrix()?;
 
         Ok(())
     }
 
     /// Sets the target of camera
-    pub fn set_target(&mut self, x: f32, y: f32, z: f32) -> Result<()> {
-        self.target = glm::vec3(x, y, z);
+    pub fn set_target(&mut self, new_target: [f32; 3]) -> Result<()> {
+        self.target = glm::vec3(new_target[0], new_target[1], new_target[2]);
         self.build_view_projection_matrix()?;
 
         Ok(())
     }
 
     /// Sets the up of camera
-    pub fn set_up(&mut self, x: f32, y: f32, z: f32) -> Result<()> {
-        self.up = glm::vec3(x, y, z);
+    pub fn set_up(&mut self, new_up: [f32; 3]) -> Result<()> {
+        self.up = glm::vec3(new_up[0], new_up[1], new_up[2]);
         self.build_view_projection_matrix()?;
 
         Ok(())
@@ -155,11 +108,13 @@ impl Camera {
     pub fn update_view_projection(&mut self, renderer: &mut Renderer) -> Result<()> {
         if self.changed {
             let updated_buffer = renderer
-                .build_uniform_buffer(vec![UniformBuffer::Matrix(
-                    "Camera Uniform",
-                    self.camera_uniform_buffer()
-                        .expect("Couldn't build camera projection"),
-                )])
+                .build_uniform_buffer(vec![
+                    UniformBuffer::Matrix(
+                        "Camera Uniform",
+                        self.camera_uniform_buffer()
+                            .expect("Couldn't build camera projection"),
+                    ),
+                ])
                 .expect("Couldn't update the camera uniform buffer")
                 .0;
             let _ = std::mem::replace(&mut renderer.uniform_bind_group[0], updated_buffer);

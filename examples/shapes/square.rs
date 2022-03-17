@@ -31,6 +31,7 @@ pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, 
         vec![2, 1, 0, 2, 0, 3],
         ObjectSettings {
             name: name,
+            camera_effect: false,
             ..Default::default()
         },
     )?;

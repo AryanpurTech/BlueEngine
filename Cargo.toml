@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.2.6"
+version = "0.2.5"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -16,17 +16,17 @@ name = "blue_engine"
 crate-type = ["rlib"]
 
 [dependencies]
-winit = "0.25.0"
+winit = "0.26.1"
 futures = "0.3.17"
-image = "0.23.14"
+image = "0.24.1"
 bytemuck = { version = "1.7.2", features = [ "derive" ] }
-winit_input_helper = "0.10.0"
+winit_input_helper = "0.11.1"
 anyhow = "1.0.44"
-fontdue = "0.5.2"
+fontdue = "0.7.2"
 env_logger = "0.9.0"
-nalgebra-glm = "0.15.0"
-wgpu = "0.10.1"
-ultraviolet = { version = "0.8.1", features = ["bytemuck", "serde"] }
+glm = "0.2.3"
+wgpu = "0.10.2"
+
 
 # ========== EXAMPLES ========== #
 

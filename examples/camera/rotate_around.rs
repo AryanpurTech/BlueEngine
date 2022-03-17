@@ -4,6 +4,7 @@
  * The license is same as the one on the root.
 */
 
+extern crate glm;
 use blue_engine::{
     header::{Engine, ObjectSettings, ShaderSettings, WindowDescriptor},
     objects::two_dimensions::square,
@@ -19,7 +20,7 @@ fn main() {
             // let's give it a name
             name: Some("Rotating Square"),
             // and set the size
-            size: (500f32, 500f32, 0f32),
+            size: (500f32, 500f32, 1f32),
             // we need it to not cull it's back face so that it's visible on both side
             shader_settings: ShaderSettings {
                 cull_mode: None,
@@ -37,10 +38,10 @@ fn main() {
 
     engine
         .update_loop(move |_, _, _, _, camera| {
-            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
-            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
+            let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
+            let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
             camera
-                .set_position(camx, 0.0, camz)
+                .set_eye([camx, 0.0, camz])
                 .expect("Couldn't update the camera eye");
         })
         .expect("Error during update loop");

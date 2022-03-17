@@ -35,7 +35,7 @@ impl crate::header::Renderer {
         let shader = self
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
-                label: Some("Shader"),
+                label: Some(format!("{} Shader", name).as_str()),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
             });
 
@@ -62,12 +62,12 @@ impl crate::header::Renderer {
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
-                    entry_point: "main",
+                    entry_point: "vs_main",
                     buffers: &[Vertex::desc()],
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
-                    entry_point: "main",
+                    entry_point: "fs_main",
                     targets: &[wgpu::ColorTargetState {
                         format: self.config.format,
                         write_mask: wgpu::ColorWrites::ALL,
@@ -80,8 +80,9 @@ impl crate::header::Renderer {
                     front_face: settings.front_face,
                     cull_mode: settings.cull_mode, //Some(wgpu::Face::Back),
                     polygon_mode: settings.polygon_mode,
-                    clamp_depth: settings.clamp_depth,
                     conservative: settings.conservative,
+                    clamp_depth: settings.clamp_depth,
+                    //unclipped_depth: false,
                 },
                 depth_stencil: Some(wgpu::DepthStencilState {
                     format: Self::DEPTH_FORMAT,
@@ -95,6 +96,7 @@ impl crate::header::Renderer {
                     mask: settings.mask,
                     alpha_to_coverage_enabled: settings.alpha_to_coverage_enabled,
                 },
+                //multiview: None,
             });
 
         Ok(render_pipeline)

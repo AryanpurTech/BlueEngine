@@ -32,7 +32,7 @@ struct VertexOutput {
 };
 
 [[stage(vertex)]]
-fn main(input: VertexInput) -> VertexOutput {
+fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));
     out.texture_coordinates = input.texture_coordinates;
@@ -55,7 +55,7 @@ var texture_diffuse: texture_2d<f32>;
 var sampler_diffuse: sampler;
 
 [[stage(fragment)]]
-fn main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
+fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
 }
 "#;
@@ -89,12 +89,29 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
-    crate::header::uniform_type::Matrix {
-        data: [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ],
-    };
+pub const DEFAULT_MATRIX_4: glm::Mat4 = glm::Mat4 {
+    c0: glm::Vector4 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+        w: 0.0,
+    },
+    c1: glm::Vector4 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+        w: 0.0,
+    },
+    c2: glm::Vector4 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+        w: 0.0,
+    },
+    c3: glm::Vector4 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        w: 1.0,
+    },
+};
