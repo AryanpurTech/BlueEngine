@@ -39,7 +39,7 @@ impl Text {
             for pixel in char_image.pixels_mut() {
                 //let pixel_value = percentage(character.1[char_length] as f32, 255f32);]
                 let pixel_value = character.1[char_length];
-                pixel.0 = [pixel_value, pixel_value, pixel_value, 255];
+                pixel.0 = [pixel_value, pixel_value, pixel_value, 0];
 
                 char_length += 1;
             }
@@ -66,7 +66,7 @@ impl Text {
         position: (isize, isize),
         engine: &mut crate::header::Engine,
     ) -> anyhow::Result<()> {
-        //let mut chars = Vec::<Vertex>::new();
+        let mut characters = Vec::<(fontdue::Metrics, usize)>::new();
         for i in content.char_indices() {
             let character: (fontdue::Metrics, usize);
             match self.char_cache.get(&i.1) {
@@ -83,12 +83,12 @@ impl Text {
                         for pixel in char_image.pixels_mut() {
                             //let pixel_value = percentage(character.1[char_length] as f32, 255f32);]
                             let pixel_value = character.1[char_length];
-                            pixel.0 = [pixel_value, pixel_value, pixel_value, 255];
+                            pixel.0 = [pixel_value, pixel_value, pixel_value, 0];
 
                             char_length += 1;
                         }
                         let index = engine.renderer.build_and_append_texture(
-                            "charTest",
+                            "CharTex",
                             TextureData::Image(image::DynamicImage::ImageRgba8(char_image)),
                             crate::header::TextureMode::Clamp,
                             //crate::header::TextureFormat::BMP,
@@ -98,7 +98,18 @@ impl Text {
                 }
             }
 
-            let window_width = engine.window.inner_size().width;
+            characters.push(character);
+        }
+
+        let mut current_character_position_x = position.0;
+        let mut average_height = 0;
+        for i in characters.iter() {
+            average_height += i.0.height;
+        }
+        average_height /= characters.len();
+
+        for character in characters.iter() {
+            let window_size = engine.window.inner_size();
             let character_shape_index = objects::two_dimensions::square(
                 ObjectSettings {
                     name: Some("text"),
@@ -110,8 +121,18 @@ impl Text {
                 },
                 engine,
             )?;
+
             let character_shape = engine.get_object(character_shape_index).unwrap();
-            character_shape.translate(normalize((position.0 * i.0 as isize) as f32, window_width), 0.0, 0.0);
+            current_character_position_x += character.0.width as isize + 20;
+
+            character_shape.translate(
+                normalize((current_character_position_x) as f32, window_size.width),
+                normalize(
+                    (average_height as f32 + character.0.height as f32),
+                    window_size.height,
+                ),
+                0.0,
+            );
         }
         Ok(())
     }

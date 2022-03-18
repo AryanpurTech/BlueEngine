@@ -24,28 +24,28 @@ fn main() {
     .unwrap();
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
-    let square_id = square(
+    /*let square_id = square(
         ObjectSettings {
             name: Some("SQUAREEE"),
             ..Default::default()
         },
         &mut engine,
     )
-    .unwrap();
+    .unwrap();*/
     //let window_size = engine.window.inner_size();
-    let change_texture = engine
-        .renderer
-        .build_and_append_texture(
-            "name",
-            TextureData::Bytes(include_bytes!("resource/BlueLogoDiscord.png").to_vec()),
-            blue_engine::header::TextureMode::Clamp,
-            //blue_engine::header::TextureFormat::PNG,
-        )
-        .unwrap();
+    /*let change_texture = engine
+    .renderer
+    .build_and_append_texture(
+        "name",
+        TextureData::Bytes(include_bytes!("resource/BlueLogoDiscord.png").to_vec()),
+        blue_engine::header::TextureMode::Clamp,
+        //blue_engine::header::TextureFormat::PNG,
+    )
+    .unwrap();*/
 
-    let square = engine.get_object(square_id).unwrap();
+    //let square = engine.get_object(square_id).unwrap();
     //square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
-    square.change_texture(change_texture);
+    //square.change_texture(change_texture);
     //square.resize(100.0, 100.0, 0.0, window_size);
 
     //let square = engine.objects.get_mut(square_id).unwrap();
