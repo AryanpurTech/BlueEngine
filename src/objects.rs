@@ -59,6 +59,7 @@ impl Engine {
                 self.window.inner_size().height as f32,
                 0f32,
             ),
+            scale: settings.scale,
             position: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4,
@@ -72,13 +73,7 @@ impl Engine {
             object.pipeline.0,
             Some(self.renderer.append_pipeline(object.pipeline.0)?),
         );
-        object.scale(0.1, 0.1, 0.1);
-        object.resize(
-            settings.size.0,
-            settings.size.1,
-            settings.size.2,
-            self.window.inner_size(),
-        );
+        object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
         object.position(
             settings.position.0,
             settings.position.1,
@@ -98,19 +93,20 @@ impl Engine {
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
-        for i in self.vertices.iter_mut() {
+        /*for i in self.vertices.iter_mut() {
             i.position[0] *= x;
             i.position[1] *= y;
             i.position[2] *= z;
-        }
+        }*/
 
         self.size.0 *= x;
         self.size.1 *= y;
         self.size.2 *= z;
 
-        self.changed = true;
+        let transformation_matrix = self.transformation_matrix;
+        let result = glm::ext::scale(&transformation_matrix, glm::vec3(x, y, z));
+        self.transformation_matrix = result;
     }
-
     /// Resizes an object in pixels which are relative to the window
     pub fn resize(
         &mut self,
@@ -120,17 +116,35 @@ impl Object {
         window_size: winit::dpi::PhysicalSize<u32>,
     ) {
         let difference_in_width = if self.size.0 != 0.0 && width != 0.0 {
-            normalize(width, window_size.width) / normalize(self.size.0, window_size.width)
+            let a = normalize(width, window_size.width);
+            let b = normalize(self.size.0, window_size.width);
+            if a != 0f32 && b != 0f32 {
+                a / b
+            } else {
+                b
+            }
         } else {
             0.0
         };
         let difference_in_height = if self.size.1 != 0.0 && height != 0.0 {
-            normalize(height, window_size.height) / normalize(self.size.1, window_size.height)
+            let a = normalize(height, window_size.height);
+            let b = normalize(self.size.1, window_size.height);
+            if a != 0f32 && b != 0f32 {
+                a / b
+            } else {
+                b
+            }
         } else {
             0.0
         };
         let difference_in_depth = if self.size.2 != 0.0 && depth != 0.0 {
-            normalize(depth, window_size.width) / normalize(self.size.2, window_size.width)
+            let a = normalize(depth, window_size.width);
+            let b = normalize(self.size.2, window_size.width);
+            if a != 0f32 && b != 0f32 {
+                a / b
+            } else {
+                b
+            }
         } else {
             0.0
         };

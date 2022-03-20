@@ -39,7 +39,11 @@ impl Text {
             for pixel in char_image.pixels_mut() {
                 //let pixel_value = percentage(character.1[char_length] as f32, 255f32);]
                 let pixel_value = character.1[char_length];
-                pixel.0 = [pixel_value, pixel_value, pixel_value, 0];
+                if pixel_value == 0 {
+                    pixel.0 = [0, 0, 0, 0];
+                } else {
+                    pixel.0 = [pixel_value, pixel_value, pixel_value, 0];
+                }
 
                 char_length += 1;
             }
@@ -113,9 +117,14 @@ impl Text {
             let character_shape_index = objects::two_dimensions::square(
                 ObjectSettings {
                     name: Some("text"),
-                    size: (character.0.width as f32, character.0.height as f32, 0f32),
+                    //size: (character.0.width as f32, character.0.height as f32, 0f32),
                     texture_index: character.1,
                     position: (position.0 as f32, position.1 as f32, 0.0),
+                    scale: (
+                        normalize(character.0.width as f32, window_size.width),
+                        normalize(character.0.height as f32, window_size.height),
+                        1f32,
+                    ),
                     camera_effect: false,
                     ..Default::default()
                 },
@@ -124,11 +133,16 @@ impl Text {
 
             let character_shape = engine.get_object(character_shape_index).unwrap();
             current_character_position_x += character.0.width as isize + 20;
+            println!(
+                "{} - {}",
+                normalize((current_character_position_x) as f32, window_size.width),
+                current_character_position_x
+            );
 
             character_shape.translate(
                 normalize((current_character_position_x) as f32, window_size.width),
                 normalize(
-                    (average_height as f32 + character.0.height as f32),
+                    average_height as f32 + character.0.height as f32,
                     window_size.height,
                 ),
                 0.0,

@@ -153,6 +153,7 @@ pub struct Object {
     pub pipeline: (Pipeline, Option<usize>),
     /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
+    pub scale: (f32, f32, f32),
     /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
     // flags the object to be updated until next frame
@@ -177,6 +178,7 @@ pub struct ObjectSettings {
     pub name: Option<&'static str>,
     /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
+    pub scale: (f32, f32, f32),
     /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
     /// The color of your object, A.K.A. albedo sometimes
@@ -193,6 +195,7 @@ impl Default for ObjectSettings {
         Self {
             name: Some("Object!"),
             size: (100f32, 100f32, 100f32),
+            scale: (1f32, 1f32, 1f32),
             position: (0f32, 0f32, 0f32),
             color: uniform_type::Array {
                 data: crate::utils::default_resources::DEFAULT_COLOR,
@@ -202,6 +205,13 @@ impl Default for ObjectSettings {
             shader_settings: ShaderSettings::default(),
         }
     }
+}
+
+pub struct Geometry {
+    /// A list of Vertex
+    pub vertices: Vec<Vertex>,
+    /// A list of indices that dictates the order that vertices appear
+    pub indices: Vec<u16>,
 }
 
 /// The engine is the main starting point of using the Blue Engine. Everything that runs on Blue Engine will be under this struct.

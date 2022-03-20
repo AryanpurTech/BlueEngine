@@ -1,6 +1,9 @@
+use std::ops::Mul;
+
 use blue_engine::{
     header::{
-        uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, TextureData, WindowDescriptor,
+        uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, ShaderSettings, TextureData,
+        WindowDescriptor,
     },
     objects::two_dimensions::{square, triangle},
     utils::text::Text,
@@ -24,14 +27,19 @@ fn main() {
     .unwrap();
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
-    /*let square_id = square(
+    let square_id = square(
         ObjectSettings {
             name: Some("SQUAREEE"),
+            shader_settings: ShaderSettings {
+                cull_mode: None,
+                ..Default::default()
+            },
+            scale: (0.1, 0.1, 0.1),
             ..Default::default()
         },
         &mut engine,
     )
-    .unwrap();*/
+    .unwrap();
     //let window_size = engine.window.inner_size();
     /*let change_texture = engine
     .renderer
@@ -44,6 +52,7 @@ fn main() {
     .unwrap();*/
 
     //let square = engine.get_object(square_id).unwrap();
+
     //square.change_color(0.0, 0.0, 1.0, 0.7).unwrap();
     //square.change_texture(change_texture);
     //square.resize(100.0, 100.0, 0.0, window_size);
@@ -56,12 +65,25 @@ fn main() {
     let radius = 2f32;
     let start = std::time::SystemTime::now();
     let mut rotation = 0f32;
+    let speed = 0.5;
 
     engine
         .update_loop(move |renderer, window, objects, events, camera| {
             let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
             let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
             //camera.set_eye([camx, 0.0, camz]);
+            if events.key_pressed(blue_engine::header::KeyboardKeys::S) {
+                let result = camera.eye - camera.target * speed;
+                camera.set_eye([result.x, result.y, result.z]);
+            }
+            if events.key_pressed(blue_engine::header::KeyboardKeys::W) {
+                let result = camera.eye + camera.target * speed;
+                camera.set_eye([result.x, result.y, result.z]);
+                objects
+                    .get_mut(square_id)
+                    .unwrap()
+                    .translate(0.5, 0f32, 0f32);
+            }
         })
         .expect("Error during update loop");
 }

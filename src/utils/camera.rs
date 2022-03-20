@@ -4,12 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::{
-    header::{
-        uniform_type::{Matrix},
-        Camera, Renderer, UniformBuffer,
-    },
-};
+use crate::header::{uniform_type::Matrix, Camera, Renderer, UniformBuffer};
 use anyhow::Result;
 
 use super::default_resources::DEFAULT_MATRIX_4;
@@ -108,13 +103,11 @@ impl Camera {
     pub fn update_view_projection(&mut self, renderer: &mut Renderer) -> Result<()> {
         if self.changed {
             let updated_buffer = renderer
-                .build_uniform_buffer(vec![
-                    UniformBuffer::Matrix(
-                        "Camera Uniform",
-                        self.camera_uniform_buffer()
-                            .expect("Couldn't build camera projection"),
-                    ),
-                ])
+                .build_uniform_buffer(vec![UniformBuffer::Matrix(
+                    "Camera Uniform",
+                    self.camera_uniform_buffer()
+                        .expect("Couldn't build camera projection"),
+                )])
                 .expect("Couldn't update the camera uniform buffer")
                 .0;
             let _ = std::mem::replace(&mut renderer.uniform_bind_group[0], updated_buffer);

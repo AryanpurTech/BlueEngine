@@ -136,13 +136,13 @@ fn main() {
 
     let _ = cube(Some("Cube"), &mut engine).unwrap();
 
-    let radius = 2f32;
+    let radius = 5f32;
     let start = std::time::SystemTime::now();
     engine
         .update_loop(move |_, _, _, _, camera| {
-            let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
-            let camy = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
-            let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
             camera
                 .set_eye([camx, camy, camz])
                 .expect("Couldn't update the camera eye");
