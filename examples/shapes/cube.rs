@@ -144,7 +144,7 @@ fn main() {
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
             camera
-                .set_eye([camx, camy, camz])
+                .set_position(camx, camy, camz)
                 .expect("Couldn't update the camera eye");
         })
         .expect("Error during update loop");

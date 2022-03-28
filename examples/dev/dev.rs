@@ -1,13 +1,40 @@
-use std::ops::Mul;
+use std::{ops::Mul, result};
 
 use blue_engine::{
     header::{
         uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, ShaderSettings, TextureData,
-        WindowDescriptor,
+        Vertex, WindowDescriptor,
     },
     objects::two_dimensions::{square, triangle},
-    utils::text::Text,
+    utils::{default_resources::DEFAULT_MATRIX_4, text::Text},
 };
+use legion::system;
+
+#[system]
+fn test(#[resource] t: &mut u8) {
+    if *t != u8::MAX {
+        *t += 1;
+        //println!("{}", t);
+    }
+}
+
+/*
+    Good new structure idea:
+
+    Pipeline: Entity with 4 component entity which later on render pass is queried.
+    so e.g. shader is an entity with it's id saved to pipeline. and pipeline is an entity itself.
+
+    OR:
+
+    Pipeline includes all the built data, with the raw saved on the objects. This does have easier use but bigger in runtime size.
+    A good fix for size can be referencing. although that might open to some borrow check errors not allowing same memory borrowed by many...
+
+
+*/
+
+struct haha {
+    data: String,
+}
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor {
@@ -18,6 +45,31 @@ fn main() {
         resizable: true,
     })
     .expect("win");
+
+    let mut world = legion::World::default();
+
+    let entity = world.push((
+        Vertex {
+            position: [-1f32, -1f32, -1f32],
+            texture: [1f32, 1f32],
+        },
+        0f32,
+    ));
+
+    match world.entry(entity) {
+        Some(data) => {
+            //let t = data.get_component::<f32>();
+            //println!("{:?}", t);
+        }
+        None => {}
+    };
+    let mut scheduler = legion::Schedule::builder()
+        .add_system(test_system())
+        .build();
+    let mut res = legion::Resources::default();
+    res.insert(5u8);
+
+    // ===============================
 
     let mut font = Text::new(
         include_bytes!("resource/JetBrainsMono-Medium.ttf"),
@@ -69,20 +121,18 @@ fn main() {
 
     engine
         .update_loop(move |renderer, window, objects, events, camera| {
-            let camx = glm::sin(start.elapsed().unwrap().as_secs_f32()) * radius;
-            let camz = glm::cos(start.elapsed().unwrap().as_secs_f32()) * radius;
+            scheduler.execute(&mut world, &mut res);
+
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
             //camera.set_eye([camx, 0.0, camz]);
             if events.key_pressed(blue_engine::header::KeyboardKeys::S) {
-                let result = camera.eye - camera.target * speed;
-                camera.set_eye([result.x, result.y, result.z]);
+                let result = camera.position - camera.target * speed;
+                camera.set_position(result.x, result.y, result.z);
             }
             if events.key_pressed(blue_engine::header::KeyboardKeys::W) {
-                let result = camera.eye + camera.target * speed;
-                camera.set_eye([result.x, result.y, result.z]);
-                objects
-                    .get_mut(square_id)
-                    .unwrap()
-                    .translate(0.5, 0f32, 0f32);
+                let result = camera.position + camera.target * speed;
+                camera.set_position(result.x, result.y, result.z);
             }
         })
         .expect("Error during update loop");

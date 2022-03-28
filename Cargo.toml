@@ -15,6 +15,9 @@ resolver = "2"
 name = "blue_engine"
 crate-type = ["rlib"]
 
+[features]
+NON_FILL_POLYGON_MODE = []
+
 [dependencies]
 winit = "0.26.1"
 futures = "0.3.17"
@@ -24,8 +27,9 @@ winit_input_helper = "0.11.1"
 anyhow = "1.0.44"
 fontdue = "0.7.2"
 env_logger = "0.9.0"
-glm = "0.2.3"
 wgpu = "0.10.2"
+legion = "0.4.0"
+nalgebra-glm = "0.16.0"
 
 # ========== EXAMPLES ========== #
 

@@ -23,12 +23,10 @@ impl Engine {
         let vertex_buffer_index = self
             .renderer
             .build_and_append_vertex_buffers(verticies.clone(), indicies.clone())?;
+        let b = vertex_buffer_index;
 
         let uniform_index = self.renderer.build_and_append_uniform_buffers(vec![
-            UniformBuffer::Matrix(
-                "Transformation Matrix",
-                uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
-            ),
+            UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
             UniformBuffer::Array("Color", settings.color),
         ])?;
 
@@ -62,7 +60,7 @@ impl Engine {
             scale: settings.scale,
             position: (0f32, 0f32, 0f32),
             changed: false,
-            transformation_matrix: DEFAULT_MATRIX_4,
+            transformation_matrix: DEFAULT_MATRIX_4.to_im(),
             color: settings.color,
             object_index: self.objects.len(),
             camera_effect: settings.camera_effect,
@@ -104,7 +102,7 @@ impl Object {
         self.size.2 *= z;
 
         let transformation_matrix = self.transformation_matrix;
-        let result = glm::ext::scale(&transformation_matrix, glm::vec3(x, y, z));
+        let result = nalgebra_glm::scale(&transformation_matrix, &nalgebra_glm::vec3(x, y, z));
         self.transformation_matrix = result;
     }
     /// Resizes an object in pixels which are relative to the window
@@ -159,15 +157,12 @@ impl Object {
     /// Rotates the object in the axis you specify
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
         let mut rotation_matrix = self.transformation_matrix;
-        rotation_matrix = glm::ext::rotate(
-            &rotation_matrix,
-            angle,
-            match axis {
-                RotateAxis::Z => glm::vec3(0.0, 0.0, 1.0),
-                RotateAxis::X => glm::vec3(0.0, 1.0, 0.0),
-                RotateAxis::Y => glm::vec3(1.0, 0.0, 0.0),
-            },
-        );
+        let axis = match axis {
+            RotateAxis::Z => nalgebra_glm::vec3(0.0, 0.0, 1.0),
+            RotateAxis::X => nalgebra_glm::vec3(0.0, 1.0, 0.0),
+            RotateAxis::Y => nalgebra_glm::vec3(1.0, 0.0, 0.0),
+        };
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle, &axis);
         self.transformation_matrix = rotation_matrix;
 
         self.changed = true;
@@ -176,7 +171,7 @@ impl Object {
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, x: f32, y: f32, z: f32) {
         let mut position_matrix = self.transformation_matrix;
-        position_matrix = glm::ext::translate(&position_matrix, glm::vec3(x, y, z));
+        position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
         self.transformation_matrix = position_matrix;
 
         self.changed = true;
@@ -306,7 +301,7 @@ impl Object {
             .build_uniform_buffer(vec![
                 UniformBuffer::Matrix(
                     "Transformation Matrix",
-                    uniform_type::Matrix::from_glm(self.transformation_matrix),
+                    uniform_type::Matrix::from_im(self.transformation_matrix),
                 ),
                 UniformBuffer::Array("Color", self.color),
             ])?

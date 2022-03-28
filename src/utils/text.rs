@@ -133,11 +133,11 @@ impl Text {
 
             let character_shape = engine.get_object(character_shape_index).unwrap();
             current_character_position_x += character.0.width as isize + 20;
-            println!(
+            /*println!(
                 "{} - {}",
                 normalize((current_character_position_x) as f32, window_size.width),
                 current_character_position_x
-            );
+            );*/
 
             character_shape.translate(
                 normalize((current_character_position_x) as f32, window_size.width),

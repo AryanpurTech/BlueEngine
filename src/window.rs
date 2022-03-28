@@ -66,10 +66,7 @@ impl Engine {
 
         let default_uniform = renderer
             .build_and_append_uniform_buffers(vec![
-                UniformBuffer::Matrix(
-                    "Transformation Matrix",
-                    uniform_type::Matrix::from_glm(DEFAULT_MATRIX_4),
-                ),
+                UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
                 UniformBuffer::Array(
                     "Color",
                     uniform_type::Array {
@@ -86,12 +83,18 @@ impl Engine {
             ShaderSettings::default(),
         )?;
 
+        let world = (
+            legion::World::default(),
+            legion::Schedule::builder().build(),
+        );
+
         Ok(Self {
             window,
             event_loop,
             renderer,
             objects: Vec::new(),
             camera,
+            world,
         })
     }
 
@@ -112,6 +115,7 @@ impl Engine {
             window,
             mut objects,
             mut camera,
+            mut world,
         } = self;
 
         // and get input events to handle them later
