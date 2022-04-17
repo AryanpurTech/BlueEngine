@@ -79,7 +79,7 @@ fn main() {
     .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
-    let square_id = square(
+    let square = square(
         ObjectSettings {
             name: Some("SQUAREEE"),
             shader_settings: ShaderSettings {

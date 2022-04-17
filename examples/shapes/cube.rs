@@ -6,9 +6,12 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::header::{Engine, ObjectSettings, Vertex, WindowDescriptor};
+use blue_engine::header::{Engine, Object, ObjectSettings, Vertex, WindowDescriptor};
 
-pub fn cube(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
+pub fn cube<'a>(
+    name: Option<&'static str>,
+    engine: &'a mut Engine,
+) -> Result<&'a mut Object, anyhow::Error> {
     let new_cube = engine.new_object(
         vec![
             // Top Face
@@ -134,7 +137,8 @@ pub fn cube(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, an
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let _ = cube(Some("Cube"), &mut engine).unwrap();
+    let cube_object = cube(Some("Cube"), &mut engine).unwrap();
+    cube_object.change_color(0f32, 0f32, 1f32, 1f32).unwrap();
 
     let radius = 5f32;
     let start = std::time::SystemTime::now();

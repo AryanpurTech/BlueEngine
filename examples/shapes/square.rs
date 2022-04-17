@@ -6,9 +6,12 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::header::{Engine, ObjectSettings, Vertex, WindowDescriptor};
+use blue_engine::header::{Engine, Object, ObjectSettings, Vertex, WindowDescriptor};
 
-pub fn square(name: Option<&'static str>, engine: &mut Engine) -> Result<usize, anyhow::Error> {
+pub fn square<'a>(
+    name: Option<&'static str>,
+    engine: &'a mut Engine,
+) -> Result<&'a mut Object, anyhow::Error> {
     let new_square = engine.new_object(
         vec![
             Vertex {

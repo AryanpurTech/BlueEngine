@@ -19,7 +19,7 @@ impl Engine {
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
-    ) -> anyhow::Result<usize> {
+    ) -> anyhow::Result<&mut Object> {
         let vertex_buffer = self
             .renderer
             .build_vertex_buffer(verticies.clone(), indicies.clone())?;
@@ -79,7 +79,7 @@ impl Engine {
         );
         //object.update(&mut self.renderer)?;
 
-        Ok(index)
+        Ok(object)
     }
 
     /// Returns mutable object
