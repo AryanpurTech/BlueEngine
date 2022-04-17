@@ -4,7 +4,10 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::Renderer;
+use crate::{
+    header::{uniform_type, Camera, Object, Renderer, ShaderSettings, TextureData, UniformBuffer},
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
+};
 use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;
@@ -19,7 +22,7 @@ fn get_render_features() -> Features {
 }
 
 impl Renderer {
-    pub(crate) async fn new(window: &Window) -> Self {
+    pub(crate) async fn new(window: &Window) -> anyhow::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -98,7 +101,7 @@ impl Renderer {
 
         let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
-        Self {
+        let mut renderer = Self {
             surface,
             device,
             queue,
@@ -109,12 +112,37 @@ impl Renderer {
             default_uniform_bind_group_layout,
             depth_buffer,
 
-            shaders: Vec::new(),
-            vertex_buffers: Vec::new(),
-            texture_bind_group: Vec::new(),
-            uniform_bind_group: Vec::new(),
-            render_pipelines: Vec::new(),
-        }
+            default_data: None,
+            camera: None,
+        };
+
+        let default_texture = renderer.build_texture(
+            "Default Texture",
+            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
+            crate::header::TextureMode::Clamp,
+            //crate::header::TextureFormat::PNG
+        )?;
+
+        let default_uniform = renderer.build_uniform_buffer(vec![
+            UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
+            UniformBuffer::Array(
+                "Color",
+                uniform_type::Array {
+                    data: DEFAULT_COLOR,
+                },
+            ),
+        ])?;
+
+        let default_shader = renderer.build_shader(
+            "Default Shader",
+            DEFAULT_SHADER.to_string(),
+            Some(&default_uniform.1),
+            ShaderSettings::default(),
+        )?;
+
+        renderer.default_data = Some((default_texture, default_shader, default_uniform.0));
+
+        Ok(renderer)
     }
 
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
@@ -125,7 +153,11 @@ impl Renderer {
         self.depth_buffer = Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
     }
 
-    pub(crate) fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub(crate) fn render(
+        &mut self,
+        objects: &Vec<Object>,
+        camera: &Camera,
+    ) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_frame()?.output;
         let view = frame
             .texture
@@ -157,83 +189,24 @@ impl Renderer {
             }),
         });
 
-        let mut already_loaded_shader: usize = 0;
-        let mut already_loaded_buffer: usize = 5;
-        let mut already_loaded_texture: usize = 0;
-        let mut already_loaded_uniform_buffer: usize = 0;
+        let default_data = self.default_data.as_ref().unwrap();
 
-        render_pass.set_bind_group(
-            1,
-            self.uniform_bind_group
-                .get(0)
-                .expect("Couldn't find the camera uniform data"),
-            &[],
-        );
-        render_pass.set_pipeline(
-            self.shaders
-                .get(0)
-                .expect("Couldn't find the default shader"),
-        );
-        render_pass.set_bind_group(
-            0,
-            self.texture_bind_group
-                .get(0)
-                .expect("Couldn't find the default texture"),
-            &[],
-        );
+        render_pass.set_bind_group(0, &default_data.0, &[]);
+        render_pass.set_pipeline(&default_data.1);
+        render_pass.set_bind_group(1, &camera.uniform_data, &[]);
 
-        for i in self.render_pipelines.iter() {
-            if already_loaded_shader != i.shader_index.clone() || i.shader_index.clone() >= 1 {
-                render_pass.set_pipeline(
-                    self.shaders.get(i.shader_index.clone()).expect(
-                        format!("Couldn't find shader at index: {}", i.shader_index).as_str(),
-                    ),
-                );
-                already_loaded_shader = i.shader_index;
+        for i in objects.iter() {
+            render_pass.set_pipeline(&i.pipeline.shader);
+            render_pass.set_bind_group(0, &i.pipeline.texture, &[]);
+            if i.pipeline.uniform.is_some() {
+                render_pass.set_bind_group(2, &i.pipeline.uniform.as_ref().unwrap(), &[]);
             }
-
-            if already_loaded_texture != i.texture_index.clone() || i.texture_index.clone() >= 1 {
-                render_pass.set_bind_group(
-                    0,
-                    self.texture_bind_group
-                        .get(i.texture_index.clone())
-                        .unwrap(),
-                    &[],
-                );
-                already_loaded_texture = i.texture_index;
-            }
-
-            if i.uniform_index.is_some() {
-                let uniform_buffer_index = i.uniform_index.clone().unwrap();
-                let uniform_buffer_enum_option = self.uniform_bind_group.get(uniform_buffer_index);
-
-                if uniform_buffer_enum_option.is_some() {
-                    let uniform_buffer = uniform_buffer_enum_option.expect(
-                        format!(
-                            "Uniform buffer group at {} doesn't exist",
-                            uniform_buffer_index
-                        )
-                        .as_str(),
-                    );
-                    if already_loaded_uniform_buffer != uniform_buffer_index.clone()
-                        || uniform_buffer_index.clone() == 1
-                    {
-                        render_pass.set_bind_group(2, uniform_buffer, &[]);
-                        already_loaded_uniform_buffer = uniform_buffer_index;
-                    }
-                }
-            }
-
-            if already_loaded_buffer != i.vertex_buffer_index.clone()
-                || i.vertex_buffer_index.clone() == 0
-            {
-                let buffers = self.vertex_buffers.get(i.vertex_buffer_index).unwrap();
-                render_pass.set_vertex_buffer(0, buffers.vertex_buffer.slice(..));
-                render_pass
-                    .set_index_buffer(buffers.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                render_pass.draw_indexed(0..buffers.length, 0, 0..1);
-                already_loaded_buffer = i.vertex_buffer_index;
-            }
+            render_pass.set_vertex_buffer(0, i.pipeline.vertex_buffer.vertex_buffer.slice(..));
+            render_pass.set_index_buffer(
+                i.pipeline.vertex_buffer.index_buffer.slice(..),
+                wgpu::IndexFormat::Uint16,
+            );
+            render_pass.draw_indexed(0..i.pipeline.vertex_buffer.length, 0, 0..1);
         }
 
         drop(render_pass);

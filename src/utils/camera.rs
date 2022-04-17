@@ -6,22 +6,29 @@
 
 use crate::header::{uniform_type::Matrix, Camera, Renderer, UniformBuffer};
 use anyhow::Result;
+use winit::dpi::PhysicalSize;
 
 use super::default_resources::DEFAULT_MATRIX_4;
 
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
-    pub fn new(renderer: &Renderer) -> Result<Self> {
+    pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Result<Self> {
+        let camera_uniform = renderer.build_uniform_buffer(vec![UniformBuffer::Matrix(
+            "Camera Uniform",
+            DEFAULT_MATRIX_4,
+        )])?;
+
         let mut camera = Self {
             position: nalgebra_glm::vec3(0.0, 0.0, 1.0),
-            target: nalgebra_glm::vec3(0.0, 0.0, -1.0).into(),
+            target: nalgebra_glm::vec3(0.0, 0.0, 0.0).into(),
             up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
-            aspect: renderer.config.width as f32 / renderer.config.height as f32,
+            aspect: window_size.width as f32 / window_size.height as f32,
             fov: 70f32 * (std::f32::consts::PI / 180f32),
             near: 0.1,
             far: 100.0,
             view_data: DEFAULT_MATRIX_4.to_im(),
             changed: true,
+            uniform_data: camera_uniform.0,
         };
         camera.build_view_projection_matrix()?;
 
@@ -110,7 +117,7 @@ impl Camera {
                 )])
                 .expect("Couldn't update the camera uniform buffer")
                 .0;
-            let _ = std::mem::replace(&mut renderer.uniform_bind_group[0], updated_buffer);
+            self.uniform_data = updated_buffer;
             self.changed = false;
         }
 

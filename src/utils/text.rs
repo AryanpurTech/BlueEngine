@@ -118,7 +118,7 @@ impl Text {
                 ObjectSettings {
                     name: Some("text"),
                     //size: (character.0.width as f32, character.0.height as f32, 0f32),
-                    texture_index: character.1,
+                    //texture: character.1,
                     position: (position.0 as f32, position.1 as f32, 0.0),
                     scale: (
                         normalize(character.0.width as f32, window_size.width),

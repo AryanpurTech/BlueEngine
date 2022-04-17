@@ -6,7 +6,7 @@ use blue_engine::{
         Vertex, WindowDescriptor,
     },
     objects::two_dimensions::{square, triangle},
-    utils::{default_resources::DEFAULT_MATRIX_4, text::Text},
+    utils::default_resources::DEFAULT_MATRIX_4, // text::Text},
 };
 use legion::system;
 
@@ -71,12 +71,12 @@ fn main() {
 
     // ===============================
 
-    let mut font = Text::new(
+    /*let mut font = Text::new(
         include_bytes!("resource/JetBrainsMono-Medium.ttf"),
         25f32,
         &mut engine.renderer,
     )
-    .unwrap();
+    .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let square_id = square(
@@ -87,6 +87,7 @@ fn main() {
                 ..Default::default()
             },
             scale: (0.1, 0.1, 0.1),
+            camera_effect: false,
             ..Default::default()
         },
         &mut engine,
@@ -112,7 +113,7 @@ fn main() {
     //let square = engine.objects.get_mut(square_id).unwrap();
 
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
-    font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
+    //font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
 
     let radius = 2f32;
     let start = std::time::SystemTime::now();

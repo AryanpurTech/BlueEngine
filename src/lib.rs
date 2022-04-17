@@ -5,7 +5,6 @@
 */
 
 pub(crate) mod definition;
-pub mod gui;
 pub mod header;
 pub mod objects;
 pub mod render;

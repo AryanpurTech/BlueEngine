@@ -134,7 +134,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
 name = "blue_engine"
-version = "0.2.9"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -2156,9 +2156,9 @@ dependencies = [
 
 [[package]]
 name = "winit_input_helper"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "353281ce305e2d720d6af2ad9343abf9ed47c41b5f2aa011f83f41970179b414"
+checksum = "f114b4fe1f38c80027543eb8a0711634fb9136a5cd18e8e990122aaea21f9302"
 dependencies = [
  "winit",
 ]

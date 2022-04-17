@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.2.9"
+version = "0.3.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2018"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -23,7 +23,7 @@ winit = "0.26.1"
 futures = "0.3.17"
 image = "0.24.1"
 bytemuck = { version = "1.7.2", features = [ "derive" ] }
-winit_input_helper = "0.11.1"
+winit_input_helper = "0.12.0"
 anyhow = "1.0.44"
 fontdue = "0.7.2"
 env_logger = "0.9.0"

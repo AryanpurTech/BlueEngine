@@ -141,7 +141,6 @@ pub mod uniform_type {
 /// creating 3D objects and showing them on screen. A range of default objects are available
 /// as well as ability to customize each of them and even create your own! You can also
 /// customize almost everything there is about them!
-#[derive(Debug)]
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
     pub name: Option<&'static str>,
@@ -151,7 +150,7 @@ pub struct Object {
     pub indices: Vec<u16>,
     pub uniform_layout: wgpu::BindGroupLayout,
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures
-    pub pipeline: (Pipeline, Option<usize>),
+    pub pipeline: Pipeline,
     /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
     pub scale: (f32, f32, f32),
@@ -186,8 +185,6 @@ pub struct ObjectSettings {
     pub color: uniform_type::Array,
     /// Should it be affected by camera?
     pub camera_effect: bool,
-    /// Custom texture index
-    pub texture_index: usize,
     /// Shader Settings
     pub shader_settings: ShaderSettings,
 }
@@ -202,7 +199,6 @@ impl Default for ObjectSettings {
                 data: crate::utils::default_resources::DEFAULT_COLOR,
             },
             camera_effect: true,
-            texture_index: 0,
             shader_settings: ShaderSettings::default(),
         }
     }
@@ -254,17 +250,14 @@ pub struct Engine {
     pub objects: Vec<Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
-
-    pub(crate) world: (legion::World, legion::Schedule),
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
-#[derive(Debug, Clone, Copy)]
 pub struct Pipeline {
-    pub shader_index: usize,
-    pub vertex_buffer_index: usize,
-    pub texture_index: usize,
-    pub uniform_index: Option<usize>,
+    pub shader: Shaders,
+    pub vertex_buffer: VertexBuffers,
+    pub texture: Textures,
+    pub uniform: Option<UniformBuffers>,
 }
 
 /// Container for vertex and index buffer
@@ -293,11 +286,8 @@ pub struct Renderer {
     pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,
     pub(crate) depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
-    pub(crate) shaders: Vec<Shaders>,
-    pub(crate) vertex_buffers: Vec<VertexBuffers>,
-    pub(crate) texture_bind_group: Vec<Textures>,
-    pub(crate) uniform_bind_group: Vec<UniformBuffers>,
-    pub(crate) render_pipelines: Vec<Pipeline>,
+    pub default_data: Option<(Textures, Shaders, UniformBuffers)>,
+    pub camera: Option<UniformBuffers>,
 }
 
 /// Descriptor and settings for a window.
@@ -329,7 +319,7 @@ impl std::default::Default for WindowDescriptor {
 
 /// Container for the camera feature. The settings here are needed for
 /// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct Camera {
     /// The position of the camera in 3D space
     pub position: nalgebra_glm::Vec3,
@@ -347,6 +337,7 @@ pub struct Camera {
     pub view_data: nalgebra_glm::Mat4,
     // For checking and rebuilding it's uniform buffer
     pub(crate) changed: bool,
+    pub(crate) uniform_data: UniformBuffers,
 }
 
 /// The mouse button identifier
