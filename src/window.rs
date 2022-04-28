@@ -6,7 +6,7 @@
 
 use crate::header::{Camera, Engine, Object, Renderer, WindowDescriptor};
 use winit::{
-    event::{Event, WindowEvent},
+    event::{DeviceEvent, Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
@@ -42,7 +42,7 @@ impl Engine {
         let window = new_window.build(&event_loop).unwrap();
 
         // The renderer init on current window
-        let mut renderer = futures::executor::block_on(Renderer::new(&window))?;
+        let mut renderer = pollster::block_on(Renderer::new(&window))?;
 
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
 
@@ -64,7 +64,13 @@ impl Engine {
     pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
     where
         F: 'static
-            + FnMut(&mut Renderer, &Window, &mut Vec<Object>, &WinitInputHelper, &mut Camera),
+            + FnMut(
+                &mut Renderer,
+                &Window,
+                &mut Vec<Object>,
+                (&winit::event::DeviceEvent, &WinitInputHelper),
+                &mut Camera,
+            ),
     {
         let Self {
             event_loop,
@@ -76,13 +82,16 @@ impl Engine {
 
         // and get input events to handle them later
         let mut input = winit_input_helper::WinitInputHelper::new();
+        let mut device_event: winit::event::DeviceEvent =
+            DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
         let mut current_window_size = window.inner_size();
 
         // The main loop
-        event_loop.run(move |event, _, control_flow| {
+        event_loop.run(move |events, _, control_flow| {
             // updates the data on what events happened before the frame start
-            input.update(&event);
-            match event {
+            input.update(&events);
+
+            match events {
                 Event::WindowEvent {
                     ref event,
                     window_id,
@@ -91,6 +100,7 @@ impl Engine {
                     _ => {}
                 },
 
+                Event::DeviceEvent { event, .. } => device_event = event,
                 Event::MainEventsCleared => {
                     let new_window_size = window.inner_size();
                     if new_window_size != current_window_size {
@@ -98,7 +108,13 @@ impl Engine {
                         current_window_size = new_window_size;
                     }
 
-                    update_function(&mut renderer, &window, &mut objects, &input, &mut camera);
+                    update_function(
+                        &mut renderer,
+                        &window,
+                        &mut objects,
+                        (&device_event, &input),
+                        &mut camera,
+                    );
                     camera
                         .update_view_projection(&mut renderer)
                         .expect("Couldn't update camera");
@@ -117,6 +133,9 @@ impl Engine {
                         // All other errors (Outdated, Timeout) should be resolved by the next frame
                         Err(e) => eprintln!("{:?}", e),
                     }
+                    window.request_redraw();
+
+                    device_event = DeviceEvent::Text { codepoint: ' ' };
                 }
                 _ => (),
             }

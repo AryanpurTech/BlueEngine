@@ -10,7 +10,6 @@ use crate::header::{
     TextureData, Textures, UniformBuffer, Vertex,
 };
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
-pub mod two_dimensions;
 
 impl Engine {
     /// Creates a new object

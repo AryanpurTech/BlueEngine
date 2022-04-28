@@ -6,7 +6,10 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{header::{Engine, ObjectSettings, WindowDescriptor}, objects::two_dimensions::triangle};
+use blue_engine::{
+    header::{Engine, ObjectSettings, WindowDescriptor},
+    primitive_shapes::triangle,
+};
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");

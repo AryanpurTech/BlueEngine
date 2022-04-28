@@ -338,8 +338,11 @@ pub struct Camera {
     // For checking and rebuilding it's uniform buffer
     pub(crate) changed: bool,
     pub(crate) uniform_data: UniformBuffers,
+    pub(crate) add_position_and_target: bool,
 }
 
+/// Device Events
+pub use winit::event::DeviceEvent;
 /// The mouse button identifier
 pub use winit::event::MouseButton;
 /// Keyboard keys identifier

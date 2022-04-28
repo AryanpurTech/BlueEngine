@@ -6,7 +6,7 @@
 
 use blue_engine::{
     header::{Engine, ObjectSettings, ShaderSettings, WindowDescriptor},
-    objects::two_dimensions::square,
+    primitive_shapes::square,
 };
 
 fn main() {

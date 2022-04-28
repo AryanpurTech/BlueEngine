@@ -19,8 +19,8 @@ impl Camera {
         )])?;
 
         let mut camera = Self {
-            position: nalgebra_glm::vec3(0.0, 0.0, 1.0),
-            target: nalgebra_glm::vec3(0.0, 0.0, 0.0).into(),
+            position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
+            target: nalgebra_glm::vec3(0.0, 0.0, -1.0).into(),
             up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
             aspect: window_size.width as f32 / window_size.height as f32,
             fov: 70f32 * (std::f32::consts::PI / 180f32),
@@ -29,6 +29,7 @@ impl Camera {
             view_data: DEFAULT_MATRIX_4.to_im(),
             changed: true,
             uniform_data: camera_uniform.0,
+            add_position_and_target: false,
         };
         camera.build_view_projection_matrix()?;
 
@@ -37,7 +38,15 @@ impl Camera {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
-        let view = nalgebra_glm::look_at_rh(&self.position, &self.target, &self.up);
+        let view = nalgebra_glm::look_at_rh(
+            &self.position,
+            &if self.add_position_and_target {
+                self.position + self.target
+            } else {
+                self.target
+            },
+            &self.up,
+        );
         let proj = nalgebra_glm::perspective(self.fov, self.aspect, self.near, self.far);
         self.view_data = proj * view;
         self.changed = true;
@@ -104,6 +113,11 @@ impl Camera {
         self.build_view_projection_matrix()?;
 
         Ok(())
+    }
+
+    /// Enables adding position and target for the view target
+    pub fn add_position_and_target(&mut self, enable: bool) {
+        self.add_position_and_target = enable;
     }
 
     /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame

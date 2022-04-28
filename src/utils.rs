@@ -7,3 +7,4 @@
 pub mod camera;
 //pub mod text;
 pub mod default_resources;
+pub mod flycamera;
