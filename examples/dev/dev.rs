@@ -6,7 +6,7 @@ use blue_engine::{
         Vertex, WindowDescriptor,
     },
     primitive_shapes::{square, triangle},
-    utils::{default_resources::DEFAULT_MATRIX_4, loader::load_gltf}, // text::Text},
+    utils::default_resources::DEFAULT_MATRIX_4, // text::Text},
 };
 use std::time::Duration;
 

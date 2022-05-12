@@ -49,9 +49,14 @@ impl Renderer {
             .await
             .unwrap();
 
+        let tex_format = surface.get_preferred_format(&adapter);
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: if tex_format.is_some() {
+                tex_format.unwrap()
+            } else {
+                wgpu::TextureFormat::Bgra8Unorm
+            }, //wgpu::TextureFormat::Bgra8UnormSrgb,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Immediate,

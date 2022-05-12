@@ -42,7 +42,7 @@ impl Engine {
         let window = new_window.build(&event_loop).unwrap();
 
         // The renderer init on current window
-        let mut renderer = pollster::block_on(Renderer::new(&window))?;
+        let mut renderer = futures::executor::block_on(Renderer::new(&window))?;
 
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
 
