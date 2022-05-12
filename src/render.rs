@@ -32,7 +32,7 @@ impl Renderer {
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::LowPower,
                 compatible_surface: Some(&surface),
-                //force_fallback_adapter: false,
+                force_fallback_adapter: false,
             })
             .await
             .unwrap();
@@ -79,10 +79,8 @@ impl Renderer {
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
                         visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler {
-                            comparison: false,
-                            filtering: true,
-                        },
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), //comparison: false,
+                        // filtering: true,
                         count: None,
                     },
                 ],
@@ -163,7 +161,7 @@ impl Renderer {
         objects: &Vec<Object>,
         camera: &Camera,
     ) -> Result<(), wgpu::SurfaceError> {
-        let frame = self.surface.get_current_frame()?.output;
+        let frame = self.surface.get_current_texture()?;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -218,6 +216,7 @@ impl Renderer {
 
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
+        frame.present();
 
         Ok(())
     }

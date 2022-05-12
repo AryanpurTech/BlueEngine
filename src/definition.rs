@@ -86,8 +86,8 @@ impl crate::header::Renderer {
                     cull_mode: settings.cull_mode, //Some(wgpu::Face::Back),
                     polygon_mode: settings.polygon_mode,
                     conservative: settings.conservative,
-                    clamp_depth: settings.clamp_depth,
-                    //unclipped_depth: false,
+                    //clamp_depth: settings.clamp_depth,
+                    unclipped_depth: false,
                 },
                 depth_stencil: Some(wgpu::DepthStencilState {
                     format: Self::DEPTH_FORMAT,
@@ -101,7 +101,7 @@ impl crate::header::Renderer {
                     mask: settings.mask,
                     alpha_to_coverage_enabled: settings.alpha_to_coverage_enabled,
                 },
-                //multiview: None,
+                multiview: None,
             });
 
         Ok(render_pipeline)

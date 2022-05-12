@@ -297,20 +297,20 @@ impl Object {
         // step 1 define blocks
         let blocks = format!(
             "\n{}\n{}\n{}",
-            r#"[[block]]
+            r#"
 struct TransformationUniforms {
     transform_matrix: mat4x4<f32>;
 };
 [[group(2), binding(0)]]
 var<uniform> transform_uniform: TransformationUniforms;"#,
-            r#"[[block]]
+            r#"
 struct FragmentUniforms {
     color: vec4<f32>;
 };
 [[group(2), binding(1)]]
 var<uniform> fragment_uniforms: FragmentUniforms;"#,
             if self.camera_effect {
-                r#"[[block]]
+                r#"
 struct CameraUniforms {
     camera_matrix: mat4x4<f32>;
 };

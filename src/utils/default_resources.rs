@@ -7,14 +7,14 @@
 pub const DEFAULT_SHADER: &str = r#"
 // Vertex Stage
 
-[[block]]
+
 struct CameraUniforms {
     camera_matrix: mat4x4<f32>;
 };
 [[group(1), binding(0)]]
 var<uniform> camera_uniform: CameraUniforms;
 
-[[block]]
+
 struct TransformationUniforms {
     transform_matrix: mat4x4<f32>;
 };
@@ -41,7 +41,7 @@ fn vs_main(input: VertexInput) -> VertexOutput {
 
 // Fragment Stage
 
-[[block]]
+
 struct FragmentUniforms {
     color: vec4<f32>;
 };
