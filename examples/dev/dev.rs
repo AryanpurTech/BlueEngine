@@ -5,8 +5,9 @@ use blue_engine::{
         uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, ShaderSettings, TextureData,
         Vertex, WindowDescriptor,
     },
-    primitive_shapes::{square, triangle},
-    utils::default_resources::DEFAULT_MATRIX_4, // text::Text},
+    primitive_shapes::{cube, square, triangle},
+    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
+    PolygonMode, // text::Text},
 };
 use std::time::Duration;
 
@@ -30,20 +31,11 @@ fn main() {
     .unwrap();*/
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
-    let square = square(
-        ObjectSettings {
-            name: Some("SQUAREEE"),
-            shader_settings: ShaderSettings {
-                cull_mode: None,
-                ..Default::default()
-            },
-            scale: (0.1, 0.1, 0.1),
-            camera_effect: false,
-            ..Default::default()
-        },
-        &mut engine,
-    )
-    .unwrap();
+    let window_size = engine.window.inner_size();
+    let cube = cube(Some("CUBEE"), &mut engine).unwrap();
+    cube.scale(0.3, 0.3, 0.3);
+    let cube_index = cube.object_index;
+
     //let window_size = engine.window.inner_size();
     /*let change_texture = engine
     .renderer
@@ -69,23 +61,66 @@ fn main() {
     let radius = 2f32;
     let start = std::time::SystemTime::now();
     let mut rotation = 0f32;
-    let speed = 0.5;
+    let speed = -0.05;
 
-    /*engine
-    .update_loop(move |renderer, window, objects, events, camera| {
-        scheduler.execute(&mut world, &mut res);
+    let mut fly_camera = FlyCamera::new(&mut engine.camera);
 
-        let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
-        let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-        //camera.set_eye([camx, 0.0, camz]);
-        if events.key_pressed(blue_engine::header::KeyboardKeys::S) {
-            let result = camera.position - camera.target * speed;
-            camera.set_position(result.x, result.y, result.z);
-        }
-        if events.key_pressed(blue_engine::header::KeyboardKeys::W) {
-            let result = camera.position + camera.target * speed;
-            camera.set_position(result.x, result.y, result.z);
-        }
-    })
-    .expect("Error during update loop");*/
+    engine
+        .update_loop(move |_, window, objects, (event, input), camera| {
+            fly_camera.update(camera, window, event, input);
+
+            let sprite = objects.get_mut(cube_index).unwrap();
+
+            if input.key_held(blue_engine::KeyboardKeys::Up) {
+                sprite.position(
+                    sprite.position.0,
+                    sprite.position.1 + speed,
+                    sprite.position.2,
+                    window_size,
+                );
+            }
+            if input.key_held(blue_engine::KeyboardKeys::Down) {
+                sprite.position(
+                    sprite.position.0,
+                    sprite.position.1 - speed,
+                    sprite.position.2,
+                    window_size,
+                );
+            }
+
+            if input.key_held(blue_engine::KeyboardKeys::Left) {
+                sprite.position(
+                    sprite.position.0 - speed,
+                    sprite.position.1,
+                    sprite.position.2,
+                    window_size,
+                );
+            }
+            if input.key_held(blue_engine::KeyboardKeys::Right) {
+                sprite.position(
+                    sprite.position.0 + speed,
+                    sprite.position.1,
+                    sprite.position.2,
+                    window_size,
+                );
+            }
+
+            if input.key_held(blue_engine::KeyboardKeys::E) {
+                sprite.position(
+                    sprite.position.0,
+                    sprite.position.1,
+                    sprite.position.2 - speed,
+                    window_size,
+                );
+            }
+            if input.key_held(blue_engine::KeyboardKeys::Q) {
+                sprite.position(
+                    sprite.position.0,
+                    sprite.position.1,
+                    sprite.position.2 + speed,
+                    window_size,
+                );
+            }
+        })
+        .expect("Error during update loop");
 }

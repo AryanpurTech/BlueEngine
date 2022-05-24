@@ -213,14 +213,14 @@ impl Object {
             }
         };
 
-        self.position.0 = x;
-        self.position.1 = y;
-        self.position.2 = z;
+        self.position.0 -= x;
+        self.position.1 -= y;
+        self.position.2 -= z;
 
         self.translate(
-            normalized_target_x,
-            normalized_target_y,
-            normalized_target_z,
+            self.position.0 - x,
+            self.position.1 - y,
+            self.position.2 - z,
         );
     }
 
