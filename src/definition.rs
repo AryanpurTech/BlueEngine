@@ -39,7 +39,7 @@ impl crate::header::Renderer {
     ) -> Result<Shaders, anyhow::Error> {
         let shader = self
             .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some(format!("{} Shader", name).as_str()),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
             });
@@ -73,11 +73,11 @@ impl crate::header::Renderer {
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
                     entry_point: "fs_main",
-                    targets: &[wgpu::ColorTargetState {
+                    targets: &[Some(wgpu::ColorTargetState {
                         format: self.config.format,
                         write_mask: wgpu::ColorWrites::ALL,
                         blend: Some(wgpu::BlendState::REPLACE),
-                    }],
+                    })],
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: settings.topology,

@@ -49,14 +49,10 @@ impl Renderer {
             .await
             .unwrap();
 
-        let tex_format = surface.get_preferred_format(&adapter);
+        let tex_format = surface.get_supported_formats(&adapter)[0];
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: if tex_format.is_some() {
-                tex_format.unwrap()
-            } else {
-                wgpu::TextureFormat::Bgra8Unorm
-            }, //wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Immediate,
@@ -174,14 +170,14 @@ impl Renderer {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render pass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: &self.depth_buffer.1,
                 depth_ops: Some(wgpu::Operations {

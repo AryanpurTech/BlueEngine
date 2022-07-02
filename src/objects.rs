@@ -299,22 +299,22 @@ impl Object {
             "\n{}\n{}\n{}",
             r#"
 struct TransformationUniforms {
-    transform_matrix: mat4x4<f32>;
+    transform_matrix: mat4x4<f32>,
 };
-[[group(2), binding(0)]]
+@group(2) @binding(0)
 var<uniform> transform_uniform: TransformationUniforms;"#,
             r#"
 struct FragmentUniforms {
-    color: vec4<f32>;
+    color: vec4<f32>,
 };
-[[group(2), binding(1)]]
+@group(2) @binding(1)
 var<uniform> fragment_uniforms: FragmentUniforms;"#,
             if self.camera_effect {
                 r#"
 struct CameraUniforms {
-    camera_matrix: mat4x4<f32>;
+    camera_matrix: mat4x4<f32>,
 };
-[[group(1), binding(0)]]
+@group(1) @binding(0)
 var<uniform> camera_uniform: CameraUniforms;"#
             } else {
                 ""
@@ -325,30 +325,30 @@ var<uniform> camera_uniform: CameraUniforms;"#
         let input_and_output = format!(
             "\n{}",
             r#"struct VertexInput {
-    [[location(0)]] position: vec3<f32>;
-    [[location(1)]] texture_coordinates: vec2<f32>;
+    @location(0) position: vec3<f32>,
+    @location(1) texture_coordinates: vec2<f32>,
 };
 
 struct VertexOutput {
-    [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] texture_coordinates: vec2<f32>;
+    @builtin(position) position: vec4<f32>,
+    @location(0) texture_coordinates: vec2<f32>,
 };"#
         );
 
         // step 3 define texture data
         let texture_data = format!(
             "\n{}",
-            r#"[[group(0), binding(0)]]
+            r#"@group(0) @binding(0)
 var texture_diffuse: texture_2d<f32>;
 
-[[group(0), binding(1)]]
+@group(0) @binding(1)
 var sampler_diffuse: sampler;"#
         );
 
         // step 4 vertex stage according to data before
         let vertex_stage = format!(
             "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
-            r#"[[stage(vertex)]]
+            r#"@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;"#,
@@ -364,8 +364,8 @@ fn vs_main(input: VertexInput) -> VertexOutput {
         // step 5 fragment stage
         let fragment_stage = format!(
             "\n// ===== Fragment STAGE ===== //\n{}",
-            r#"[[stage(fragment)]]
-fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
+            r#"@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
 }"#
         );

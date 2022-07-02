@@ -9,29 +9,29 @@ pub const DEFAULT_SHADER: &str = r#"
 
 
 struct CameraUniforms {
-    camera_matrix: mat4x4<f32>;
+    camera_matrix: mat4x4<f32>,
 };
-[[group(1), binding(0)]]
+@group(1) @binding(0)
 var<uniform> camera_uniform: CameraUniforms;
 
 
 struct TransformationUniforms {
-    transform_matrix: mat4x4<f32>;
+    transform_matrix: mat4x4<f32>,
 };
-[[group(2), binding(0)]]
+@group(2) @binding(0)
 var<uniform> transform_uniform: TransformationUniforms;
 
 struct VertexInput {
-    [[location(0)]] position: vec3<f32>;
-    [[location(1)]] texture_coordinates: vec2<f32>;
+    @location(0) position: vec3<f32>,
+    @location(1) texture_coordinates: vec2<f32>,
 };
 
 struct VertexOutput {
-    [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] texture_coordinates: vec2<f32>;
+    @builtin(position) position: vec4<f32>,
+    @location(0) texture_coordinates: vec2<f32>,
 };
 
-[[stage(vertex)]]
+@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));
@@ -43,19 +43,19 @@ fn vs_main(input: VertexInput) -> VertexOutput {
 
 
 struct FragmentUniforms {
-    color: vec4<f32>;
+    color: vec4<f32>,
 };
-[[group(2), binding(1)]]
+@group(2) @binding(1)
 var<uniform> fragment_uniforms: FragmentUniforms;
 
-[[group(0), binding(0)]]
+@group(0) @binding(0)
 var texture_diffuse: texture_2d<f32>;
 
-[[group(0), binding(1)]]
+@group(0) @binding(1)
 var sampler_diffuse: sampler;
 
-[[stage(fragment)]]
-fn fs_main(input: VertexOutput) -> [[location(0)]] vec4<f32> {
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
 }
 "#;
