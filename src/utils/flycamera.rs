@@ -53,7 +53,7 @@ impl FlyCamera {
             }
         }
 
-        if input.key_pressed(crate::KeyboardKeys::Escape) {
+        if input.key_pressed(crate::VirtualKeyCode::Escape) {
             window
                 .set_cursor_grab(false)
                 .expect("Couldn't release the cursor");
@@ -107,7 +107,7 @@ impl FlyCamera {
             }
 
             // W
-            if input.key_held(crate::KeyboardKeys::W) {
+            if input.key_held(crate::VirtualKeyCode::W) {
                 let result = (camera.position + (camera.target * camera_speed)).data;
                 let result = result.as_slice();
 
@@ -117,7 +117,7 @@ impl FlyCamera {
             }
 
             // S
-            if input.key_held(crate::KeyboardKeys::S) {
+            if input.key_held(crate::VirtualKeyCode::S) {
                 let result = (camera.position - (camera.target * camera_speed)).data;
                 let result = result.as_slice();
 
@@ -126,7 +126,7 @@ impl FlyCamera {
                     .unwrap();
             }
             // A
-            if input.key_held(crate::KeyboardKeys::A) {
+            if input.key_held(crate::VirtualKeyCode::A) {
                 let result = (camera.position - (self.camera_right * camera_speed)).data;
                 let result = result.as_slice();
 
@@ -135,7 +135,7 @@ impl FlyCamera {
                     .unwrap();
             }
             // D
-            if input.key_held(crate::KeyboardKeys::D) {
+            if input.key_held(crate::VirtualKeyCode::D) {
                 let result = (camera.position + (self.camera_right * camera_speed)).data;
                 let result = result.as_slice();
 

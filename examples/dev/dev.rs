@@ -67,9 +67,11 @@ fn main() {
 
     engine
         .update_loop(move |_, window, objects, (event, input), camera| {
-            fly_camera.update(camera, window, event, input);
+            //fly_camera.update(camera, window, event, input);
 
-            let sprite = objects.get_mut(cube_index).unwrap();
+            //cube.translate(1f32, 1f32, 1f32);
+
+            /*let sprite = objects.get_mut(cube_index).unwrap();
 
             if input.key_held(blue_engine::KeyboardKeys::Up) {
                 sprite.position(
@@ -120,7 +122,7 @@ fn main() {
                     sprite.position.2 + speed,
                     window_size,
                 );
-            }
+            } */
         })
         .expect("Error during update loop");
 }

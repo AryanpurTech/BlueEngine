@@ -5,14 +5,33 @@
 */
 
 use crate::header::{Camera, Engine, Object, Renderer, WindowDescriptor};
-#[cfg(feature = "gui")]
-use imgui::{FontSource, Ui};
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
 use winit_input_helper::WinitInputHelper;
+
+#[cfg(feature = "gui")]
+use egui_winit_platform::{Platform, PlatformDescriptor};
+
+#[cfg(feature = "gui")]
+enum ExEvent {
+    RequestRedraw,
+}
+
+#[cfg(feature = "gui")]
+struct ExampleRepaintSignal(std::sync::Mutex<winit::event_loop::EventLoopProxy<ExEvent>>);
+#[cfg(feature = "gui")]
+impl epi::backend::RepaintSignal for ExampleRepaintSignal {
+    fn request_repaint(&self) {
+        self.0
+            .lock()
+            .unwrap()
+            .send_event(ExEvent::RequestRedraw)
+            .ok();
+    }
+}
 
 impl Engine {
     /// Creates a new window in current thread.
@@ -39,6 +58,9 @@ impl Engine {
         // will create the main event loop of the window.
         // and will contain all the callbacks and button press
         // also will allow graphics API
+        #[cfg(feature = "gui")]
+        let event_loop = EventLoop::with_user_event();
+        #[cfg(not(feature = "gui"))]
         let event_loop = EventLoop::new();
 
         // bind the loop to window
@@ -64,17 +86,9 @@ impl Engine {
     ///
     /// Renderer, window, vec of objects, events, and camera are passed to the update code.
     #[allow(unreachable_code)]
-    pub fn update_loop<
-        #[cfg(feature = "gui")] T: 'static
-            + FnMut(
-                &mut Renderer,
-                &Window,
-                &mut Vec<Object>,
-                (&winit::event::DeviceEvent, &WinitInputHelper),
-                &mut Camera,
-                &Ui,
-            ),
-        #[cfg(not(feature = "gui"))] F: 'static
+    pub fn update_loop<F>(self, mut update_function: F) -> anyhow::Result<()>
+    where
+        F: 'static
             + FnMut(
                 &mut Renderer,
                 &Window,
@@ -82,11 +96,7 @@ impl Engine {
                 (&winit::event::DeviceEvent, &WinitInputHelper),
                 &mut Camera,
             ),
-    >(
-        self,
-        #[cfg(feature = "gui")] mut update_function: T,
-        #[cfg(not(feature = "gui"))] mut update_function: F,
-    ) -> anyhow::Result<()> {
+    {
         let Self {
             event_loop,
             mut renderer,
@@ -102,49 +112,18 @@ impl Engine {
         let mut current_window_size = window.inner_size();
 
         #[cfg(feature = "gui")]
-        let mut imgui = imgui::Context::create();
-        #[cfg(feature = "gui")]
-        let mut platform = imgui_winit_support::WinitPlatform::init(&mut imgui);
-        #[cfg(feature = "gui")]
-        platform.attach_window(
-            imgui.io_mut(),
-            &window,
-            imgui_winit_support::HiDpiMode::Default,
-        );
-        #[cfg(feature = "gui")]
-        imgui.set_ini_filename(None);
-
-        #[cfg(feature = "gui")]
-        let hidpi_factor = window.scale_factor();
-
-        #[cfg(feature = "gui")]
-        imgui_redesign(&mut imgui, hidpi_factor);
-
-        #[cfg(feature = "gui")]
-        let mut imgui_renderer = imgui_wgpu::Renderer::new(
-            &mut imgui,
-            &renderer.device,
-            &renderer.queue,
-            imgui_wgpu::RendererConfig {
-                texture_format: renderer.surface.get_supported_formats(&renderer.adapter)[0],
-                ..Default::default()
-            },
-        );
-
-        let mut last_frame = std::time::Instant::now();
+        let mut platform = Platform::new(PlatformDescriptor {
+            physical_width: current_window_size.width,
+            physical_height: current_window_size.height,
+            scale_factor: window.scale_factor(),
+            font_definitions: egui::FontDefinitions::default(),
+            style: Default::default(),
+        });
 
         // The main loop
         event_loop.run(move |events, _, control_flow| {
             // updates the data on what events happened before the frame start
             input.update(&events);
-
-            let now = std::time::Instant::now();
-            #[cfg(feature = "gui")]
-            imgui.io_mut().update_delta_time(now - last_frame);
-            last_frame = now;
-
-            #[cfg(feature = "gui")]
-            platform.handle_event(imgui.io_mut(), &window, &events);
 
             match events {
                 Event::WindowEvent {
@@ -163,23 +142,6 @@ impl Engine {
                         current_window_size = new_window_size;
                     }
 
-                    #[cfg(feature = "gui")]
-                    platform
-                        .prepare_frame(imgui.io_mut(), &window)
-                        .expect("Failed to prepare frame");
-                    #[cfg(feature = "gui")]
-                    let ui = imgui.frame();
-
-                    #[cfg(feature = "gui")]
-                    update_function(
-                        &mut renderer,
-                        &window,
-                        &mut objects,
-                        (&device_event, &input),
-                        &mut camera,
-                        &ui,
-                    );
-                    #[cfg(not(feature = "gui"))]
                     update_function(
                         &mut renderer,
                         &window,
@@ -197,11 +159,27 @@ impl Engine {
                     });
 
                     #[cfg(feature = "gui")]
-                    let ren = renderer.render(&objects, &camera, &mut imgui_renderer, ui);
-                    #[cfg(not(feature = "gui"))]
-                    let ren = renderer.render(&objects, &camera);
+                    platform.begin_frame();
 
-                    match ren {
+                    egui::CentralPanel::default().show(&platform.context(), |ui| {
+                        ui.heading("YOOOO");
+                    });
+
+                    let full_output = platform.end_frame(Some(&window));
+                    let paint_jobs = platform.context().tessellate(full_output.shapes);
+                    let tdelta: egui::TexturesDelta = full_output.textures_delta;
+                    let screen_descriptor = egui_wgpu_backend::ScreenDescriptor {
+                        physical_width: current_window_size.width,
+                        physical_height: current_window_size.height,
+                        scale_factor: window.scale_factor() as f32,
+                    };
+
+                    match renderer.render(
+                        &objects,
+                        &camera,
+                        #[cfg(feature = "gui")]
+                        (paint_jobs, tdelta, screen_descriptor),
+                    ) {
                         Ok(_) => {}
                         // Recreate the swap_chain if lost
                         Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
@@ -221,38 +199,4 @@ impl Engine {
 
         Ok(())
     }
-}
-
-#[cfg(feature = "gui")]
-fn imgui_redesign(imgui: &mut imgui::Context, hidpi_factor: f64) {
-    let font_size = (13.0 * hidpi_factor) as f32;
-
-    imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
-
-    imgui.fonts().add_font(&[FontSource::TtfData {
-        data: include_bytes!("./utils/JetBrainsMono-Medium.ttf"),
-        size_pixels: 20f32,
-        config: Some(imgui::FontConfig {
-            name: Some("JetBrainsMono".to_string()),
-            ..Default::default()
-        }),
-    }]);
-
-    imgui.fonts().add_font(&[FontSource::DefaultFontData {
-        config: Some(imgui::FontConfig {
-            oversample_h: 1,
-            pixel_snap_h: true,
-            size_pixels: font_size,
-            ..Default::default()
-        }),
-    }]);
-
-    imgui.set_renderer_name(Some("Blue Engine".to_string()));
-
-    let mut style = imgui.style_mut();
-    style.window_menu_button_position = imgui::Direction::None;
-    style.frame_rounding = 2f32;
-    style.grab_rounding = 1f32;
-    style.window_title_align = [0.5, 0.5];
-    style.color_button_position = imgui::Direction::Right;
 }

@@ -12,6 +12,9 @@ use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;
 
+#[cfg(feature = "gui")]
+use egui_wgpu_backend::{RenderPass, ScreenDescriptor};
+
 #[cfg(not(target_feature = "NON_FILL_POLYGON_MODE"))]
 fn get_render_features() -> Features {
     Features::empty()
@@ -157,8 +160,11 @@ impl Renderer {
         &mut self,
         objects: &Vec<Object>,
         camera: &Camera,
-        #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
-        #[cfg(feature = "gui")] ui: imgui::Ui,
+        #[cfg(feature = "gui")] egui_render_data: (
+            Vec<egui::ClippedPrimitive>,
+            egui::TexturesDelta,
+            egui_wgpu_backend::ScreenDescriptor,
+        ),
     ) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let view = frame
@@ -171,7 +177,35 @@ impl Renderer {
                 label: Some("Render Encoder"),
             });
 
-        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        #[cfg(feature = "gui")]
+        let mut egui_render_pass = RenderPass::new(
+            &self.device,
+            self.surface.get_supported_formats(&self.adapter)[0],
+            1,
+        );
+
+        egui_render_pass
+            .add_textures(&self.device, &self.queue, &egui_render_data.1)
+            .expect("add texture ok");
+        egui_render_pass.update_buffers(
+            &self.device,
+            &self.queue,
+            &egui_render_data.0,
+            &egui_render_data.2,
+        );
+
+        // Record all render passes.
+        egui_render_pass
+            .execute(
+                &mut encoder,
+                &view,
+                &egui_render_data.0,
+                &egui_render_data.2,
+                Some(wgpu::Color::BLACK),
+            )
+            .unwrap();
+
+        /*let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
@@ -211,31 +245,15 @@ impl Renderer {
             render_pass.draw_indexed(0..i.pipeline.vertex_buffer.length, 0, 0..1);
         }
 
-        drop(render_pass);
-
-        #[cfg(feature = "gui")]
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Load,
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: None,
-            });
-
-            imgui_renderer
-                .render(ui.render(), &self.queue, &self.device, &mut render_pass)
-                .unwrap();
-        }
+        drop(render_pass); */
 
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         frame.present();
+
+        egui_render_pass
+            .remove_textures(egui_render_data.1)
+            .expect("remove texture ok");
 
         Ok(())
     }

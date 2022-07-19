@@ -4,6 +4,9 @@
  * The license is same as the one on the root.
 */
 
+#[cfg(feature = "gui")]
+pub use imgui as gui;
+
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -278,6 +281,7 @@ pub type Textures = wgpu::BindGroup;
 
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
+    pub(crate) adapter: wgpu::Adapter,
     pub(crate) surface: wgpu::Surface,
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
@@ -346,7 +350,7 @@ pub use winit::event::DeviceEvent;
 /// The mouse button identifier
 pub use winit::event::MouseButton;
 /// Keyboard keys identifier
-pub use winit::event::VirtualKeyCode as KeyboardKeys;
+pub use winit::event::VirtualKeyCode;
 
 /// Buffer type enum, allowing for multiple types to be sent
 #[derive(Clone, Debug)]
