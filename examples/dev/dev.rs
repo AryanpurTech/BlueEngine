@@ -16,7 +16,7 @@ fn main() {
         width: 800,
         height: 600,
         title: "title",
-        decorations: true,
+        decorations: false,
         resizable: true,
     })
     .expect("win");

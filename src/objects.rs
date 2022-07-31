@@ -74,7 +74,6 @@ impl Engine {
             settings.position.0,
             settings.position.1,
             settings.position.2,
-            self.window.inner_size(),
         );
         //object.update(&mut self.renderer)?;
 
@@ -176,12 +175,12 @@ impl Object {
     }
 
     /// Sets the position of the object in 3D space relative to the window
-    pub fn position(&mut self, x: f32, y: f32, z: f32, window_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn position(&mut self, x: f32, y: f32, z: f32) {
+        /*
         let difference = ((self.position.0 - x).powf(2.0)
             + (self.position.1 - y).powf(2.0)
             + (self.position.2 - z).powf(2.0))
         .sqrt();
-
         let normalized_target_x = if (self.position.0 - x) == 0.0 {
             0.0
         } else {
@@ -211,7 +210,7 @@ impl Object {
             } else {
                 new_difference
             }
-        };
+        };*/
 
         self.position.0 -= x;
         self.position.1 -= y;

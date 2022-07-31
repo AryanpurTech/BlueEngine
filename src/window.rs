@@ -131,6 +131,7 @@ impl Engine {
             },
         );
 
+        #[cfg(feature = "gui")]
         let mut last_frame = std::time::Instant::now();
 
         // The main loop
@@ -138,10 +139,12 @@ impl Engine {
             // updates the data on what events happened before the frame start
             input.update(&events);
 
-            let now = std::time::Instant::now();
             #[cfg(feature = "gui")]
-            imgui.io_mut().update_delta_time(now - last_frame);
-            last_frame = now;
+            {
+                let now = std::time::Instant::now();
+                imgui.io_mut().update_delta_time(now - last_frame);
+                last_frame = now;
+            }
 
             #[cfg(feature = "gui")]
             platform.handle_event(imgui.io_mut(), &window, &events);

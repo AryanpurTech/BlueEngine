@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.3.7"
+version = "0.3.75"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -13,7 +13,7 @@ resolver = "2"
 
 [lib]
 name = "blue_engine"
-crate-type = ["rlib"]
+crate-type = ["lib", "cdylib"]
 
 [features]
 default = []
@@ -29,7 +29,7 @@ bytemuck = { version = "1.10.0", features = ["derive"] }
 winit_input_helper = "0.12.0"
 anyhow = "1.0.57"
 env_logger = "0.9.0"
-wgpu = "0.13.0"
+wgpu = { version = "0.13.0" }
 nalgebra-glm = "0.17.0"
 # model_loader
 gltf = { version = "1.0.0", optional = true }
@@ -39,6 +39,9 @@ imgui-winit-support = { version = "0.8.2", optional = true, features = [
     "winit-26",
 ] }
 imgui = { version = "0.8.2", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "0.13.0", features = ["webgl"] }
 
 # ========== EXAMPLES ========== #
 
