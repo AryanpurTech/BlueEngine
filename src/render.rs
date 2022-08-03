@@ -22,7 +22,10 @@ fn get_render_features() -> Features {
 }
 
 impl Renderer {
-    pub(crate) async fn new(window: &Window) -> anyhow::Result<Self> {
+    pub(crate) async fn new(
+        window: &Window,
+        power_preference: crate::PowerPreference,
+    ) -> anyhow::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -30,7 +33,7 @@ impl Renderer {
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::LowPower,
+                power_preference: power_preference,
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
             })

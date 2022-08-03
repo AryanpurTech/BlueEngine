@@ -1,13 +1,17 @@
 use std::{ops::Mul, result};
 
 use blue_engine::{
+    gui,
     header::{
         uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, ShaderSettings, TextureData,
         Vertex, WindowDescriptor,
     },
     primitive_shapes::{cube, square, triangle},
+    style_block, // text::Text},
     utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
-    PolygonMode, // text::Text},
+    PolygonMode,
+    PowerPreference,
+    Style,
 };
 use std::time::Duration;
 
@@ -16,8 +20,9 @@ fn main() {
         width: 800,
         height: 600,
         title: "title",
-        decorations: false,
+        decorations: true,
         resizable: true,
+        power_preference: PowerPreference::HighPerformance,
     })
     .expect("win");
 
@@ -64,9 +69,42 @@ fn main() {
     let speed = -0.05;
 
     let mut fly_camera = FlyCamera::new(&mut engine.camera);
+    let mut has_border = false;
+    let mut val = 0f32;
 
     engine
-        .update_loop(move |_, window, objects, (event, input), camera| {
+        .update_loop(move |_, window, objects, (event, input), camera, ui| {
+            ui.show_demo_window(&mut true);
+            ui.show_default_style_editor();
+            gui::Window::new("name").build(&ui, || {
+                style_block(
+                    if has_border {
+                        vec![
+                            Style::Config(gui::StyleVar::FrameBorderSize(10f32)),
+                            Style::Color(gui::StyleColor::Border, [0f32, 0f32, 1f32, 1f32]),
+                        ]
+                    } else {
+                        vec![Style::Config(gui::StyleVar::FrameBorderSize(0f32))]
+                    },
+                    || {
+                        ui.button(if has_border {
+                            "Text has border"
+                        } else {
+                            "Text doesn't have border"
+                        });
+                    },
+                    ui,
+                );
+                if ui.button("label2") {
+                    has_border = true;
+                }
+
+                gui::Drag::new("label")
+                    .speed(0.2)
+                    .range(0f32, 5f32)
+                    .build(&ui, &mut val);
+            });
+
             //fly_camera.update(camera, window, event, input);
 
             //cube.translate(1f32, 1f32, 1f32);

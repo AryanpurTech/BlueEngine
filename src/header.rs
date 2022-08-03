@@ -38,6 +38,32 @@ impl Vertex {
     }
 }
 
+#[cfg(feature = "gui")]
+pub enum Style {
+    Config(gui::StyleVar),
+    Color(gui::StyleColor, [f32; 4]),
+}
+
+#[cfg(feature = "gui")]
+pub fn style_block<F: FnMut()>(styles: Vec<Style>, mut ui_block: F, ui: &gui::Ui) {
+    let mut stack = Vec::<gui::StyleStackToken>::new();
+    let mut color = Vec::<gui::ColorStackToken>::new();
+
+    for i in styles {
+        match i {
+            Style::Config(data) => stack.push(ui.push_style_var(data)),
+            Style::Color(data, hue) => color.push(ui.push_style_color(data, hue)),
+        }
+    }
+    ui_block();
+    for i in stack {
+        i.end();
+    }
+    for i in color {
+        i.end();
+    }
+}
+
 /// A container for uniform buffer types
 pub mod uniform_type {
 
@@ -307,6 +333,8 @@ pub struct WindowDescriptor {
     pub decorations: bool,
     /// Should the window be resizable
     pub resizable: bool,
+    /// Define how much power should the app ask for
+    pub power_preference: PowerPreference,
 }
 impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
@@ -317,6 +345,7 @@ impl std::default::Default for WindowDescriptor {
             title: "Blue Engine",
             decorations: true,
             resizable: true,
+            power_preference: PowerPreference::LowPower,
         }
     }
 }
@@ -420,6 +449,7 @@ pub type IndexFormat = wgpu::IndexFormat;
 pub type FrontFace = wgpu::FrontFace;
 pub type CullMode = wgpu::Face;
 pub type PolygonMode = wgpu::PolygonMode;
+pub type PowerPreference = wgpu::PowerPreference;
 
 // ? These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
