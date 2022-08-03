@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.3.80"
+version = "0.3.85"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -71,6 +71,10 @@ path = "examples/camera/fly_camera.rs"
 [[example]]
 name = "hello_gui"
 path = "examples/gui/hello_gui.rs"
+
+[[example]]
+name = "styling_gui"
+path = "examples/gui/styling.rs"
 
 # Development ONLY
 [[example]]
