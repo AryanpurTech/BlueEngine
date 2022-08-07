@@ -8,6 +8,7 @@ pub mod camera;
 //pub mod text;
 pub mod default_resources;
 pub mod flycamera;
+pub mod light;
 
 #[cfg(feature = "model_loader")]
 pub mod loader;

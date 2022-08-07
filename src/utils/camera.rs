@@ -22,7 +22,7 @@ impl Camera {
             position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
             target: nalgebra_glm::vec3(0.0, 0.0, -1.0).into(),
             up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
-            aspect: window_size.width as f32 / window_size.height as f32,
+            resolution: (window_size.width as f32, window_size.height as f32),
             fov: 70f32 * (std::f32::consts::PI / 180f32),
             near: 0.1,
             far: 100.0,
@@ -47,8 +47,38 @@ impl Camera {
             },
             &self.up,
         );
-        let proj = nalgebra_glm::perspective(self.fov, self.aspect, self.near, self.far);
+        let proj = nalgebra_glm::perspective(
+            self.fov,
+            self.resolution.0 / self.resolution.1,
+            self.near,
+            self.far,
+        );
         self.view_data = proj * view;
+        self.changed = true;
+
+        Ok(())
+    }
+
+    /// Updates the view uniform matrix that decides how camera works
+    pub fn build_view_orthographic_matrix(&mut self) -> Result<()> {
+        let view = nalgebra_glm::look_at_rh(
+            &self.position,
+            &if self.add_position_and_target {
+                self.position + self.target
+            } else {
+                self.target
+            },
+            &self.up,
+        );
+        let ortho = nalgebra_glm::ortho(
+            0f32,
+            self.resolution.0,
+            0f32,
+            self.resolution.1,
+            self.near,
+            self.far,
+        );
+        self.view_data = ortho * view;
         self.changed = true;
 
         Ok(())
@@ -108,8 +138,8 @@ impl Camera {
     }
 
     /// Sets the aspect ratio of the camera
-    pub fn set_aspect(&mut self, new_aspect: f32) -> Result<()> {
-        self.aspect = new_aspect;
+    pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) -> Result<()> {
+        self.resolution = (window_size.width as f32, window_size.height as f32);
         self.build_view_projection_matrix()?;
 
         Ok(())

@@ -104,7 +104,6 @@ impl Renderer {
         let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
         let mut renderer = Self {
-            adapter,
             surface,
             device,
             queue,

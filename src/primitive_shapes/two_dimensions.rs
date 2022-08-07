@@ -15,15 +15,18 @@ pub fn triangle(
         vec![
             Vertex {
                 position: [0.0, 1.0, 0.0],
-                texture: [0.5, 0.0],
+                uv: [0.5, 0.0],
+                normal: [0f32, 0f32, 0f32],
             },
             Vertex {
                 position: [-1.0, -1.0, 0.0],
-                texture: [0.0, 1.0],
+                uv: [0.0, 1.0],
+                normal: [0f32, 0f32, 0f32],
             },
             Vertex {
                 position: [1.0, -1.0, 0.0],
-                texture: [1.0, 1.0],
+                uv: [1.0, 1.0],
+                normal: [0f32, 0f32, 0f32],
             },
         ],
         vec![0, 1, 2],
@@ -39,19 +42,23 @@ pub fn square(settings: ObjectSettings, engine: &mut Engine) -> Result<&mut Obje
         vec![
             Vertex {
                 position: [1.0, 1.0, 0.0],
-                texture: [1.0, 0.0],
+                uv: [1.0, 0.0],
+                normal: [0f32, 0f32, 0f32],
             },
             Vertex {
                 position: [1.0, -1.0, 0.0],
-                texture: [1.0, 1.0],
+                uv: [1.0, 1.0],
+                normal: [0f32, 0f32, 0f32],
             },
             Vertex {
                 position: [-1.0, -1.0, 0.0],
-                texture: [0.0, 1.0],
+                uv: [0.0, 1.0],
+                normal: [0f32, 0f32, 0f32],
             },
             Vertex {
                 position: [-1.0, 1.0, 0.0],
-                texture: [0.0, 0.0],
+                uv: [0.0, 0.0],
+                normal: [0f32, 0f32, 0f32],
             },
         ],
         vec![2, 1, 0, 2, 0, 3],

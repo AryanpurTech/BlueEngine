@@ -54,18 +54,15 @@ impl Engine {
                 uniform: Some(uniform.0),
             },
             uniform_layout: uniform.1,
-            size: (
-                self.window.inner_size().width as f32,
-                self.window.inner_size().height as f32,
-                0f32,
-            ),
+            size: settings.size,
             scale: settings.scale,
             position: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
+            main_color: settings.color,
             color: settings.color,
             object_index: self.objects.len(),
-            camera_effect: settings.camera_effect,
+            shader_builder: ShaderBuilder::new(settings.camera_effect),
             shader_settings: settings.shader_settings,
         });
         let object = self.objects.get_mut(index).unwrap();
@@ -84,7 +81,7 @@ impl Engine {
     pub fn get_object(&mut self, index: usize) -> Option<&mut Object> {
         self.objects.get_mut(index)
     }
-} // ? make the Shader Builder, add customizations to the objects, and fix bugs boi
+}
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
@@ -224,13 +221,7 @@ impl Object {
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
-    pub fn change_color(
-        &mut self,
-        red: f32,
-        green: f32,
-        blue: f32,
-        alpha: f32,
-    ) -> anyhow::Result<()> {
+    pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> anyhow::Result<()> {
         self.color = Array {
             data: [red, green, blue, alpha],
         };
@@ -239,8 +230,24 @@ impl Object {
         Ok(())
     }
 
+    /// Changes the main color of the object. If textures exist, the color of textures will change
+    pub fn set_main_color(
+        &mut self,
+        red: f32,
+        green: f32,
+        blue: f32,
+        alpha: f32,
+    ) -> anyhow::Result<()> {
+        self.main_color = Array {
+            data: [red, green, blue, alpha],
+        };
+        self.changed = true;
+
+        Ok(())
+    }
+
     /// Replaces the object's texture with provided one
-    pub fn change_texture(&mut self, texture: Textures) -> anyhow::Result<()> {
+    pub fn set_texture(&mut self, texture: Textures) -> anyhow::Result<()> {
         self.pipeline.texture = texture;
         self.changed = true;
 
@@ -267,7 +274,7 @@ impl Object {
     pub(crate) fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_shader = renderer.build_shader(
             self.name.unwrap_or("Object"),
-            self.build_shader(),
+            self.shader_builder.build_shader(),
             Some(&self.uniform_layout),
             self.shader_settings,
         )?;
@@ -291,39 +298,49 @@ impl Object {
 
         Ok(())
     }
+}
 
-    pub(crate) fn build_shader(&self) -> String {
-        // step 1 define blocks
-        let blocks = format!(
-            "\n{}\n{}\n{}",
-            r#"
+pub struct ShaderBuilder {
+    pub blocks: String,
+    pub input_and_output: String,
+    pub texture_data: String,
+    pub vertex_stage: String,
+    pub fragment_stage: String,
+}
+
+impl ShaderBuilder {
+    pub fn new(camera_effect: bool) -> Self {
+        Self {
+            blocks: format!(
+                // step 1 define blocks
+                "\n{}\n{}\n{}",
+                r#"
 struct TransformationUniforms {
     transform_matrix: mat4x4<f32>,
 };
 @group(2) @binding(0)
 var<uniform> transform_uniform: TransformationUniforms;"#,
-            r#"
+                r#"
 struct FragmentUniforms {
     color: vec4<f32>,
 };
 @group(2) @binding(1)
 var<uniform> fragment_uniforms: FragmentUniforms;"#,
-            if self.camera_effect {
-                r#"
+                if camera_effect {
+                    r#"
 struct CameraUniforms {
     camera_matrix: mat4x4<f32>,
 };
 @group(1) @binding(0)
 var<uniform> camera_uniform: CameraUniforms;"#
-            } else {
-                ""
-            }
-        );
-
-        // step 2 define input and output for vertex
-        let input_and_output = format!(
-            "\n{}",
-            r#"struct VertexInput {
+                } else {
+                    ""
+                }
+            ),
+            input_and_output: format!(
+                // step 2 define input and output for vertex
+                "\n{}",
+                r#"struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) texture_coordinates: vec2<f32>,
 };
@@ -332,46 +349,50 @@ struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) texture_coordinates: vec2<f32>,
 };"#
-        );
-
-        // step 3 define texture data
-        let texture_data = format!(
-            "\n{}",
-            r#"@group(0) @binding(0)
+            ),
+            texture_data: format!(
+                // step 3 define texture data
+                "\n{}",
+                r#"@group(0) @binding(0)
 var texture_diffuse: texture_2d<f32>;
 
 @group(0) @binding(1)
 var sampler_diffuse: sampler;"#
-        );
-
-        // step 4 vertex stage according to data before
-        let vertex_stage = format!(
-            "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
-            r#"@vertex
+            ),
+            vertex_stage: format!(
+                // step 4 vertex stage according to data before
+                "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
+                r#"@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;"#,
-            if self.camera_effect {
-                "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
-            } else {
-                "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
-            },
-            r#"return out;
+                if camera_effect {
+                    "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
+                } else {
+                    "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
+                },
+                r#"return out;
 }"#
-        );
-
-        // step 5 fragment stage
-        let fragment_stage = format!(
-            "\n// ===== Fragment STAGE ===== //\n{}",
-            r#"@fragment
+            ),
+            fragment_stage: format!(
+                // step 5 fragment stage
+                "\n// ===== Fragment STAGE ===== //\n{}",
+                r#"@fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
 }"#
-        );
+            ),
+        }
+    }
 
+    pub(crate) fn build_shader(&self) -> String {
         format!(
             "{}{}{}{}{}",
-            blocks, input_and_output, texture_data, vertex_stage, fragment_stage
+            self.blocks,
+            self.input_and_output,
+            self.texture_data,
+            self.vertex_stage,
+            self.fragment_stage
         )
     }
 }

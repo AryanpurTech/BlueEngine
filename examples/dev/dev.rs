@@ -1,25 +1,19 @@
 use std::{ops::Mul, result};
 
 use blue_engine::{
-    gui,
-    header::{
-        uniform_type::Matrix, Engine, ObjectSettings, RotateAxis, ShaderSettings, TextureData,
-        Vertex, WindowDescriptor,
-    },
-    primitive_shapes::{cube, square, triangle},
-    style_block, // text::Text},
+    primitive_shapes::{cube, square, triangle, uv_sphere},
+    uniform_type::Matrix,
     utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
-    PolygonMode,
-    PowerPreference,
-    Style,
+    Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
+    TextureData, Vertex, WindowDescriptor,
 };
 use std::time::Duration;
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor {
-        width: 800,
-        height: 600,
-        title: "title",
+        width: 1600,
+        height: 1200,
+        title: "ambient light test",
         decorations: true,
         resizable: true,
         power_preference: PowerPreference::HighPerformance,
@@ -37,9 +31,23 @@ fn main() {
 
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let window_size = engine.window.inner_size();
-    let cube = cube(Some("CUBEE"), &mut engine).unwrap();
-    cube.scale(0.3, 0.3, 0.3);
+    let cube = uv_sphere(Some("CUBEE"), &mut engine, (18, 36, 1f32)).unwrap();
+    cube.scale(0.6, 0.6, 0.6);
+    //cube.scale(0.3, 0.3, 0.3);
     let cube_index = cube.object_index;
+
+    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
+        .unwrap()
+        .translate(2f32, 1f32, 0f32);
+    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
+        .unwrap()
+        .translate(-2f32, 1f32, 0f32);
+    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
+        .unwrap()
+        .translate(2f32, -1f32, 0f32);
+    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
+        .unwrap()
+        .translate(-2f32, -1f32, 0f32);
 
     //let window_size = engine.window.inner_size();
     /*let change_texture = engine
@@ -72,95 +80,63 @@ fn main() {
     let mut has_border = false;
     let mut val = 0f32;
 
+    let mut lm = LightManager::new();
+
     engine
-        .update_loop(move |_, window, objects, (event, input), camera, ui| {
-            ui.show_demo_window(&mut true);
-            ui.show_default_style_editor();
-            gui::Window::new("name").build(&ui, || {
-                style_block(
-                    if has_border {
-                        vec![
-                            Style::Config(gui::StyleVar::FrameBorderSize(10f32)),
-                            Style::Color(gui::StyleColor::Border, [0f32, 0f32, 1f32, 1f32]),
-                        ]
-                    } else {
-                        vec![Style::Config(gui::StyleVar::FrameBorderSize(0f32))]
-                    },
-                    || {
-                        ui.button(if has_border {
-                            "Text has border"
-                        } else {
-                            "Text doesn't have border"
-                        });
-                    },
-                    ui,
-                );
-                if ui.button("label2") {
-                    has_border = true;
-                }
-
-                gui::Drag::new("label")
-                    .speed(0.2)
-                    .range(0f32, 5f32)
-                    .build(&ui, &mut val);
-            });
-
+        .update_loop(move |_, window, objects, (event, input), camera| {
             //fly_camera.update(camera, window, event, input);
+            lm.update(objects).expect("Couldn't add light");
 
             //cube.translate(1f32, 1f32, 1f32);
 
-            /*let sprite = objects.get_mut(cube_index).unwrap();
+            let sprite = objects.get_mut(cube_index).unwrap();
 
-            if input.key_held(blue_engine::KeyboardKeys::Up) {
+            if input.key_held(blue_engine::VirtualKeyCode::Up) {
                 sprite.position(
                     sprite.position.0,
                     sprite.position.1 + speed,
                     sprite.position.2,
-                    window_size,
                 );
+                lm.ambient_color.data = [1f32, 1f32, 1f32, 1f32];
             }
-            if input.key_held(blue_engine::KeyboardKeys::Down) {
+            if input.key_held(blue_engine::VirtualKeyCode::Down) {
                 sprite.position(
                     sprite.position.0,
                     sprite.position.1 - speed,
                     sprite.position.2,
-                    window_size,
                 );
+                lm.ambient_color.data = [0.1f32, 0.1f32, 0.1f32, 1f32];
             }
 
-            if input.key_held(blue_engine::KeyboardKeys::Left) {
+            if input.key_held(blue_engine::VirtualKeyCode::Left) {
                 sprite.position(
                     sprite.position.0 - speed,
                     sprite.position.1,
                     sprite.position.2,
-                    window_size,
                 );
             }
-            if input.key_held(blue_engine::KeyboardKeys::Right) {
+            if input.key_held(blue_engine::VirtualKeyCode::Right) {
                 sprite.position(
                     sprite.position.0 + speed,
                     sprite.position.1,
                     sprite.position.2,
-                    window_size,
                 );
             }
 
-            if input.key_held(blue_engine::KeyboardKeys::E) {
+            if input.key_held(blue_engine::VirtualKeyCode::E) {
                 sprite.position(
                     sprite.position.0,
                     sprite.position.1,
                     sprite.position.2 - speed,
-                    window_size,
                 );
             }
-            if input.key_held(blue_engine::KeyboardKeys::Q) {
+            if input.key_held(blue_engine::VirtualKeyCode::Q) {
                 sprite.position(
                     sprite.position.0,
                     sprite.position.1,
                     sprite.position.2 + speed,
-                    window_size,
                 );
-            } */
+            }
         })
         .expect("Error during update loop");
 }

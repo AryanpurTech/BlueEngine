@@ -14,8 +14,10 @@ pub use imgui as gui;
 pub struct Vertex {
     /// Contains position data for the vertex in 3D space
     pub position: [f32; 3],
-    /// Contains texture position data for the vertex
-    pub texture: [f32; 2],
+    /// Contains uv position data for the vertex
+    pub uv: [f32; 2],
+    /// Contains the normal face of the vertex
+    pub normal: [f32; 3],
 }
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -32,6 +34,11 @@ impl Vertex {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32x3,
                 },
             ],
         }
@@ -152,6 +159,35 @@ pub mod uniform_type {
             self.data = uniform.data;
         }
     }
+    impl std::ops::Mul<Array> for Array {
+        type Output = Array;
+
+        fn mul(self, rhs: Self) -> Self::Output {
+            Array {
+                data: [
+                    self.data[0] * rhs.data[0],
+                    self.data[1] * rhs.data[1],
+                    self.data[2] * rhs.data[2],
+                    self.data[3] * rhs.data[3],
+                ],
+            }
+        }
+    }
+
+    impl std::ops::Mul<f32> for Array {
+        type Output = Array;
+
+        fn mul(self, rhs: f32) -> Self::Output {
+            Array {
+                data: [
+                    self.data[0] * rhs,
+                    self.data[1] * rhs,
+                    self.data[2] * rhs,
+                    self.data[3] * rhs,
+                ],
+            }
+        }
+    }
 
     /// A 32 bit float uniform buffer
     #[repr(C)]
@@ -190,12 +226,14 @@ pub struct Object {
     /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub transformation_matrix: nalgebra_glm::Mat4,
-    /// The color of your object, A.K.A. albedo sometimes
+    /// The main color of your object
+    pub main_color: uniform_type::Array,
+    /// The color of your object that is sent to gpu
     pub color: uniform_type::Array,
     /// The index of the object in the queue
     pub object_index: usize,
-    /// Should it be affected by camera?
-    pub camera_effect: bool,
+    /// A struct making it easier to manipulate specific parts of shader
+    pub shader_builder: crate::objects::ShaderBuilder,
     /// Shader settings
     pub shader_settings: ShaderSettings,
 }
@@ -307,7 +345,6 @@ pub type Textures = wgpu::BindGroup;
 
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
-    pub(crate) adapter: wgpu::Adapter,
     pub(crate) surface: wgpu::Surface,
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
@@ -359,7 +396,7 @@ pub struct Camera {
     /// The target at which the camera should be looking
     pub target: nalgebra_glm::Vec3,
     pub up: nalgebra_glm::Vec3,
-    pub aspect: f32,
+    pub resolution: (f32, f32),
     /// The field of view of the camera
     pub fov: f32,
     /// The closest view of camera
@@ -372,6 +409,10 @@ pub struct Camera {
     pub(crate) changed: bool,
     pub(crate) uniform_data: UniformBuffers,
     pub(crate) add_position_and_target: bool,
+}
+
+pub struct LightManager {
+    pub ambient_color: uniform_type::Array,
 }
 
 /// Device Events

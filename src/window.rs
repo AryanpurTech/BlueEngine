@@ -164,6 +164,12 @@ impl Engine {
                     let new_window_size = window.inner_size();
                     if new_window_size != current_window_size {
                         renderer.resize(new_window_size);
+                        camera
+                            .set_resolution(new_window_size)
+                            .expect("Couldn't set the resize to camera");
+                        camera
+                            .update_view_projection(&mut renderer)
+                            .expect("Couldn't set the resize to camera in renderer");
                         current_window_size = new_window_size;
                     }
 

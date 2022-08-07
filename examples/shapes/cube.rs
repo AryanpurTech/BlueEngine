@@ -1,144 +1,19 @@
 /*
  * Blue Engine by Elham Aryanpur
  *
- * Cube Example by Noswad#0001
- *
  * The license is same as the one on the root.
 */
 
-use blue_engine::header::{Engine, Object, ObjectSettings, Vertex, WindowDescriptor};
-
-pub fn cube<'a>(
-    name: Option<&'static str>,
-    engine: &'a mut Engine,
-) -> Result<&'a mut Object, anyhow::Error> {
-    let new_cube = engine.new_object(
-        vec![
-            // Top Face
-            Vertex {
-                position: [-1.0, -1.0, 1.0],
-                texture: [0.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, 1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, 1.0, 1.0],
-                texture: [1.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, 1.0],
-                texture: [0.0, 1.0],
-            },
-            // Botom Face
-            Vertex {
-                position: [-1.0, 1.0, -1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, 1.0, -1.0],
-                texture: [0.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, -1.0],
-                texture: [0.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, -1.0],
-                texture: [1.0, 1.0],
-            },
-            // Right face
-            Vertex {
-                position: [1.0, -1.0, -1.0],
-                texture: [0.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, 1.0, -1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [1.0, 1.0, 1.0],
-                texture: [1.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, 1.0],
-                texture: [0.0, 1.0],
-            },
-            // Left Face
-            Vertex {
-                position: [-1.0, -1.0, 1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, 1.0],
-                texture: [0.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, -1.0],
-                texture: [1.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, -1.0],
-                texture: [1.0, 1.0],
-            },
-            // Front Face
-            Vertex {
-                position: [1.0, 1.0, -1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, -1.0],
-                texture: [0.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, 1.0],
-                texture: [0.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, 1.0, 1.0],
-                texture: [1.0, 1.0],
-            },
-            // Back Face
-            Vertex {
-                position: [1.0, -1.0, 1.0],
-                texture: [0.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, 1.0],
-                texture: [1.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, -1.0],
-                texture: [1.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, -1.0],
-                texture: [0.0, 1.0],
-            },
-        ],
-        vec![
-            0, 1, 2, 2, 3, 0, // top
-            4, 5, 6, 6, 7, 4, // bottom
-            8, 9, 10, 10, 11, 8, // right
-            12, 13, 14, 14, 15, 12, // left
-            16, 17, 18, 18, 19, 16, // front
-            20, 21, 22, 22, 23, 20, // back
-        ],
-        ObjectSettings {
-            name,
-            ..Default::default()
-        },
-    )?;
-
-    Ok(new_cube)
-}
+use blue_engine::{
+    header::{Engine, WindowDescriptor},
+    primitive_shapes::cube,
+};
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     let cube_object = cube(Some("Cube"), &mut engine).unwrap();
-    cube_object.change_color(0f32, 0f32, 1f32, 1f32).unwrap();
+    cube_object.set_color(0f32, 0f32, 1f32, 1f32).unwrap();
 
     let radius = 5f32;
     let start = std::time::SystemTime::now();

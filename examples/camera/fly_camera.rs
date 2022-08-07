@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         blue_engine::header::TextureMode::Clamp,
     )?;
     let floor = cube(Some("floor"), &mut engine)?;
-    floor.change_texture(texture)?;
+    floor.set_texture(texture)?;
 
     // camera
     let mut fly_camera = FlyCamera::new(&mut engine.camera);
