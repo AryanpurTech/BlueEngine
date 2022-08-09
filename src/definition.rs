@@ -259,7 +259,16 @@ impl crate::header::Renderer {
                         },
                     ));
                 }
-                UniformBuffer::Array(name, value) => {
+                UniformBuffer::Array3(name, value) => {
+                    buffer_vec.push(self.device.create_buffer_init(
+                        &wgpu::util::BufferInitDescriptor {
+                            label: Some(*name),
+                            contents: bytemuck::cast_slice(&[*value]),
+                            usage: wgpu::BufferUsages::UNIFORM,
+                        },
+                    ));
+                }
+                UniformBuffer::Array4(name, value) => {
                     buffer_vec.push(self.device.create_buffer_init(
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(*name),
@@ -282,11 +291,7 @@ impl crate::header::Renderer {
         for i in 0..buffer_vec.len() {
             let descriptor = wgpu::BindGroupEntry {
                 binding: i as u32,
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: &buffer_vec.get(i).unwrap(),
-                    offset: 0,
-                    size: None,
-                }),
+                resource: buffer_vec.get(i).unwrap().as_entire_binding(),
             };
             buffer_entry.push(descriptor);
             buffer_layout.push(wgpu::BindGroupLayoutEntry {

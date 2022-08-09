@@ -148,22 +148,51 @@ pub mod uniform_type {
         }
     }
 
+    /// An array with length 3, each 32 bit float value, uniform buffer
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+    pub struct Array3 {
+        pub data: [f32; 3],
+    }
+    impl std::ops::Mul<Array3> for Array3 {
+        type Output = Self;
+
+        fn mul(self, rhs: Self) -> Self::Output {
+            Self {
+                data: [
+                    self.data[0] * rhs.data[0],
+                    self.data[1] * rhs.data[1],
+                    self.data[2] * rhs.data[2],
+                ],
+            }
+        }
+    }
+    impl std::ops::Mul<f32> for Array3 {
+        type Output = Self;
+
+        fn mul(self, rhs: f32) -> Self::Output {
+            Self {
+                data: [self.data[0] * rhs, self.data[1] * rhs, self.data[2] * rhs],
+            }
+        }
+    }
+
     /// An array with length 4, each 32 bit float value, uniform buffer
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-    pub struct Array {
+    pub struct Array4 {
         pub data: [f32; 4],
     }
-    impl Array {
-        pub fn update(&mut self, uniform: Array) {
+    impl Array4 {
+        pub fn update(&mut self, uniform: Array4) {
             self.data = uniform.data;
         }
     }
-    impl std::ops::Mul<Array> for Array {
-        type Output = Array;
+    impl std::ops::Mul<Array4> for Array4 {
+        type Output = Self;
 
         fn mul(self, rhs: Self) -> Self::Output {
-            Array {
+            Array4 {
                 data: [
                     self.data[0] * rhs.data[0],
                     self.data[1] * rhs.data[1],
@@ -173,12 +202,11 @@ pub mod uniform_type {
             }
         }
     }
-
-    impl std::ops::Mul<f32> for Array {
-        type Output = Array;
+    impl std::ops::Mul<f32> for Array4 {
+        type Output = Array4;
 
         fn mul(self, rhs: f32) -> Self::Output {
-            Array {
+            Array4 {
                 data: [
                     self.data[0] * rhs,
                     self.data[1] * rhs,
@@ -227,15 +255,19 @@ pub struct Object {
     /// Best choice is to let the Object system handle it
     pub transformation_matrix: nalgebra_glm::Mat4,
     /// The main color of your object
-    pub main_color: uniform_type::Array,
+    pub main_color: uniform_type::Array4,
     /// The color of your object that is sent to gpu
-    pub color: uniform_type::Array,
+    pub color: uniform_type::Array4,
     /// The index of the object in the queue
     pub object_index: usize,
     /// A struct making it easier to manipulate specific parts of shader
     pub shader_builder: crate::objects::ShaderBuilder,
     /// Shader settings
     pub shader_settings: ShaderSettings,
+    /// Camera have any effect on the object?
+    pub camera_effect: bool,
+    /// Uniform Buffers to be sent to GPU
+    pub uniform_buffers: Vec<UniformBuffer>,
 }
 
 /// Extra settings to customize objects on time of creation
@@ -249,7 +281,7 @@ pub struct ObjectSettings {
     /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
     /// The color of your object, A.K.A. albedo sometimes
-    pub color: uniform_type::Array,
+    pub color: uniform_type::Array4,
     /// Should it be affected by camera?
     pub camera_effect: bool,
     /// Shader Settings
@@ -262,7 +294,7 @@ impl Default for ObjectSettings {
             size: (100f32, 100f32, 100f32),
             scale: (1f32, 1f32, 1f32),
             position: (0f32, 0f32, 0f32),
-            color: uniform_type::Array {
+            color: uniform_type::Array4 {
                 data: crate::utils::default_resources::DEFAULT_COLOR,
             },
             camera_effect: true,
@@ -412,7 +444,9 @@ pub struct Camera {
 }
 
 pub struct LightManager {
-    pub ambient_color: uniform_type::Array,
+    pub ambient_color: uniform_type::Array4,
+    pub affected_objects: Vec<usize>,
+    pub light_objects: std::collections::BTreeMap<usize, [f32; 3]>,
 }
 
 /// Device Events
@@ -426,7 +460,8 @@ pub use winit::event::VirtualKeyCode;
 #[derive(Clone, Debug)]
 pub enum UniformBuffer {
     Matrix(&'static str, uniform_type::Matrix),
-    Array(&'static str, uniform_type::Array),
+    Array4(&'static str, uniform_type::Array4),
+    Array3(&'static str, uniform_type::Array3),
     Float(&'static str, uniform_type::Float),
 }
 

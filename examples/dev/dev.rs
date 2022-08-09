@@ -13,7 +13,7 @@ fn main() {
     let mut engine = Engine::new(WindowDescriptor {
         width: 1600,
         height: 1200,
-        title: "ambient light test",
+        title: "diffuse light test",
         decorations: true,
         resizable: true,
         power_preference: PowerPreference::HighPerformance,
@@ -36,18 +36,18 @@ fn main() {
     //cube.scale(0.3, 0.3, 0.3);
     let cube_index = cube.object_index;
 
-    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
-        .unwrap()
-        .translate(2f32, 1f32, 0f32);
-    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
-        .unwrap()
-        .translate(-2f32, 1f32, 0f32);
-    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
-        .unwrap()
-        .translate(2f32, -1f32, 0f32);
-    let _ = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32))
-        .unwrap()
-        .translate(-2f32, -1f32, 0f32);
+    let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
+    sphere_1.translate(2f32, 1f32, 0f32);
+    sphere_1.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
+    let sphere_2 = uv_sphere(Some("SPHERE2"), &mut engine, (18, 36, 1f32)).unwrap();
+    sphere_2.translate(-2f32, 1f32, 0f32);
+    sphere_2.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
+    let sphere_3 = uv_sphere(Some("SPHERE3"), &mut engine, (18, 36, 1f32)).unwrap();
+    sphere_3.translate(2f32, -1f32, 0f32);
+    sphere_3.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
+    let sphere_4 = uv_sphere(Some("SPHERE4"), &mut engine, (18, 36, 1f32)).unwrap();
+    sphere_4.translate(-2f32, -1f32, 0f32);
+    sphere_4.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
 
     //let window_size = engine.window.inner_size();
     /*let change_texture = engine
@@ -81,11 +81,12 @@ fn main() {
     let mut val = 0f32;
 
     let mut lm = LightManager::new();
+    lm.set_object_as_light(cube_index);
 
     engine
-        .update_loop(move |_, window, objects, (event, input), camera| {
-            //fly_camera.update(camera, window, event, input);
-            lm.update(objects).expect("Couldn't add light");
+        .update_loop(move |renderer, window, objects, (event, input), camera| {
+            fly_camera.update(camera, window, event, input);
+            lm.update(objects, renderer).expect("Couldn't add light");
 
             //cube.translate(1f32, 1f32, 1f32);
 
@@ -97,7 +98,7 @@ fn main() {
                     sprite.position.1 + speed,
                     sprite.position.2,
                 );
-                lm.ambient_color.data = [1f32, 1f32, 1f32, 1f32];
+                //lm.ambient_color.data = [1f32, 1f32, 1f32, 1f32];
             }
             if input.key_held(blue_engine::VirtualKeyCode::Down) {
                 sprite.position(
@@ -105,7 +106,7 @@ fn main() {
                     sprite.position.1 - speed,
                     sprite.position.2,
                 );
-                lm.ambient_color.data = [0.1f32, 0.1f32, 0.1f32, 1f32];
+                //lm.ambient_color.data = [0.1f32, 0.1f32, 0.1f32, 1f32];
             }
 
             if input.key_held(blue_engine::VirtualKeyCode::Left) {

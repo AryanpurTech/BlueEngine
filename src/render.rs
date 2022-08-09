@@ -127,9 +127,9 @@ impl Renderer {
 
         let default_uniform = renderer.build_uniform_buffer(vec![
             UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
-            UniformBuffer::Array(
+            UniformBuffer::Array4(
                 "Color",
-                uniform_type::Array {
+                uniform_type::Array4 {
                     data: DEFAULT_COLOR,
                 },
             ),

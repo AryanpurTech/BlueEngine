@@ -4,11 +4,11 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::uniform_type::Array;
 use crate::header::{
     normalize, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
     TextureData, Textures, UniformBuffer, Vertex,
 };
+use crate::uniform_type::Array4;
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
 
 impl Engine {
@@ -25,7 +25,7 @@ impl Engine {
 
         let uniform = self.renderer.build_uniform_buffer(vec![
             UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
-            UniformBuffer::Array("Color", settings.color),
+            UniformBuffer::Array4("Color", settings.color),
         ])?;
 
         let shader = self.renderer.build_shader(
@@ -64,6 +64,11 @@ impl Engine {
             object_index: self.objects.len(),
             shader_builder: ShaderBuilder::new(settings.camera_effect),
             shader_settings: settings.shader_settings,
+            camera_effect: settings.camera_effect,
+            uniform_buffers: vec![
+                UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
+                UniformBuffer::Array4("Color", settings.color),
+            ],
         });
         let object = self.objects.get_mut(index).unwrap();
         object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
@@ -209,6 +214,8 @@ impl Object {
             }
         };*/
 
+        //println!("input {} - {} - {}", x, y, z);
+
         self.position.0 -= x;
         self.position.1 -= y;
         self.position.2 -= z;
@@ -222,7 +229,7 @@ impl Object {
 
     /// Changes the color of the object. If textures exist, the color of textures will change
     pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> anyhow::Result<()> {
-        self.color = Array {
+        self.color = Array4 {
             data: [red, green, blue, alpha],
         };
         self.changed = true;
@@ -238,7 +245,7 @@ impl Object {
         blue: f32,
         alpha: f32,
     ) -> anyhow::Result<()> {
-        self.main_color = Array {
+        self.main_color = Array4 {
             data: [red, green, blue, alpha],
         };
         self.changed = true;
@@ -284,14 +291,13 @@ impl Object {
     }
 
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        self.uniform_buffers[0] = UniformBuffer::Matrix(
+            "Transformation Matrix",
+            uniform_type::Matrix::from_im(self.transformation_matrix),
+        );
+        self.uniform_buffers[1] = UniformBuffer::Array4("Color", self.color);
         let updated_buffer = renderer
-            .build_uniform_buffer(vec![
-                UniformBuffer::Matrix(
-                    "Transformation Matrix",
-                    uniform_type::Matrix::from_im(self.transformation_matrix),
-                ),
-                UniformBuffer::Array("Color", self.color),
-            ])?
+            .build_uniform_buffer(self.uniform_buffers.clone())?
             .0;
 
         self.pipeline.uniform = Some(updated_buffer);
