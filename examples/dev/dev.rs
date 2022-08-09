@@ -37,16 +37,16 @@ fn main() {
     let cube_index = cube.object_index;
 
     let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
-    sphere_1.translate(2f32, 1f32, 0f32);
+    sphere_1.position(2f32, 1f32, 0f32);
     sphere_1.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
     let sphere_2 = uv_sphere(Some("SPHERE2"), &mut engine, (18, 36, 1f32)).unwrap();
-    sphere_2.translate(-2f32, 1f32, 0f32);
+    sphere_2.position(-2f32, 1f32, 0f32);
     sphere_2.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
     let sphere_3 = uv_sphere(Some("SPHERE3"), &mut engine, (18, 36, 1f32)).unwrap();
-    sphere_3.translate(2f32, -1f32, 0f32);
+    sphere_3.position(2f32, -1f32, 0f32);
     sphere_3.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
     let sphere_4 = uv_sphere(Some("SPHERE4"), &mut engine, (18, 36, 1f32)).unwrap();
-    sphere_4.translate(-2f32, -1f32, 0f32);
+    sphere_4.position(-2f32, -1f32, 0f32);
     sphere_4.set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
 
     //let window_size = engine.window.inner_size();

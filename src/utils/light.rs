@@ -32,7 +32,12 @@ impl crate::LightManager {
                 let light_pos = crate::UniformBuffer::Array4(
                     "light_pos",
                     crate::uniform_type::Array4 {
-                        data: [pos[0], pos[1], pos[2], 1f32],
+                        data: [
+                            pos[0] * -1f32,
+                            pos[1] * -1f32,
+                            pos[2] * -1f32, // For diffuse light mistaking it
+                            1f32,
+                        ],
                     },
                 );
 

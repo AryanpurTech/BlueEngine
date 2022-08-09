@@ -56,7 +56,11 @@ impl Engine {
             uniform_layout: uniform.1,
             size: settings.size,
             scale: settings.scale,
-            position: (0f32, 0f32, 0f32),
+            position: (
+                settings.position.0,
+                settings.position.1,
+                settings.position.2,
+            ),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
             main_color: settings.color,
@@ -214,17 +218,15 @@ impl Object {
             }
         };*/
 
-        //println!("input {} - {} - {}", x, y, z);
-
-        self.position.0 -= x;
-        self.position.1 -= y;
-        self.position.2 -= z;
-
         self.translate(
             self.position.0 - x,
             self.position.1 - y,
             self.position.2 - z,
         );
+
+        self.position.0 = x;
+        self.position.1 = y;
+        self.position.2 = z;
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
