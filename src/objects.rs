@@ -11,39 +11,35 @@ use crate::header::{
 use crate::uniform_type::Array4;
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
 
-impl Engine {
-    /// Creates a new object
-    pub fn new_object(
+impl Renderer {
+    pub fn build_object(
         &mut self,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
-    ) -> anyhow::Result<&mut Object> {
-        let vertex_buffer = self
-            .renderer
-            .build_vertex_buffer(verticies.clone(), indicies.clone())?;
+    ) -> anyhow::Result<Object> {
+        let vertex_buffer = self.build_vertex_buffer(verticies.clone(), indicies.clone())?;
 
-        let uniform = self.renderer.build_uniform_buffer(vec![
+        let uniform = self.build_uniform_buffer(vec![
             UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
             UniformBuffer::Array4("Color", settings.color),
         ])?;
 
-        let shader = self.renderer.build_shader(
+        let shader = self.build_shader(
             settings.name.unwrap_or("Object"),
             DEFAULT_SHADER.to_string(),
             Some(&uniform.1),
             settings.shader_settings,
         )?;
 
-        let texture = self.renderer.build_texture(
+        let texture = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
         )?;
 
-        let index = self.objects.len();
-        self.objects.push(Object {
+        Ok(Object {
             name: settings.name,
             vertices: verticies,
             indices: indicies,
@@ -65,7 +61,7 @@ impl Engine {
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
             main_color: settings.color,
             color: settings.color,
-            object_index: self.objects.len(),
+            object_index: 0,
             shader_builder: ShaderBuilder::new(settings.camera_effect),
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
@@ -73,22 +69,52 @@ impl Engine {
                 UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
                 UniformBuffer::Array4("Color", settings.color),
             ],
+        })
+    }
+}
+
+impl Engine {
+    /// Creates a new object
+    pub fn new_object(
+        &mut self,
+        verticies: Vec<Vertex>,
+        indicies: Vec<u16>,
+        settings: ObjectSettings,
+    ) -> anyhow::Result<usize> {
+        let index = Self::add_object(
+            &mut self.objects,
+            self.renderer.build_object(verticies, indicies, settings)?,
+        )?;
+
+        Self::update_object(&mut self.objects, index, |object| {
+            object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
+            object.position(
+                settings.position.0,
+                settings.position.1,
+                settings.position.2,
+            );
         });
-        let object = self.objects.get_mut(index).unwrap();
-        object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
-        object.position(
-            settings.position.0,
-            settings.position.1,
-            settings.position.2,
-        );
+
         //object.update(&mut self.renderer)?;
 
-        Ok(object)
+        Ok(index)
     }
 
-    /// Returns mutable object
-    pub fn get_object(&mut self, index: usize) -> Option<&mut Object> {
-        self.objects.get_mut(index)
+    pub fn add_object(objects: &mut Vec<Object>, object: Object) -> anyhow::Result<usize> {
+        let index = objects.len();
+        let mut object = object;
+        object.object_index = index;
+        objects.push(object);
+
+        Ok(index)
+    }
+
+    /// Allows for safe update of objects
+    pub fn update_object<T: Fn(&mut Object)>(objects: &mut Vec<Object>, index: usize, callback: T) {
+        let object = objects.get_mut(index);
+        if object.is_some() {
+            callback(object.unwrap())
+        }
     }
 }
 impl Object {

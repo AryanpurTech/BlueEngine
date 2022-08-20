@@ -15,9 +15,7 @@ use blue_engine::{
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let trig = triangle(ObjectSettings::default(), &mut engine)
-        .unwrap()
-        .object_index;
+    let trig = triangle(ObjectSettings::default(), &mut engine).unwrap();
 
     let mut color = [1f32, 1f32, 1f32, 1f32];
 
@@ -34,7 +32,7 @@ fn main() {
                 });
 
             objects[trig]
-                .change_color(color[0], color[1], color[2], color[3])
+                .set_color(color[0], color[1], color[2], color[3])
                 .unwrap();
         })
         .expect("Error during update loop");

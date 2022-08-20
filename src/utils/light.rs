@@ -2,8 +2,9 @@ impl crate::LightManager {
     pub fn new() -> Self {
         Self {
             ambient_color: crate::uniform_type::Array4 {
-                data: [1f32, 1f32, 1f32, 1f32],
+                data: [0.5f32, 0.5f32, 1f32, 1f32],
             },
+            ambient_strength: 1f32,
             affected_objects: Vec::new(),
             light_objects: std::collections::BTreeMap::new(),
         }
@@ -35,8 +36,8 @@ impl crate::LightManager {
                         data: [
                             pos[0] * -1f32,
                             pos[1] * -1f32,
-                            pos[2] * -1f32, // For diffuse light mistaking it
-                            1f32,
+                            pos[2] * -1f32,        // For diffuse light mistaking it
+                            self.ambient_strength, // for ambient intensity
                         ],
                     },
                 );
@@ -54,37 +55,6 @@ impl crate::LightManager {
                 i.uniform_layout = new_uniform_buffers.1;
 
                 if !self.affected_objects.contains(&i.object_index) {
-                    i.shader_builder.input_and_output = format!(
-                        "\n{}",
-                        r#"struct VertexInput {
-    @location(0) position: vec3<f32>,
-    @location(1) texture_coordinates: vec2<f32>,
-    @location(2) normal: vec3<f32>,
-};
-
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texture_coordinates: vec2<f32>,
-    @location(1) normal: vec3<f32>,
-    @location(2) fragment_position: vec3<f32>,
-};"#
-                    );
-                    i.shader_builder.vertex_stage = format!(
-                        "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
-                        r#"@vertex
-fn vs_main(input: VertexInput) -> VertexOutput {
-    var out: VertexOutput;
-    out.texture_coordinates = input.texture_coordinates;
-    out.normal = input.normal;
-    out.fragment_position = (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0)).xyz;"#,
-                        if i.camera_effect {
-                            "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
-                        } else {
-                            "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
-                        },
-                        r#"return out;
-}"#
-                    );
                     i.shader_builder.blocks = format!(
                         // step 1 define blocks
                         "\n{}\n{}\n{}",
@@ -117,6 +87,41 @@ var<uniform> camera_uniform: CameraUniforms;"#
                             ""
                         }
                     );
+                    i.shader_builder.input_and_output = format!(
+                        "\n{}",
+                        /* wgsl */
+                        r#"struct VertexInput {
+    @location(0) position: vec3<f32>,
+    @location(1) texture_coordinates: vec2<f32>,
+    @location(2) normal: vec3<f32>,
+};
+
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texture_coordinates: vec2<f32>,
+    @location(1) normal: vec3<f32>,
+    @location(2) fragment_position: vec3<f32>,
+    @location(3) ambient_intensity: f32,
+};"#
+                    );
+                    i.shader_builder.vertex_stage = format!(
+                        "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
+                        r#"@vertex
+fn vs_main(input: VertexInput) -> VertexOutput {
+    var out: VertexOutput;
+    out.texture_coordinates = input.texture_coordinates;
+    out.normal = input.normal;
+    out.fragment_position = (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0)).xyz;
+    out.ambient_intensity = light_position.light_pos.w;"#,
+                        if i.camera_effect {
+                            "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
+                        } else {
+                            "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
+                        },
+                        r#"return out;
+}"#
+                    );
+
                     i.shader_builder.fragment_stage = format!(
                         // step 5 fragment stage
                         "\n// ===== Fragment STAGE ===== //\n{}",
@@ -130,7 +135,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     light_color.y = 0.9;
     light_color.z = 1.0;
     light_color.w = 1.0;
-    var diffuse = (diff + 1.0) * light_color;
+    var diffuse = (diff + input.ambient_intensity) * light_color;
 
     // textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) *
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color * diffuse;

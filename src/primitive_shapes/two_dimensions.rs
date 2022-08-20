@@ -4,13 +4,10 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{Engine, Object, ObjectSettings, Vertex};
+use crate::header::{Engine, ObjectSettings, Vertex};
 
 /// Creates a 2D triangle
-pub fn triangle(
-    settings: ObjectSettings,
-    engine: &mut Engine,
-) -> Result<&mut Object, anyhow::Error> {
+pub fn triangle(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result<usize> {
     let new_triangle = engine.new_object(
         vec![
             Vertex {
@@ -37,7 +34,7 @@ pub fn triangle(
 }
 
 /// Creates a 2D square
-pub fn square(settings: ObjectSettings, engine: &mut Engine) -> Result<&mut Object, anyhow::Error> {
+pub fn square(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result<usize> {
     let new_square = engine.new_object(
         vec![
             Vertex {

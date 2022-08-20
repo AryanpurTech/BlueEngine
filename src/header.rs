@@ -378,6 +378,8 @@ pub type Textures = wgpu::BindGroup;
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
     pub(crate) surface: wgpu::Surface,
+    #[cfg(feature = "gui")]
+    pub(crate) adapter: wgpu::Adapter,
     pub(crate) device: wgpu::Device,
     pub(crate) queue: wgpu::Queue,
     pub(crate) config: wgpu::SurfaceConfiguration,
@@ -445,6 +447,7 @@ pub struct Camera {
 
 pub struct LightManager {
     pub ambient_color: uniform_type::Array4,
+    pub ambient_strength: f32,
     pub affected_objects: Vec<usize>,
     pub light_objects: std::collections::BTreeMap<usize, [f32; 3]>,
 }
