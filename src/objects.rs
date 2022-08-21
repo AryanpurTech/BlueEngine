@@ -59,7 +59,7 @@ impl Renderer {
             ),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
-            main_color: settings.color,
+            uniform_color: settings.color,
             color: settings.color,
             object_index: 0,
             shader_builder: ShaderBuilder::new(settings.camera_effect),
@@ -266,14 +266,14 @@ impl Object {
     }
 
     /// Changes the main color of the object. If textures exist, the color of textures will change
-    pub fn set_main_color(
+    pub fn set_uniform_color(
         &mut self,
         red: f32,
         green: f32,
         blue: f32,
         alpha: f32,
     ) -> anyhow::Result<()> {
-        self.main_color = Array4 {
+        self.uniform_color = Array4 {
             data: [red, green, blue, alpha],
         };
         self.changed = true;
@@ -323,12 +323,11 @@ impl Object {
             "Transformation Matrix",
             uniform_type::Matrix::from_im(self.transformation_matrix),
         );
-        self.uniform_buffers[1] = UniformBuffer::Array4("Color", self.color);
-        let updated_buffer = renderer
-            .build_uniform_buffer(self.uniform_buffers.clone())?
-            .0;
+        self.uniform_buffers[1] = UniformBuffer::Array4("Color", self.uniform_color);
+        let updated_buffer = renderer.build_uniform_buffer(self.uniform_buffers.clone())?;
 
-        self.pipeline.uniform = Some(updated_buffer);
+        self.pipeline.uniform = Some(updated_buffer.0);
+        self.uniform_layout = updated_buffer.1;
 
         Ok(())
     }

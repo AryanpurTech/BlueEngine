@@ -1,10 +1,12 @@
+// ? Add a way for custom uniform buffer class creation
+
 impl crate::LightManager {
     pub fn new() -> Self {
         Self {
             ambient_color: crate::uniform_type::Array4 {
-                data: [0.5f32, 0.5f32, 1f32, 1f32],
+                data: [1f32, 1f32, 1f32, 1f32], //0.051f32, 0.533f32, 0.898f32
             },
-            ambient_strength: 1f32,
+            ambient_strength: 0f32,
             affected_objects: Vec::new(),
             light_objects: std::collections::BTreeMap::new(),
         }
@@ -14,6 +16,7 @@ impl crate::LightManager {
         &mut self,
         objects: &mut Vec<crate::Object>,
         renderer: &mut crate::Renderer,
+        camera: &crate::Camera,
     ) -> anyhow::Result<()> {
         let light_keys: Vec<usize> = self.light_objects.keys().map(|x| *x).collect();
 
@@ -22,8 +25,8 @@ impl crate::LightManager {
                 self.light_objects
                     .insert(i.object_index, [i.position.0, i.position.1, i.position.2]);
             } else {
-                let result = i.main_color * self.ambient_color;
-                i.set_color(
+                let result = i.color * self.ambient_color;
+                i.set_uniform_color(
                     result.data[0],
                     result.data[1],
                     result.data[2],
@@ -41,18 +44,42 @@ impl crate::LightManager {
                         ],
                     },
                 );
-
                 if i.uniform_buffers.len() == 2 {
                     i.uniform_buffers.push(light_pos);
                 } else {
                     i.uniform_buffers[2] = light_pos;
                 }
 
-                let new_uniform_buffers = renderer
-                    .build_uniform_buffer(i.uniform_buffers.clone())
-                    .unwrap();
-                i.pipeline.uniform = Some(new_uniform_buffers.0);
-                i.uniform_layout = new_uniform_buffers.1;
+                let normal_model = crate::UniformBuffer::Matrix(
+                    "inverse_model",
+                    crate::uniform_type::Matrix::from_im(nalgebra_glm::transpose(
+                        &nalgebra_glm::inverse(&i.transformation_matrix),
+                    )),
+                );
+                if i.uniform_buffers.len() == 3 {
+                    i.uniform_buffers.push(normal_model);
+                } else {
+                    i.uniform_buffers[3] = normal_model;
+                }
+
+                let camera_position = crate::UniformBuffer::Array4(
+                    "camera_pos_and_specular",
+                    crate::uniform_type::Array4 {
+                        data: [
+                            camera.position.data.0[0][0],
+                            camera.position.data.0[0][1],
+                            camera.position.data.0[0][2],
+                            0.8,
+                        ],
+                    },
+                );
+                if i.uniform_buffers.len() == 4 {
+                    i.uniform_buffers.push(camera_position);
+                } else {
+                    i.uniform_buffers[4] = camera_position;
+                }
+
+                i.update_uniform_buffer(renderer)?;
 
                 if !self.affected_objects.contains(&i.object_index) {
                     i.shader_builder.blocks = format!(
@@ -75,7 +102,19 @@ struct LightPosition {
     light_pos: vec4<f32>,
 };
 @group(2) @binding(2)
-var<uniform> light_position: LightPosition;"#,
+var<uniform> light_position: LightPosition;
+
+struct InverseModel {
+    inverse_model: mat4x4<f32>,
+};
+@group(2) @binding(3)
+var<uniform> inverse_model: InverseModel;
+
+struct CameraPosition {
+    camera_pos_and_specular: vec4<f32>,
+};
+@group(2) @binding(4)
+var<uniform> camera_position: CameraPosition;"#,
                         if i.camera_effect {
                             r#"
 struct CameraUniforms {
@@ -108,9 +147,10 @@ struct VertexOutput {
                         "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
                         r#"@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
+    var new_normal: vec4<f32> = inverse_model.inverse_model * vec4<f32>(input.normal, 0.0);
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;
-    out.normal = input.normal;
+    out.normal = new_normal.xyz;
     out.fragment_position = (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0)).xyz;
     out.ambient_intensity = light_position.light_pos.w;"#,
                         if i.camera_effect {
@@ -127,18 +167,27 @@ fn vs_main(input: VertexInput) -> VertexOutput {
                         "\n// ===== Fragment STAGE ===== //\n{}",
                         r#"@fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
+    var light_color: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    
+    // ambient
+    var ambient: vec4<f32> = input.ambient_intensity * light_color;
+
+    // diffuse
     var norm: vec3<f32> = normalize(input.normal);
     var light_dir: vec3<f32> = normalize(light_position.light_pos.xyz - input.fragment_position);
     var diff: f32 = max(dot(norm, light_dir), 0.0);
-    var light_color: vec4<f32>;
-    light_color.x = 0.9;
-    light_color.y = 0.9;
-    light_color.z = 1.0;
-    light_color.w = 1.0;
-    var diffuse = (diff + input.ambient_intensity) * light_color;
+    var diffuse = diff * light_color;
 
-    // textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) *
-    return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color * diffuse;
+    // specular
+    var specular_strength = camera_position.camera_pos_and_specular.w;
+    var view_dir: vec3<f32> = normalize(camera_position.camera_pos_and_specular.xyz - input.fragment_position);
+    var reflect_dir: vec3<f32> = reflect(-light_dir, norm);
+    var spec: f32 = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
+    var specular = specular_strength * spec * light_color;
+
+    var result = (ambient + diffuse + specular) * fragment_uniforms.color;
+
+    return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * result;
 }"#
                     );
                     i.pipeline.shader = renderer.build_shader(

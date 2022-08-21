@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.3.99"
+version = "0.4.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
@@ -16,7 +16,7 @@ name = "blue_engine"
 crate-type = ["lib", "cdylib"]
 
 [features]
-default = []
+default = ["model_loader"]
 NON_FILL_POLYGON_MODE = []
 model_loader = ["dep:gltf"]
 gui = ["dep:imgui-winit-support", "dep:imgui-wgpu", "dep:imgui"]

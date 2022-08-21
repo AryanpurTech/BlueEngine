@@ -1,6 +1,6 @@
-use crate::{Engine, Object, ObjectSettings, Vertex};
+use crate::{Engine, ObjectSettings, Vertex};
 
-pub fn load_gltf<'a>(path: &'static str, engine: &'a mut Engine) -> anyhow::Result<&'a mut Object> {
+pub fn load_gltf<'a>(path: &'static str, engine: &mut Engine) -> anyhow::Result<usize> {
     let mut verticies = Vec::<Vertex>::new();
     let mut indicies = Vec::<u16>::new();
 
@@ -8,14 +8,28 @@ pub fn load_gltf<'a>(path: &'static str, engine: &'a mut Engine) -> anyhow::Resu
     for mesh in gltf.meshes() {
         for primitive in mesh.primitives() {
             let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+            let mut positions: Vec<[f32; 3]> = Vec::new();
             if let Some(iter) = reader.read_positions() {
                 for vertex_position in iter {
-                    verticies.push(Vertex {
-                        position: vertex_position,
-                        texture: [0f32, 0f32],
-                    });
+                    positions.push(vertex_position);
                 }
             }
+
+            let mut normals: Vec<[f32; 3]> = Vec::new();
+            if let Some(iter) = reader.read_normals() {
+                for normal in iter {
+                    normals.push(normal);
+                }
+            }
+
+            for i in 0..positions.len() {
+                verticies.push(Vertex {
+                    position: positions[i],
+                    uv: [0f32, 0f32],
+                    normal: normals[i],
+                })
+            }
+
             if let Some(index) = reader.read_indices() {
                 match index {
                     gltf::mesh::util::ReadIndices::U16(iter) => {

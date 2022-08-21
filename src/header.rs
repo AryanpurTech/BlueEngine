@@ -255,7 +255,7 @@ pub struct Object {
     /// Best choice is to let the Object system handle it
     pub transformation_matrix: nalgebra_glm::Mat4,
     /// The main color of your object
-    pub main_color: uniform_type::Array4,
+    pub uniform_color: uniform_type::Array4,
     /// The color of your object that is sent to gpu
     pub color: uniform_type::Array4,
     /// The index of the object in the queue

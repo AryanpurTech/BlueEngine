@@ -3,7 +3,7 @@ use std::{ops::Mul, result};
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
+    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera, loader::load_gltf},
     Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
@@ -35,7 +35,19 @@ fn main() {
     engine.objects[cube].scale(0.6, 0.6, 0.6);
     //cube.scale(0.3, 0.3, 0.3);
 
+    /*let test = load_gltf(
+        "/home/elhamaryanpur/Desktop/Projects/Blue Engine/examples/shapes/monkey.glb",
+        &mut engine,
+    )
+    .unwrap();
+
+    engine.objects[test].set_color(0.051f32, 0.533f32, 0.898f32, 1f32); */
+
     let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
+    engine.objects[sphere_1].scale(2f32, 2f32, 2f32);
+    engine.objects[sphere_1].set_color(0.051f32, 0.533f32, 0.898f32, 1f32);
+
+    /*let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
     engine.objects[sphere_1].position(2f32, 1f32, 0f32);
     engine.objects[sphere_1].set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
     let sphere_2 = uv_sphere(Some("SPHERE2"), &mut engine, (18, 36, 1f32)).unwrap();
@@ -46,7 +58,7 @@ fn main() {
     engine.objects[sphere_3].set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
     let sphere_4 = uv_sphere(Some("SPHERE4"), &mut engine, (18, 36, 1f32)).unwrap();
     engine.objects[sphere_4].position(-2f32, -1f32, 0f32);
-    engine.objects[sphere_4].set_color(1.0f32, 0.5f32, 0.31f32, 1f32);
+    engine.objects[sphere_4].set_color(1.0f32, 0.5f32, 0.31f32, 1f32); */
 
     //let window_size = engine.window.inner_size();
     /*let change_texture = engine
@@ -70,7 +82,7 @@ fn main() {
     //square.no_stretch_update(&mut engine.renderer, engine.window.inner_size()).unwrap();
     //font.draw("Hello_World", (-100, 50), &mut engine).unwrap();
 
-    let radius = 2f32;
+    let radius = 10f32;
     let start = std::time::SystemTime::now();
     let mut rotation = 0f32;
     let speed = -0.05;
@@ -85,7 +97,14 @@ fn main() {
     engine
         .update_loop(move |renderer, window, objects, (event, input), camera| {
             fly_camera.update(camera, window, event, input);
-            lm.update(objects, renderer).expect("Couldn't add light");
+            lm.update(objects, renderer, &camera)
+                .expect("Couldn't add light");
+
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
+
+            objects[cube].position(camx, 0f32, camz);
 
             //cube.translate(1f32, 1f32, 1f32);
 
