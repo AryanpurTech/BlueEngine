@@ -230,6 +230,9 @@ pub mod uniform_type {
     }
 }
 
+pub use bytemuck::Pod;
+pub use bytemuck::Zeroable;
+
 /// Objects make it easier to work with Blue Engine, it automates most of work needed for
 /// creating 3D objects and showing them on screen. A range of default objects are available
 /// as well as ability to customize each of them and even create your own! You can also
@@ -267,7 +270,7 @@ pub struct Object {
     /// Camera have any effect on the object?
     pub camera_effect: bool,
     /// Uniform Buffers to be sent to GPU
-    pub uniform_buffers: Vec<UniformBuffer>,
+    pub uniform_buffers: Vec<wgpu::Buffer>,
 }
 
 /// Extra settings to customize objects on time of creation
@@ -458,15 +461,6 @@ pub use winit::event::DeviceEvent;
 pub use winit::event::MouseButton;
 /// Keyboard keys identifier
 pub use winit::event::VirtualKeyCode;
-
-/// Buffer type enum, allowing for multiple types to be sent
-#[derive(Clone, Debug)]
-pub enum UniformBuffer {
-    Matrix(&'static str, uniform_type::Matrix),
-    Array4(&'static str, uniform_type::Array4),
-    Array3(&'static str, uniform_type::Array3),
-    Float(&'static str, uniform_type::Float),
-}
 
 /// This function helps in converting pixel value to the value that is between -1 and +1
 pub fn normalize(value: f32, max: u32) -> f32 {

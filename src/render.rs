@@ -5,7 +5,7 @@
 */
 
 use crate::{
-    header::{uniform_type, Camera, Object, Renderer, ShaderSettings, TextureData, UniformBuffer},
+    header::{uniform_type, Camera, Object, Renderer, ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
 use anyhow::Result;
@@ -127,9 +127,9 @@ impl Renderer {
             //crate::header::TextureFormat::PNG
         )?;
 
-        let default_uniform = renderer.build_uniform_buffer(vec![
-            UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
-            UniformBuffer::Array4(
+        let default_uniform = renderer.build_uniform_buffer(&vec![
+            renderer.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+            renderer.build_uniform_buffer_part(
                 "Color",
                 uniform_type::Array4 {
                     data: DEFAULT_COLOR,

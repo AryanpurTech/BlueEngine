@@ -6,7 +6,7 @@
 
 use crate::header::{
     normalize, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
-    TextureData, Textures, UniformBuffer, Vertex,
+    TextureData, Textures, Vertex,
 };
 use crate::uniform_type::Array4;
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -20,9 +20,9 @@ impl Renderer {
     ) -> anyhow::Result<Object> {
         let vertex_buffer = self.build_vertex_buffer(verticies.clone(), indicies.clone())?;
 
-        let uniform = self.build_uniform_buffer(vec![
-            UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
-            UniformBuffer::Array4("Color", settings.color),
+        let uniform = self.build_uniform_buffer(&vec![
+            self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+            self.build_uniform_buffer_part("Color", settings.color),
         ])?;
 
         let shader = self.build_shader(
@@ -66,8 +66,8 @@ impl Renderer {
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
             uniform_buffers: vec![
-                UniformBuffer::Matrix("Transformation Matrix", DEFAULT_MATRIX_4),
-                UniformBuffer::Array4("Color", settings.color),
+                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+                self.build_uniform_buffer_part("Color", settings.color),
             ],
         })
     }
@@ -319,12 +319,13 @@ impl Object {
     }
 
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
-        self.uniform_buffers[0] = UniformBuffer::Matrix(
+        self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
             uniform_type::Matrix::from_im(self.transformation_matrix),
         );
-        self.uniform_buffers[1] = UniformBuffer::Array4("Color", self.uniform_color);
-        let updated_buffer = renderer.build_uniform_buffer(self.uniform_buffers.clone())?;
+        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
+
+        let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
 
         self.pipeline.uniform = Some(updated_buffer.0);
         self.uniform_layout = updated_buffer.1;

@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{uniform_type::Matrix, Camera, Renderer, UniformBuffer};
+use crate::header::{uniform_type::Matrix, Camera, Renderer};
 use anyhow::Result;
 use winit::dpi::PhysicalSize;
 
@@ -13,10 +13,9 @@ use super::default_resources::DEFAULT_MATRIX_4;
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Result<Self> {
-        let camera_uniform = renderer.build_uniform_buffer(vec![UniformBuffer::Matrix(
-            "Camera Uniform",
-            DEFAULT_MATRIX_4,
-        )])?;
+        let camera_uniform = renderer.build_uniform_buffer(&vec![
+            renderer.build_uniform_buffer_part("Camera Uniform", DEFAULT_MATRIX_4)
+        ])?;
 
         let mut camera = Self {
             position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
@@ -154,7 +153,7 @@ impl Camera {
     pub fn update_view_projection(&mut self, renderer: &mut Renderer) -> Result<()> {
         if self.changed {
             let updated_buffer = renderer
-                .build_uniform_buffer(vec![UniformBuffer::Matrix(
+                .build_uniform_buffer(&vec![renderer.build_uniform_buffer_part(
                     "Camera Uniform",
                     self.camera_uniform_buffer()
                         .expect("Couldn't build camera projection"),

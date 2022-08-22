@@ -8,8 +8,8 @@ use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout, Sampler, Texture, TextureView};
 
 use crate::header::{
-    Pipeline, ShaderSettings, Shaders, TextureData, TextureMode, Textures, UniformBuffer,
-    UniformBuffers, Vertex, VertexBuffers,
+    Pipeline, ShaderSettings, Shaders, TextureData, TextureMode, Textures, UniformBuffers, Vertex,
+    VertexBuffers,
 };
 
 impl crate::header::Renderer {
@@ -240,15 +240,27 @@ impl crate::header::Renderer {
         return (texture, view, sampler);
     }
 
+    pub fn build_uniform_buffer_part<T: bytemuck::Zeroable + bytemuck::Pod>(
+        &self,
+        name: &str,
+        value: T,
+    ) -> wgpu::Buffer {
+        self.device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some(name),
+                contents: bytemuck::cast_slice(&[value]),
+                usage: wgpu::BufferUsages::UNIFORM,
+            })
+    }
+
     /// Creates a new uniform buffer group, according to a list of types
     pub fn build_uniform_buffer(
         &mut self,
-        uniforms: Vec<UniformBuffer>,
+        uniforms: &Vec<wgpu::Buffer>,
     ) -> Result<(UniformBuffers, BindGroupLayout), anyhow::Error> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
-        let mut buffer_vec = Vec::<wgpu::Buffer>::new();
-        for i in uniforms.iter() {
+        /*for i in uniforms.iter() {
             match i {
                 UniformBuffer::Matrix(name, value) => {
                     buffer_vec.push(self.device.create_buffer_init(
@@ -287,11 +299,11 @@ impl crate::header::Renderer {
                     ));
                 }
             }
-        }
-        for i in 0..buffer_vec.len() {
+        } */
+        for i in 0..uniforms.len() {
             let descriptor = wgpu::BindGroupEntry {
                 binding: i as u32,
-                resource: buffer_vec.get(i).unwrap().as_entire_binding(),
+                resource: uniforms.get(i).unwrap().as_entire_binding(),
             };
             buffer_entry.push(descriptor);
             buffer_layout.push(wgpu::BindGroupLayoutEntry {

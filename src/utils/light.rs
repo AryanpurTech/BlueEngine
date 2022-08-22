@@ -1,4 +1,12 @@
-// ? Add a way for custom uniform buffer class creation
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
+pub struct LightUniforms {
+    light_position: crate::uniform_type::Array3,  // 3 units
+    ambient_strength: f32,                        // 1 unit
+    inverse_model: crate::uniform_type::Matrix,   // 4x4 units
+    camera_position: crate::uniform_type::Array3, // 3 units
+    specular_strength: f32,                       // 1 unit
+}
 
 impl crate::LightManager {
     pub fn new() -> Self {
@@ -32,51 +40,28 @@ impl crate::LightManager {
                     result.data[2],
                     result.data[3],
                 )?;
+
                 let pos = *self.light_objects.get(&light_keys[0]).unwrap();
-                let light_pos = crate::UniformBuffer::Array4(
-                    "light_pos",
-                    crate::uniform_type::Array4 {
-                        data: [
-                            pos[0] * -1f32,
-                            pos[1] * -1f32,
-                            pos[2] * -1f32,        // For diffuse light mistaking it
-                            self.ambient_strength, // for ambient intensity
-                        ],
+                let light_uniform_buffer = renderer.build_uniform_buffer_part(
+                    "light_uniform_buffer",
+                    LightUniforms {
+                        light_position: crate::uniform_type::Array3 { data: pos },
+                        ambient_strength: self.ambient_strength,
+                        inverse_model: crate::uniform_type::Matrix::from_im(
+                            nalgebra_glm::transpose(&nalgebra_glm::inverse(
+                                &i.transformation_matrix,
+                            )),
+                        ),
+                        camera_position: crate::uniform_type::Array3 {
+                            data: camera.position.data.0[0],
+                        },
+                        specular_strength: 0.8,
                     },
                 );
                 if i.uniform_buffers.len() == 2 {
-                    i.uniform_buffers.push(light_pos);
+                    i.uniform_buffers.push(light_uniform_buffer);
                 } else {
-                    i.uniform_buffers[2] = light_pos;
-                }
-
-                let normal_model = crate::UniformBuffer::Matrix(
-                    "inverse_model",
-                    crate::uniform_type::Matrix::from_im(nalgebra_glm::transpose(
-                        &nalgebra_glm::inverse(&i.transformation_matrix),
-                    )),
-                );
-                if i.uniform_buffers.len() == 3 {
-                    i.uniform_buffers.push(normal_model);
-                } else {
-                    i.uniform_buffers[3] = normal_model;
-                }
-
-                let camera_position = crate::UniformBuffer::Array4(
-                    "camera_pos_and_specular",
-                    crate::uniform_type::Array4 {
-                        data: [
-                            camera.position.data.0[0][0],
-                            camera.position.data.0[0][1],
-                            camera.position.data.0[0][2],
-                            0.8,
-                        ],
-                    },
-                );
-                if i.uniform_buffers.len() == 4 {
-                    i.uniform_buffers.push(camera_position);
-                } else {
-                    i.uniform_buffers[4] = camera_position;
+                    i.uniform_buffers[2] = light_uniform_buffer;
                 }
 
                 i.update_uniform_buffer(renderer)?;
@@ -98,23 +83,15 @@ struct FragmentUniforms {
 @group(2) @binding(1)
 var<uniform> fragment_uniforms: FragmentUniforms;
 
-struct LightPosition {
-    light_pos: vec4<f32>,
+struct LightUniforms {
+    light_position: vec3<f32>,
+    ambient_strength: f32,
+    inverse_model: mat4x4<f32>,
+    camera_position: vec3<f32>,
+    specular_strength: f32
 };
 @group(2) @binding(2)
-var<uniform> light_position: LightPosition;
-
-struct InverseModel {
-    inverse_model: mat4x4<f32>,
-};
-@group(2) @binding(3)
-var<uniform> inverse_model: InverseModel;
-
-struct CameraPosition {
-    camera_pos_and_specular: vec4<f32>,
-};
-@group(2) @binding(4)
-var<uniform> camera_position: CameraPosition;"#,
+var<uniform> light_uniform_buffer: LightUniforms;"#,
                         if i.camera_effect {
                             r#"
 struct CameraUniforms {
@@ -147,12 +124,11 @@ struct VertexOutput {
                         "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
                         r#"@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
-    var new_normal: vec4<f32> = inverse_model.inverse_model * vec4<f32>(input.normal, 0.0);
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;
-    out.normal = new_normal.xyz;
+    out.normal = (light_uniform_buffer.inverse_model * vec4<f32>(input.normal, 0.0)).xyz * -1.0;
     out.fragment_position = (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0)).xyz;
-    out.ambient_intensity = light_position.light_pos.w;"#,
+    out.ambient_intensity = light_uniform_buffer.ambient_strength;"#,
                         if i.camera_effect {
                             "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
                         } else {
@@ -174,16 +150,15 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 
     // diffuse
     var norm: vec3<f32> = normalize(input.normal);
-    var light_dir: vec3<f32> = normalize(light_position.light_pos.xyz - input.fragment_position);
+    var light_dir: vec3<f32> = normalize(light_uniform_buffer.light_position - input.fragment_position);
     var diff: f32 = max(dot(norm, light_dir), 0.0);
     var diffuse = diff * light_color;
 
     // specular
-    var specular_strength = camera_position.camera_pos_and_specular.w;
-    var view_dir: vec3<f32> = normalize(camera_position.camera_pos_and_specular.xyz - input.fragment_position);
+    var view_dir: vec3<f32> = normalize((light_uniform_buffer.camera_position * -1.0) - input.fragment_position);
     var reflect_dir: vec3<f32> = reflect(-light_dir, norm);
     var spec: f32 = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
-    var specular = specular_strength * spec * light_color;
+    var specular = light_uniform_buffer.specular_strength * spec * light_color;
 
     var result = (ambient + diffuse + specular) * fragment_uniforms.color;
 
