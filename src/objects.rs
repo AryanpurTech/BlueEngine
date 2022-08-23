@@ -8,7 +8,7 @@ use crate::header::{
     normalize, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
     TextureData, Textures, Vertex,
 };
-use crate::uniform_type::Array4;
+use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
 
 impl Renderer {
@@ -59,6 +59,9 @@ impl Renderer {
             ),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
+            inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
+                &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
+            )),
             uniform_color: settings.color,
             color: settings.color,
             object_index: 0,
@@ -133,6 +136,9 @@ impl Object {
         let transformation_matrix = self.transformation_matrix;
         let result = nalgebra_glm::scale(&transformation_matrix, &nalgebra_glm::vec3(x, y, z));
         self.transformation_matrix = result;
+        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
+            &nalgebra_glm::inverse(&self.transformation_matrix),
+        ));
     }
     /// Resizes an object in pixels which are relative to the window
     pub fn resize(
@@ -193,6 +199,9 @@ impl Object {
         };
         rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle, &axis);
         self.transformation_matrix = rotation_matrix;
+        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
+            &nalgebra_glm::inverse(&self.transformation_matrix),
+        ));
 
         self.changed = true;
     }
@@ -202,6 +211,9 @@ impl Object {
         let mut position_matrix = self.transformation_matrix;
         position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
         self.transformation_matrix = position_matrix;
+        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
+            &nalgebra_glm::inverse(&self.transformation_matrix),
+        ));
 
         self.changed = true;
     }

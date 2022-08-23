@@ -257,6 +257,8 @@ pub struct Object {
     /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub transformation_matrix: nalgebra_glm::Mat4,
+    /// Transformation matrix, but inversed
+    pub inverse_transformation_matrix: uniform_type::Matrix,
     /// The main color of your object
     pub uniform_color: uniform_type::Array4,
     /// The color of your object that is sent to gpu
@@ -452,7 +454,7 @@ pub struct LightManager {
     pub ambient_color: uniform_type::Array4,
     pub ambient_strength: f32,
     pub affected_objects: Vec<usize>,
-    pub light_objects: std::collections::BTreeMap<usize, [f32; 3]>,
+    pub light_objects: std::collections::BTreeMap<usize, ([f32; 3], uniform_type::Array4)>,
 }
 
 /// Device Events

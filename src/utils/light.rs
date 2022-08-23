@@ -1,11 +1,12 @@
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 pub struct LightUniforms {
+    light_color: crate::uniform_type::Array4,     // 4 units
     light_position: crate::uniform_type::Array3,  // 3 units
     ambient_strength: f32,                        // 1 unit
-    inverse_model: crate::uniform_type::Matrix,   // 4x4 units
     camera_position: crate::uniform_type::Array3, // 3 units
     specular_strength: f32,                       // 1 unit
+    inverse_model: crate::uniform_type::Matrix,   // 4x4 units
 }
 
 impl crate::LightManager {
@@ -30,8 +31,10 @@ impl crate::LightManager {
 
         for i in objects {
             if light_keys.contains(&&i.object_index) {
-                self.light_objects
-                    .insert(i.object_index, [i.position.0, i.position.1, i.position.2]);
+                self.light_objects.insert(
+                    i.object_index,
+                    ([i.position.0, i.position.1, i.position.2], i.color),
+                );
             } else {
                 let result = i.color * self.ambient_color;
                 i.set_uniform_color(
@@ -45,13 +48,12 @@ impl crate::LightManager {
                 let light_uniform_buffer = renderer.build_uniform_buffer_part(
                     "light_uniform_buffer",
                     LightUniforms {
-                        light_position: crate::uniform_type::Array3 { data: pos },
+                        light_color: pos.1,
+                        light_position: crate::uniform_type::Array3 {
+                            data: [pos.0[0] * -1f32, pos.0[1] * -1f32, pos.0[2] * -1f32],
+                        },
                         ambient_strength: self.ambient_strength,
-                        inverse_model: crate::uniform_type::Matrix::from_im(
-                            nalgebra_glm::transpose(&nalgebra_glm::inverse(
-                                &i.transformation_matrix,
-                            )),
-                        ),
+                        inverse_model: i.inverse_transformation_matrix,
                         camera_position: crate::uniform_type::Array3 {
                             data: camera.position.data.0[0],
                         },
@@ -84,11 +86,12 @@ struct FragmentUniforms {
 var<uniform> fragment_uniforms: FragmentUniforms;
 
 struct LightUniforms {
+    light_color: vec4<f32>,
     light_position: vec3<f32>,
     ambient_strength: f32,
-    inverse_model: mat4x4<f32>,
     camera_position: vec3<f32>,
-    specular_strength: f32
+    specular_strength: f32,
+    inverse_model: mat4x4<f32>,
 };
 @group(2) @binding(2)
 var<uniform> light_uniform_buffer: LightUniforms;"#,
@@ -126,7 +129,7 @@ struct VertexOutput {
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;
-    out.normal = (light_uniform_buffer.inverse_model * vec4<f32>(input.normal, 0.0)).xyz * -1.0;
+    out.normal = (light_uniform_buffer.inverse_model * vec4<f32>(input.normal, 0.0)).xyz;
     out.fragment_position = (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0)).xyz;
     out.ambient_intensity = light_uniform_buffer.ambient_strength;"#,
                         if i.camera_effect {
@@ -143,22 +146,20 @@ fn vs_main(input: VertexInput) -> VertexOutput {
                         "\n// ===== Fragment STAGE ===== //\n{}",
                         r#"@fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var light_color: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, 1.0);
-    
     // ambient
-    var ambient: vec4<f32> = input.ambient_intensity * light_color;
+    var ambient: vec4<f32> = input.ambient_intensity * light_uniform_buffer.light_color;
 
     // diffuse
     var norm: vec3<f32> = normalize(input.normal);
     var light_dir: vec3<f32> = normalize(light_uniform_buffer.light_position - input.fragment_position);
     var diff: f32 = max(dot(norm, light_dir), 0.0);
-    var diffuse = diff * light_color;
+    var diffuse = diff * light_uniform_buffer.light_color;
 
     // specular
-    var view_dir: vec3<f32> = normalize((light_uniform_buffer.camera_position * -1.0) - input.fragment_position);
+    var view_dir: vec3<f32> = normalize(light_uniform_buffer.camera_position - input.fragment_position);
     var reflect_dir: vec3<f32> = reflect(-light_dir, norm);
     var spec: f32 = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
-    var specular = light_uniform_buffer.specular_strength * spec * light_color;
+    var specular = light_uniform_buffer.specular_strength * spec * light_uniform_buffer.light_color;
 
     var result = (ambient + diffuse + specular) * fragment_uniforms.color;
 
@@ -180,6 +181,14 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     }
 
     pub fn set_object_as_light(&mut self, object: usize) {
-        self.light_objects.insert(object, [0f32, 0f32, 0f32]);
+        self.light_objects.insert(
+            object,
+            (
+                [0f32, 0f32, 0f32],
+                crate::uniform_type::Array4 {
+                    data: [0f32, 0f32, 0f32, 0f32],
+                },
+            ),
+        );
     }
 }
