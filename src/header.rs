@@ -464,6 +464,9 @@ pub use winit::event::MouseButton;
 /// Keyboard keys identifier
 pub use winit::event::VirtualKeyCode;
 
+pub use winit::window::Window;
+pub use winit_input_helper::WinitInputHelper as InputHelper;
+
 /// This function helps in converting pixel value to the value that is between -1 and +1
 pub fn normalize(value: f32, max: u32) -> f32 {
     let mut result = value / max as f32;
