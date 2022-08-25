@@ -135,11 +135,11 @@ impl crate::header::Renderer {
             TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
                 .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str()),
             TextureData::Image(data) => data,
+            TextureData::Path(path) => image::open(path)
+                .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str()),
         };
 
-        let rgba = img
-            .as_rgba8()
-            .expect("Couldn't Obtain RGBA Data Of The Texture Image");
+        let rgba = img.to_rgba8();
         let dimensions = img.dimensions();
 
         let size = wgpu::Extent3d {
@@ -164,7 +164,7 @@ impl crate::header::Renderer {
                 origin: wgpu::Origin3d::ZERO,
                 aspect: wgpu::TextureAspect::All,
             },
-            rgba,
+            &rgba,
             wgpu::ImageDataLayout {
                 offset: 0,
                 bytes_per_row: std::num::NonZeroU32::new(4 * dimensions.0),

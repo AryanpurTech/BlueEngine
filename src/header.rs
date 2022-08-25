@@ -501,6 +501,7 @@ pub enum RotateAxis {
 pub enum TextureData {
     Bytes(Vec<u8>),
     Image(image::DynamicImage),
+    Path(&'static str),
 }
 
 /// Defines how the borders of texture would look like
