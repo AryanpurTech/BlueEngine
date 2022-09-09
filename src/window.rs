@@ -18,18 +18,22 @@ impl Engine {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
     pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
+        #[cfg(feature = "debug")]
         env_logger::init();
         // Dimentions of the window, as width and height
         // and then are set as a logical size that the window can accept
+        #[cfg(not(feature = "android"))]
         let dimention = winit::dpi::PhysicalSize {
             width: settings.width,   // Which sets the width of the window
             height: settings.height, // And sets the height of the window
         };
 
         // Here the size is finally made according to the dimentions we set earlier
+        #[cfg(not(feature = "android"))]
         let size = winit::dpi::Size::Physical(dimention);
 
         // And we will create a new window and set all the options we stored
+        #[cfg(not(feature = "android"))]
         let new_window = WindowBuilder::new()
             .with_inner_size(size) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
@@ -42,7 +46,10 @@ impl Engine {
         let event_loop = EventLoop::new();
 
         // bind the loop to window
+        #[cfg(not(feature = "android"))]
         let window = new_window.build(&event_loop).unwrap();
+        #[cfg(feature = "android")]
+        let window = Window::new(&event_loop).unwrap();
 
         // The renderer init on current window
         let mut renderer =
@@ -106,12 +113,14 @@ impl Engine {
         let mut imgui = imgui::Context::create();
         #[cfg(feature = "gui")]
         let mut platform = imgui_winit_support::WinitPlatform::init(&mut imgui);
+        //#[cfg(not(feature = "android"))]
         #[cfg(feature = "gui")]
         platform.attach_window(
             imgui.io_mut(),
             &window,
             imgui_winit_support::HiDpiMode::Default,
         );
+
         #[cfg(feature = "gui")]
         imgui.set_ini_filename(None);
 
@@ -127,10 +136,19 @@ impl Engine {
             &renderer.device,
             &renderer.queue,
             imgui_wgpu::RendererConfig {
-                texture_format: renderer.surface.get_supported_formats(&renderer.adapter)[0],
+                #[cfg(not(feature = "android"))]
+                texture_format: renderer
+                    .surface
+                    .as_ref()
+                    .unwrap()
+                    .get_supported_formats(&renderer.adapter)[0],
+                #[cfg(feature = "android")]
+                texture_format: wgpu::TextureFormat::Rgba8UnormSrgb,
                 ..Default::default()
             },
         );
+
+        //? FOR ANDROID FIX, CREATE OR RESIZE THE PLATFORM AFTER THE RESUMED
 
         #[cfg(feature = "gui")]
         let mut last_frame = std::time::Instant::now();
@@ -148,7 +166,9 @@ impl Engine {
             }
 
             #[cfg(feature = "gui")]
-            platform.handle_event(imgui.io_mut(), &window, &events);
+            if renderer.surface.is_some() {
+                platform.handle_event(imgui.io_mut(), &window, &events);
+            }
 
             match events {
                 Event::WindowEvent {
@@ -158,6 +178,22 @@ impl Engine {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     _ => {}
                 },
+                #[cfg(feature = "android")]
+                Event::Resumed => {
+                    let surface = unsafe { renderer.instance.create_surface(&window) };
+                    surface.configure(&renderer.device, &renderer.config);
+                    dbg!(window.inner_size());
+                    renderer.depth_buffer = Renderer::build_depth_buffer(
+                        "Depth Buffer",
+                        &renderer.device,
+                        &renderer.config,
+                    );
+                    renderer.surface = Some(surface);
+                }
+                #[cfg(feature = "android")]
+                Event::Suspended => {
+                    renderer.surface = None;
+                }
 
                 Event::DeviceEvent { event, .. } => device_event = event,
                 Event::MainEventsCleared => {

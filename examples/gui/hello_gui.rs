@@ -32,7 +32,7 @@ fn main() {
                 });
 
             objects[trig]
-                .set_color(color[0], color[1], color[2], color[3])
+                .set_uniform_color(color[0], color[1], color[2], color[3])
                 .unwrap();
         })
         .expect("Error during update loop");

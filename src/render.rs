@@ -30,11 +30,19 @@ impl Renderer {
 
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(window) };
+
+        #[cfg(not(feature = "android"))]
+        let surface = Some(unsafe { instance.create_surface(window) });
+        #[cfg(feature = "android")]
+        let surface = None;
+
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: power_preference,
-                compatible_surface: Some(&surface),
+                #[cfg(not(feature = "android"))]
+                compatible_surface: Some(surface.as_ref().unwrap()),
+                #[cfg(feature = "android")]
+                compatible_surface: surface,
                 force_fallback_adapter: false,
             })
             .await
@@ -52,15 +60,26 @@ impl Renderer {
             .await
             .unwrap();
 
-        let tex_format = surface.get_supported_formats(&adapter)[0];
+        #[cfg(not(feature = "android"))]
+        let tex_format = surface.as_ref().unwrap().get_supported_formats(&adapter)[0];
+        #[cfg(feature = "android")]
+        let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
+            #[cfg(feature = "android")]
+            width: 1080,
+            #[cfg(feature = "android")]
+            height: 2300,
+            #[cfg(not(feature = "android"))]
             width: size.width,
+            #[cfg(not(feature = "android"))]
             height: size.height,
-            present_mode: wgpu::PresentMode::Immediate,
+            present_mode: wgpu::PresentMode::Mailbox,
         };
-        surface.configure(&device, &config);
+        #[cfg(not(feature = "android"))]
+        surface.as_ref().unwrap().configure(&device, &config);
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -104,9 +123,14 @@ impl Renderer {
         let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
         let mut renderer = Self {
+            #[cfg(feature = "android")]
+            instance,
             #[cfg(feature = "gui")]
             adapter,
+            #[cfg(not(feature = "android"))]
             surface,
+            #[cfg(feature = "android")]
+            surface: None,
             device,
             queue,
             config,
@@ -153,8 +177,16 @@ impl Renderer {
         self.size = new_size;
         self.config.width = new_size.width;
         self.config.height = new_size.height;
-        self.surface.configure(&self.device, &self.config);
-        self.depth_buffer = Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+        #[cfg(not(feature = "android"))]
+        self.surface
+            .as_ref()
+            .unwrap()
+            .configure(&self.device, &self.config);
+        #[cfg(not(feature = "android"))]
+        {
+            self.depth_buffer =
+                Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+        }
     }
 
     pub(crate) fn render(
@@ -164,7 +196,13 @@ impl Renderer {
         #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
         #[cfg(feature = "gui")] ui: imgui::Ui,
     ) -> Result<(), wgpu::SurfaceError> {
-        let frame = self.surface.get_current_texture()?;
+        let surface = if let Some(ref surface) = self.surface {
+            surface
+        } else {
+            return Ok(());
+        };
+
+        let frame = surface.get_current_texture()?;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

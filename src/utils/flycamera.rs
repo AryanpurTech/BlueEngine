@@ -46,7 +46,7 @@ impl FlyCamera {
         if input.mouse_pressed(0) {
             if !self.is_focus {
                 window
-                    .set_cursor_grab(true) //winit::window::CursorGrabMode::Confined)
+                    .set_cursor_grab(winit::window::CursorGrabMode::Confined)
                     .expect("Couldn't grab the cursor");
                 window.set_cursor_visible(false);
                 self.is_focus = true;
@@ -55,7 +55,7 @@ impl FlyCamera {
 
         if input.key_pressed(crate::VirtualKeyCode::Escape) {
             window
-                .set_cursor_grab(false) //winit::window::CursorGrabMode::None)
+                .set_cursor_grab(winit::window::CursorGrabMode::None)
                 .expect("Couldn't release the cursor");
             window.set_cursor_visible(true);
             self.is_focus = false;

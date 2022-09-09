@@ -3,7 +3,7 @@ use std::{ops::Mul, result};
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera, loader::load_gltf},
+    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
     Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };

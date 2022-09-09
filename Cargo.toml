@@ -1,9 +1,9 @@
 [package]
 name = "blue_engine"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
-description = "General-Purpose, Easy-to-use, Fast, Secure, and Portable graphics engine"
+description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
 documentation = "https://github.com/ElhamAryanpur/BlueEngine/wiki"
 repository = "https://github.com/ElhamAryanpur/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D", "game"]
@@ -16,32 +16,38 @@ name = "blue_engine"
 crate-type = ["lib", "cdylib"]
 
 [features]
-default = ["model_loader"]
+default = []
+debug = []
+android = ["dep:log", "dep:android_logger"]
 NON_FILL_POLYGON_MODE = []
 model_loader = ["dep:gltf"]
 gui = ["dep:imgui-winit-support", "dep:imgui-wgpu", "dep:imgui"]
 
+[workspace]
+members = ["imgui-winit-support"]
+
 [dependencies]
 image = { version = "0.24.3" }
 futures = "0.3.21"
-winit = "0.26.1"
+winit = "0.27.2"
 bytemuck = { version = "1.12.1", features = ["derive"] }
-winit_input_helper = "0.12.0"
+winit_input_helper = "0.13.0"
 anyhow = "1.0.57"
 env_logger = "0.9.0"
-wgpu = { version = "0.13.1" }
+wgpu = { version = "0.13.0" }
 nalgebra-glm = "0.17.0"
 # model_loader
 gltf = { version = "1.0.0", optional = true }
 # GUI
 imgui-wgpu = { version = "0.20.0", optional = true }
-imgui-winit-support = { version = "0.8.2", optional = true, features = [
-    "winit-26",
-] }
+imgui-winit-support = { path = "imgui-winit-support", optional = true }
 imgui = { version = "0.8.2", optional = true }
+# android
+log = { version = "0.4.17", optional = true }
+android_logger = { version = "0.11.1", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "0.13.1", features = ["webgl"] }
+wgpu = { version = "0.13.0", features = ["webgl"] }
 
 # ========== EXAMPLES ========== #
 
