@@ -40,7 +40,7 @@ nalgebra-glm = "0.17.0"
 gltf = { version = "1.0.0", optional = true }
 # GUI
 imgui-wgpu = { version = "0.20.0", optional = true }
-imgui-winit-support = { path = "imgui-winit-support", optional = true }
+imgui-winit-support = { version = "0.8.1-alpha.0", path = "imgui-winit-support", optional = true }
 imgui = { version = "0.8.2", optional = true }
 # android
 log = { version = "0.4.17", optional = true }
