@@ -76,7 +76,10 @@ impl Renderer {
             width: size.width,
             #[cfg(not(feature = "android"))]
             height: size.height,
+            #[cfg(feature = "android")]
             present_mode: wgpu::PresentMode::Mailbox,
+            #[cfg(not(feature = "android"))]
+            present_mode: wgpu::PresentMode::Fifo,
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);
