@@ -70,10 +70,10 @@ impl Renderer {
             format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
             #[cfg(feature = "android")]
             width: 1080,
-            #[cfg(feature = "android")]
-            height: 2300,
             #[cfg(not(feature = "android"))]
             width: size.width,
+            #[cfg(feature = "android")]
+            height: 2300,
             #[cfg(not(feature = "android"))]
             height: size.height,
             #[cfg(feature = "android")]
@@ -145,6 +145,7 @@ impl Renderer {
 
             default_data: None,
             camera: None,
+            custom_render_pass: None,
         };
 
         let default_texture = renderer.build_texture(
@@ -236,6 +237,9 @@ impl Renderer {
             }),
         });
 
+        //? Scissor
+        //render_pass.set_scissor_rect(50, 50, 500, 500);
+
         let default_data = self.default_data.as_ref().unwrap();
 
         render_pass.set_bind_group(0, &default_data.0, &[]);
@@ -255,8 +259,12 @@ impl Renderer {
             );
             render_pass.draw_indexed(0..i.pipeline.vertex_buffer.length, 0, 0..1);
         }
-
         drop(render_pass);
+
+        if self.custom_render_pass.is_some() {
+            let custom_render_pass = self.custom_render_pass.as_mut().unwrap().as_mut();
+            custom_render_pass(&mut encoder, &view);
+        }
 
         #[cfg(feature = "gui")]
         {

@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -16,7 +16,7 @@ name = "blue_engine"
 crate-type = ["lib", "cdylib"]
 
 [features]
-default = []
+default = ["model_loader"]
 debug = []
 android = ["dep:log", "dep:android_logger"]
 NON_FILL_POLYGON_MODE = []

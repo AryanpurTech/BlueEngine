@@ -273,7 +273,6 @@ impl Object {
             data: [red, green, blue, alpha],
         };
         self.changed = true;
-
         Ok(())
     }
 

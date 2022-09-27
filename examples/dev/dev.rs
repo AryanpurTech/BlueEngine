@@ -1,13 +1,10 @@
-use std::{ops::Mul, result};
-
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera},
+    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera, loader::load_gltf},
     Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
-use std::time::Duration;
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor {
@@ -26,7 +23,7 @@ fn main() {
     let window_size = engine.window.inner_size();
 
     let cube = uv_sphere(Some("CUBEE"), &mut engine, (18, 36, 1f32)).unwrap();
-    /*engine.objects[cube].scale(0.6, 0.6, 0.6);
+    engine.objects[cube].scale(0.6, 0.6, 0.6);
     engine.objects[cube].set_color(1f32, 0f32, 0f32, 1f32);
     //cube.scale(0.3, 0.3, 0.3);
 
@@ -39,7 +36,7 @@ fn main() {
     engine.objects[test].set_color(0.051f32, 0.533f32, 0.898f32, 1f32);
     //engine.objects[test].rotate(90f32, RotateAxis::Y);
 
-    let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
+    /*let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
     engine.objects[sphere_1].scale(2f32, 2f32, 2f32);
     engine.objects[sphere_1].set_color(0.051f32, 0.533f32, 0.898f32, 1f32);
 
@@ -90,11 +87,30 @@ fn main() {
     let mut lm = LightManager::new();
     lm.set_object_as_light(cube);
 
+    engine.renderer.custom_render_pass = Some(Box::new(|encoder, view| {
+        let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Render pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: true,
+                },
+            })],
+            depth_stencil_attachment: None,
+        });
+
+        println!("{:?}", render_pass);
+
+        drop(render_pass);
+    }));
+
     engine
         .update_loop(move |renderer, window, objects, (event, input), camera| {
             fly_camera.update(camera, window, event, input);
-            //lm.update(objects, renderer, &camera)
-            //    .expect("Couldn't add light");
+            lm.update(objects, renderer, &camera)
+                .expect("Couldn't add light");
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;

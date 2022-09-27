@@ -396,6 +396,8 @@ pub struct Renderer {
     pub(crate) depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
     pub default_data: Option<(Textures, Shaders, UniformBuffers)>,
     pub camera: Option<UniformBuffers>,
+    pub custom_render_pass:
+        Option<Box<dyn FnMut(&mut wgpu::CommandEncoder, &wgpu::TextureView) + 'static>>,
 }
 
 /// Descriptor and settings for a window.
