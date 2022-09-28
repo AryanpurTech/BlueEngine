@@ -1,3 +1,5 @@
+use crate::Object;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
 pub struct LightUniforms {
@@ -23,16 +25,17 @@ impl crate::LightManager {
 
     pub fn update(
         &mut self,
-        objects: &mut Vec<crate::Object>,
+        objects: &mut std::collections::HashMap<&'static str, Object>,
         renderer: &mut crate::Renderer,
         camera: &crate::Camera,
     ) -> anyhow::Result<()> {
-        let light_keys: Vec<usize> = self.light_objects.keys().map(|x| *x).collect();
+        let light_keys: Vec<&'static str> = self.light_objects.keys().map(|x| *x).collect();
 
         for i in objects {
-            if light_keys.contains(&&i.object_index) {
+            let i = i.1;
+            if light_keys.contains(&i.name) {
                 self.light_objects.insert(
-                    i.object_index,
+                    i.name,
                     ([i.position.0, i.position.1, i.position.2], i.color),
                 );
             } else {
@@ -68,7 +71,7 @@ impl crate::LightManager {
 
                 i.update_uniform_buffer(renderer)?;
 
-                if !self.affected_objects.contains(&i.object_index) {
+                if !self.affected_objects.contains(&i.name) {
                     i.shader_builder.blocks = format!(
                         // step 1 define blocks
                         "\n{}\n{}\n{}",
@@ -167,12 +170,12 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }"#
                     );
                     i.pipeline.shader = renderer.build_shader(
-                        i.name.unwrap_or("Object"),
+                        i.name,
                         i.shader_builder.build_shader(),
                         Some(&i.uniform_layout),
                         i.shader_settings,
                     )?;
-                    self.affected_objects.push(i.object_index);
+                    self.affected_objects.push(i.name);
                 }
             }
         }
@@ -180,7 +183,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         Ok(())
     }
 
-    pub fn set_object_as_light(&mut self, object: usize) {
+    pub fn set_object_as_light(&mut self, object: &'static str) {
         self.light_objects.insert(
             object,
             (

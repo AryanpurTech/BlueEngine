@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.6"
+version = "0.4.7"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -13,7 +13,6 @@ resolver = "2"
 
 [lib]
 name = "blue_engine"
-crate-type = ["lib", "cdylib"]
 
 [features]
 default = ["model_loader"]

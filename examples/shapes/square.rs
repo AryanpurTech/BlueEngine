@@ -8,8 +8,9 @@
 
 use blue_engine::header::{Engine, ObjectSettings, Vertex, WindowDescriptor};
 
-pub fn square(name: Option<&'static str>, engine: &mut Engine) -> anyhow::Result<usize> {
-    let new_square = engine.new_object(
+pub fn square(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
+    engine.new_object(
+        name,
         vec![
             Vertex {
                 position: [1.0, 1.0, 0.0],
@@ -40,13 +41,13 @@ pub fn square(name: Option<&'static str>, engine: &mut Engine) -> anyhow::Result
         },
     )?;
 
-    Ok(new_square)
+    Ok(())
 }
 
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let _ = square(Some("Square"), &mut engine).unwrap();
+    let _ = square("Square", &mut engine).unwrap();
 
     engine
         .update_loop(move |_, _, _, _, _| {})

@@ -14,6 +14,7 @@ use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_
 impl Renderer {
     pub fn build_object(
         &mut self,
+        name: &'static str,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
@@ -26,7 +27,7 @@ impl Renderer {
         ])?;
 
         let shader = self.build_shader(
-            settings.name.unwrap_or("Object"),
+            name,
             DEFAULT_SHADER.to_string(),
             Some(&uniform.1),
             settings.shader_settings,
@@ -40,7 +41,7 @@ impl Renderer {
         )?;
 
         Ok(Object {
-            name: settings.name,
+            name: name,
             vertices: verticies,
             indices: indicies,
             pipeline: Pipeline {
@@ -64,7 +65,6 @@ impl Renderer {
             )),
             uniform_color: settings.color,
             color: settings.color,
-            object_index: 0,
             shader_builder: ShaderBuilder::new(settings.camera_effect),
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
@@ -80,16 +80,19 @@ impl Engine {
     /// Creates a new object
     pub fn new_object(
         &mut self,
+        name: &'static str,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
-    ) -> anyhow::Result<usize> {
-        let index = Self::add_object(
+    ) -> anyhow::Result<()> {
+        Self::add_object(
             &mut self.objects,
-            self.renderer.build_object(verticies, indicies, settings)?,
+            name,
+            self.renderer
+                .build_object(name, verticies, indicies, settings)?,
         )?;
 
-        Self::update_object(&mut self.objects, index, |object| {
+        Self::update_object(&mut self.objects, name, |object| {
             object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
             object.position(
                 settings.position.0,
@@ -100,21 +103,26 @@ impl Engine {
 
         //object.update(&mut self.renderer)?;
 
-        Ok(index)
+        Ok(())
     }
 
-    pub fn add_object(objects: &mut Vec<Object>, object: Object) -> anyhow::Result<usize> {
-        let index = objects.len();
-        let mut object = object;
-        object.object_index = index;
-        objects.push(object);
+    pub fn add_object(
+        objects: &mut std::collections::HashMap<&'static str, Object>,
+        key: &'static str,
+        object: Object,
+    ) -> anyhow::Result<()> {
+        objects.insert(key, object);
 
-        Ok(index)
+        Ok(())
     }
 
     /// Allows for safe update of objects
-    pub fn update_object<T: Fn(&mut Object)>(objects: &mut Vec<Object>, index: usize, callback: T) {
-        let object = objects.get_mut(index);
+    pub fn update_object<T: Fn(&mut Object)>(
+        objects: &mut std::collections::HashMap<&'static str, Object>,
+        key: &'static str,
+        callback: T,
+    ) {
+        let object = objects.get_mut(key);
         if object.is_some() {
             callback(object.unwrap())
         }
@@ -319,7 +327,7 @@ impl Object {
 
     pub(crate) fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_shader = renderer.build_shader(
-            self.name.unwrap_or("Object"),
+            self.name,
             self.shader_builder.build_shader(),
             Some(&self.uniform_layout),
             self.shader_settings,

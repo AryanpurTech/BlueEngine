@@ -22,18 +22,27 @@ fn main() {
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let window_size = engine.window.inner_size();
 
-    let cube = uv_sphere(Some("CUBEE"), &mut engine, (18, 36, 1f32)).unwrap();
-    engine.objects[cube].scale(0.6, 0.6, 0.6);
-    engine.objects[cube].set_color(1f32, 0f32, 0f32, 1f32);
+    uv_sphere("cube", &mut engine, (18, 36, 1f32)).unwrap();
+    engine.objects.get_mut("cube").unwrap().scale(0.6, 0.6, 0.6);
+    engine
+        .objects
+        .get_mut("cube")
+        .unwrap()
+        .set_color(1f32, 0f32, 0f32, 1f32);
     //cube.scale(0.3, 0.3, 0.3);
 
     let test = load_gltf(
+        "monke",
         "/home/elhamaryanpur/Desktop/Projects/Blue Engine/examples/shapes/monkey.glb",
         &mut engine,
     )
     .unwrap();
 
-    engine.objects[test].set_color(0.051f32, 0.533f32, 0.898f32, 1f32);
+    engine
+        .objects
+        .get_mut("monke")
+        .unwrap()
+        .set_color(0.051f32, 0.533f32, 0.898f32, 1f32);
     //engine.objects[test].rotate(90f32, RotateAxis::Y);
 
     /*let sphere_1 = uv_sphere(Some("SPHERE1"), &mut engine, (18, 36, 1f32)).unwrap();
@@ -85,7 +94,7 @@ fn main() {
     let mut val = 0f32;
 
     let mut lm = LightManager::new();
-    lm.set_object_as_light(cube);
+    lm.set_object_as_light("cube");
 
     engine.renderer.custom_render_pass = Some(Box::new(|encoder, view| {
         let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -101,8 +110,6 @@ fn main() {
             depth_stencil_attachment: None,
         });
 
-        println!("{:?}", render_pass);
-
         drop(render_pass);
     }));
 
@@ -116,11 +123,11 @@ fn main() {
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
 
-            objects[cube].position(camx, camy, camz);
+            objects.get_mut("cube").unwrap().position(camx, camy, camz);
 
             //cube.translate(1f32, 1f32, 1f32);
 
-            let sprite = objects.get_mut(cube).unwrap();
+            let sprite = objects.get_mut("cube").unwrap();
 
             if input.key_held(blue_engine::VirtualKeyCode::Up) {
                 sprite.position(

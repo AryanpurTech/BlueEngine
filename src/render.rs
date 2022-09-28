@@ -195,7 +195,7 @@ impl Renderer {
 
     pub(crate) fn render(
         &mut self,
-        objects: &Vec<Object>,
+        objects: &std::collections::HashMap<&'static str, Object>,
         camera: &Camera,
         #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
         #[cfg(feature = "gui")] ui: imgui::Ui,
@@ -247,6 +247,7 @@ impl Renderer {
         render_pass.set_bind_group(1, &camera.uniform_data, &[]);
 
         for i in objects.iter() {
+            let i = i.1;
             render_pass.set_pipeline(&i.pipeline.shader);
             render_pass.set_bind_group(0, &i.pipeline.texture, &[]);
             if i.pipeline.uniform.is_some() {

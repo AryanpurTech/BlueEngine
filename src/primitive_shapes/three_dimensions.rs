@@ -1,7 +1,8 @@
 use crate::{Engine, ObjectSettings, Vertex};
 
-pub fn cube(name: Option<&'static str>, engine: &mut Engine) -> anyhow::Result<usize> {
-    let new_cube = engine.new_object(
+pub fn cube(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
+    engine.new_object(
+        name,
         vec![
             // Front Face
             Vertex {
@@ -144,15 +145,15 @@ pub fn cube(name: Option<&'static str>, engine: &mut Engine) -> anyhow::Result<u
         },
     )?;
 
-    Ok(new_cube)
+    Ok(())
 }
 
 /// details = (stacks, sectors, radius)
 pub fn uv_sphere(
-    name: Option<&'static str>,
+    name: &'static str,
     engine: &mut Engine,
     details: (usize, usize, f32),
-) -> anyhow::Result<usize> {
+) -> anyhow::Result<()> {
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
     let length_inv = 1. / details.2;
@@ -199,11 +200,14 @@ pub fn uv_sphere(
     }
 
     engine.new_object(
+        name,
         vertices,
         indices,
         ObjectSettings {
             name,
             ..Default::default()
         },
-    )
+    )?;
+
+    Ok(())
 }

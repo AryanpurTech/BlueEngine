@@ -239,7 +239,7 @@ pub use bytemuck::Zeroable;
 /// customize almost everything there is about them!
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
-    pub name: Option<&'static str>,
+    pub name: &'static str,
     /// A list of Vertex
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
@@ -263,8 +263,6 @@ pub struct Object {
     pub uniform_color: uniform_type::Array4,
     /// The color of your object that is sent to gpu
     pub color: uniform_type::Array4,
-    /// The index of the object in the queue
-    pub object_index: usize,
     /// A struct making it easier to manipulate specific parts of shader
     pub shader_builder: crate::objects::ShaderBuilder,
     /// Shader settings
@@ -279,7 +277,7 @@ pub struct Object {
 #[derive(Debug, Clone, Copy)]
 pub struct ObjectSettings {
     /// Give your object a name, which can help later on for debugging.
-    pub name: Option<&'static str>,
+    pub name: &'static str,
     /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
     pub scale: (f32, f32, f32),
@@ -295,7 +293,7 @@ pub struct ObjectSettings {
 impl Default for ObjectSettings {
     fn default() -> Self {
         Self {
-            name: Some("Object!"),
+            name: "Object!",
             size: (100f32, 100f32, 100f32),
             scale: (1f32, 1f32, 1f32),
             position: (0f32, 0f32, 0f32),
@@ -351,7 +349,7 @@ pub struct Engine {
     pub window: winit::window::Window,
     /// The object system is a way to make it easier to work with the engine. Obviously you can work without it, but it's for those who
     /// do not have the know-how, or wish to handle all the work of rendering data manually.
-    pub objects: Vec<Object>,
+    pub objects: std::collections::HashMap<&'static str, Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
 }
@@ -457,8 +455,8 @@ pub struct Camera {
 pub struct LightManager {
     pub ambient_color: uniform_type::Array4,
     pub ambient_strength: f32,
-    pub affected_objects: Vec<usize>,
-    pub light_objects: std::collections::BTreeMap<usize, ([f32; 3], uniform_type::Array4)>,
+    pub affected_objects: Vec<&'static str>,
+    pub light_objects: std::collections::BTreeMap<&'static str, ([f32; 3], uniform_type::Array4)>,
 }
 
 /// Device Events

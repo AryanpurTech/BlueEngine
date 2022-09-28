@@ -7,8 +7,13 @@
 use crate::header::{Engine, ObjectSettings, Vertex};
 
 /// Creates a 2D triangle
-pub fn triangle(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result<usize> {
-    let new_triangle = engine.new_object(
+pub fn triangle(
+    name: &'static str,
+    settings: ObjectSettings,
+    engine: &mut Engine,
+) -> anyhow::Result<()> {
+    engine.new_object(
+        name,
         vec![
             Vertex {
                 position: [0.0, 1.0, 0.0],
@@ -30,12 +35,17 @@ pub fn triangle(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result
         settings,
     )?;
 
-    Ok(new_triangle)
+    Ok(())
 }
 
 /// Creates a 2D square
-pub fn square(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result<usize> {
-    let new_square = engine.new_object(
+pub fn square(
+    name: &'static str,
+    settings: ObjectSettings,
+    engine: &mut Engine,
+) -> anyhow::Result<()> {
+    engine.new_object(
+        name,
         vec![
             Vertex {
                 position: [1.0, 1.0, 0.0],
@@ -62,5 +72,5 @@ pub fn square(settings: ObjectSettings, engine: &mut Engine) -> anyhow::Result<u
         settings,
     )?;
 
-    Ok(new_square)
+    Ok(())
 }

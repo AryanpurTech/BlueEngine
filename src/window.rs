@@ -61,7 +61,7 @@ impl Engine {
             window,
             event_loop,
             renderer,
-            objects: Vec::new(),
+            objects: std::collections::HashMap::new(),
             camera,
         })
     }
@@ -77,7 +77,7 @@ impl Engine {
             + FnMut(
                 &mut Renderer,
                 &Window,
-                &mut Vec<Object>,
+                &mut std::collections::HashMap<&'static str, Object>,
                 (&winit::event::DeviceEvent, &WinitInputHelper),
                 &mut Camera,
                 &imgui::Ui,
@@ -86,7 +86,7 @@ impl Engine {
             + FnMut(
                 &mut Renderer,
                 &Window,
-                &mut Vec<Object>,
+                &mut std::collections::HashMap<&'static str, Object>,
                 (&winit::event::DeviceEvent, &WinitInputHelper),
                 &mut Camera,
             ),
@@ -237,8 +237,8 @@ impl Engine {
                         .update_view_projection(&mut renderer)
                         .expect("Couldn't update camera");
                     objects.iter_mut().for_each(|i| {
-                        if i.changed {
-                            i.update(&mut renderer).expect("Couldn't update objects");
+                        if i.1.changed {
+                            i.1.update(&mut renderer).expect("Couldn't update objects");
                         }
                     });
 

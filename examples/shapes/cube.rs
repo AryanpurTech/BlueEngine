@@ -12,8 +12,11 @@ use blue_engine::{
 fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    let cube_object = cube(Some("Cube"), &mut engine).unwrap();
-    engine.objects[cube_object]
+    cube("Cube", &mut engine).unwrap();
+    engine
+        .objects
+        .get_mut("Cube")
+        .unwrap()
         .set_color(0f32, 0f32, 1f32, 1f32)
         .unwrap();
 
