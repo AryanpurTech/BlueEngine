@@ -1,12 +1,12 @@
 [package]
 name = "blue_engine"
-version = "0.4.7"
+version = "0.4.8"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
-documentation = "https://github.com/ElhamAryanpur/BlueEngine/wiki"
-repository = "https://github.com/ElhamAryanpur/BlueEngine"
-keywords = ["gamedev", "graphics", "3D", "2D", "game"]
+documentation = "https://aryanpurtech.github.io/BlueEngineDocs/"
+repository = "https://github.com/AryanpurTech/BlueEngine"
+keywords = ["gamedev", "graphics", "3D", "2D"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
 resolver = "2"
@@ -15,8 +15,8 @@ resolver = "2"
 name = "blue_engine"
 
 [features]
-default = ["model_loader"]
-debug = []
+default = ["model_loader", "debug"]
+debug = ["dep:env_logger"]
 android = ["dep:log", "dep:android_logger"]
 NON_FILL_POLYGON_MODE = []
 model_loader = ["dep:gltf"]
