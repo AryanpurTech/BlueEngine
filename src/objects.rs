@@ -76,7 +76,7 @@ impl Renderer {
     }
 }
 
-impl<E: crate::UpdateEvents + 'static> Engine<E> {
+impl Engine {
     /// Creates a new object
     pub fn new_object(
         &mut self,

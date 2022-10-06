@@ -1,9 +1,6 @@
 use crate::{Engine, ObjectSettings, Vertex};
 
-pub fn cube<T: crate::UpdateEvents + 'static>(
-    name: &'static str,
-    engine: &mut Engine<T>,
-) -> anyhow::Result<()> {
+pub fn cube(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
     engine.new_object(
         name,
         vec![
@@ -152,9 +149,9 @@ pub fn cube<T: crate::UpdateEvents + 'static>(
 }
 
 /// details = (stacks, sectors, radius)
-pub fn uv_sphere<T: crate::UpdateEvents + 'static>(
+pub fn uv_sphere(
     name: &'static str,
-    engine: &mut Engine<T>,
+    engine: &mut Engine,
     details: (usize, usize, f32),
 ) -> anyhow::Result<()> {
     let sectors = details.1 as f32;

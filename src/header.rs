@@ -4,9 +4,6 @@
  * The license is same as the one on the root.
 */
 
-#[cfg(feature = "gui")]
-pub use imgui as gui;
-
 pub mod imports;
 pub mod uniform_buffer;
 pub use imports::*;
@@ -46,32 +43,6 @@ impl Vertex {
                 },
             ],
         }
-    }
-}
-
-#[cfg(feature = "gui")]
-pub enum Style {
-    Config(gui::StyleVar),
-    Color(gui::StyleColor, [f32; 4]),
-}
-
-#[cfg(feature = "gui")]
-pub fn style_block<F: FnMut()>(styles: Vec<Style>, mut ui_block: F, ui: &gui::Ui) {
-    let mut stack = Vec::<gui::StyleStackToken>::new();
-    let mut color = Vec::<gui::ColorStackToken>::new();
-
-    for i in styles {
-        match i {
-            Style::Config(data) => stack.push(ui.push_style_var(data)),
-            Style::Color(data, hue) => color.push(ui.push_style_color(data, hue)),
-        }
-    }
-    ui_block();
-    for i in stack {
-        i.end();
-    }
-    for i in color {
-        i.end();
     }
 }
 
@@ -187,7 +158,7 @@ pub trait UpdateEvents {
 ///
 /// ```
 /// [THE DATA HERE IS WORK IN PROGRESS!]
-pub struct Engine<T: UpdateEvents + 'static> {
+pub struct Engine {
     /// The renderer does exactly what it is called. It works with the GPU to render frames according to the data you gave it.
     pub renderer: Renderer,
     // The event_loop handles the events of the window and inputs, so it's used internally
@@ -199,8 +170,6 @@ pub struct Engine<T: UpdateEvents + 'static> {
     pub objects: std::collections::HashMap<&'static str, Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
-    /// Structs that fetch all events directly
-    pub event_fetch: std::collections::HashMap<&'static str, T>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.

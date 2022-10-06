@@ -12,7 +12,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-impl<T: crate::UpdateEvents + 'static> Engine<T> {
+impl Engine {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
     pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
@@ -61,7 +61,6 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
             renderer,
             objects: std::collections::HashMap::new(),
             camera,
-            event_fetch: std::collections::HashMap::new(),
         })
     }
 
@@ -74,17 +73,25 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
     pub fn update_loop<
         F: 'static
             + FnMut(
-                &mut Renderer,
-                &mut Window,
-                &mut std::collections::HashMap<&'static str, Object>,
-                &winit::event::Event<()>,
-                &mut Camera,
-                (&mut wgpu::CommandEncoder, &wgpu::TextureView),
-                &mut std::collections::HashMap<&'static str, T>,
+                // Core
+                (
+                    &mut Renderer,
+                    &mut Window,
+                    &mut std::collections::HashMap<&'static str, Object>,
+                ),
+                // Utils
+                (
+                    &winit_input_helper::WinitInputHelper,
+                    &mut Camera,
+                    (&mut wgpu::CommandEncoder, &wgpu::TextureView),
+                    &mut Vec<T>,
+                ),
             ),
+        T: crate::UpdateEvents + 'static,
     >(
         self,
         mut update_function: F,
+        mut event_fetch: Vec<T>,
     ) -> anyhow::Result<()> {
         let Self {
             event_loop,
@@ -92,7 +99,6 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
             mut window,
             mut objects,
             mut camera,
-            mut event_fetch,
         } = self;
 
         // and get input events to handle them later
@@ -107,7 +113,7 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
             input.update(&events);
 
             event_fetch.iter_mut().for_each(|i| {
-                i.1.update_events(&mut renderer, &window, &mut objects, &events, &mut camera);
+                i.update_events(&mut renderer, &window, &mut objects, &events, &mut camera);
             });
 
             match events {
@@ -157,13 +163,8 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
 
                         #[cfg(not(feature = "gui"))]
                         update_function(
-                            &mut renderer,
-                            &mut window,
-                            &mut objects,
-                            &events,
-                            &mut camera,
-                            (&mut encoder, &view),
-                            &mut event_fetch,
+                            (&mut renderer, &mut window, &mut objects),
+                            (&input, &mut camera, (&mut encoder, &view), &mut event_fetch),
                         );
                         camera
                             .update_view_projection(&mut renderer)
