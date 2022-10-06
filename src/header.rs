@@ -200,7 +200,7 @@ pub struct Engine<T: UpdateEvents + 'static> {
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
     /// Structs that fetch all events directly
-    pub event_fetch: Vec<T>,
+    pub event_fetch: std::collections::HashMap<&'static str, T>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.

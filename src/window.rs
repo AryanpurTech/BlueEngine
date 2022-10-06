@@ -61,7 +61,7 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
             renderer,
             objects: std::collections::HashMap::new(),
             camera,
-            event_fetch: Vec::new(),
+            event_fetch: std::collections::HashMap::new(),
         })
     }
 
@@ -80,7 +80,7 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
                 &winit::event::Event<()>,
                 &mut Camera,
                 (&mut wgpu::CommandEncoder, &wgpu::TextureView),
-                &mut Vec<T>,
+                &mut std::collections::HashMap<&'static str, T>,
             ),
     >(
         self,
@@ -106,15 +106,9 @@ impl<T: crate::UpdateEvents + 'static> Engine<T> {
             // updates the data on what events happened before the frame start
             input.update(&events);
 
-            for i in 0..event_fetch.len() {
-                event_fetch[i].update_events(
-                    &mut renderer,
-                    &window,
-                    &mut objects,
-                    &events,
-                    &mut camera,
-                );
-            }
+            event_fetch.iter_mut().for_each(|i| {
+                i.1.update_events(&mut renderer, &window, &mut objects, &events, &mut camera);
+            });
 
             match events {
                 Event::WindowEvent {
