@@ -14,10 +14,10 @@ fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     // create a square
-    let _ = square(
+    square(
+        // let's give it a name
+        "Rotating Square",
         ObjectSettings {
-            // let's give it a name
-            name: Some("Rotating Square"),
             // and set the size
             size: (500f32, 500f32, 1f32),
             // we need it to not cull it's back face so that it's visible on both side

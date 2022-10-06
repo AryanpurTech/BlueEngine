@@ -33,7 +33,7 @@ fn main() {
 
     let test = load_gltf(
         "monke",
-        "/home/elhamaryanpur/Desktop/Projects/Blue Engine/examples/shapes/monkey.glb",
+        "/home/elhamaryanpur/Desktop/Projects/Blue Engine/Blue Engine/examples/shapes/monkey.glb",
         &mut engine,
     )
     .unwrap();

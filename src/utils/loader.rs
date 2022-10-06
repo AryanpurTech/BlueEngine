@@ -1,9 +1,9 @@
 use crate::{Engine, ObjectSettings, Vertex};
 
-pub fn load_gltf<'a>(
+pub fn load_gltf<'a, T: crate::UpdateEvents + 'static>(
     name: &'static str,
     path: &'static str,
-    engine: &mut Engine,
+    engine: &mut Engine<T>,
 ) -> anyhow::Result<()> {
     let mut verticies = Vec::<Vertex>::new();
     let mut indicies = Vec::<u16>::new();

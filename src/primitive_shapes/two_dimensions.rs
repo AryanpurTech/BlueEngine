@@ -7,10 +7,10 @@
 use crate::header::{Engine, ObjectSettings, Vertex};
 
 /// Creates a 2D triangle
-pub fn triangle(
+pub fn triangle<T: crate::UpdateEvents + 'static>(
     name: &'static str,
     settings: ObjectSettings,
-    engine: &mut Engine,
+    engine: &mut Engine<T>,
 ) -> anyhow::Result<()> {
     engine.new_object(
         name,
@@ -39,10 +39,10 @@ pub fn triangle(
 }
 
 /// Creates a 2D square
-pub fn square(
+pub fn square<T: crate::UpdateEvents + 'static>(
     name: &'static str,
     settings: ObjectSettings,
-    engine: &mut Engine,
+    engine: &mut Engine<T>,
 ) -> anyhow::Result<()> {
     engine.new_object(
         name,

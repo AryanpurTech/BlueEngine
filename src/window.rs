@@ -12,9 +12,8 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
-use winit_input_helper::WinitInputHelper;
 
-impl Engine {
+impl<T: crate::UpdateEvents + 'static> Engine<T> {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
     pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
@@ -63,6 +62,7 @@ impl Engine {
             renderer,
             objects: std::collections::HashMap::new(),
             camera,
+            event_fetch: Vec::new(),
         })
     }
 
@@ -85,10 +85,12 @@ impl Engine {
         #[cfg(not(feature = "gui"))] F: 'static
             + FnMut(
                 &mut Renderer,
-                &Window,
+                &mut Window,
                 &mut std::collections::HashMap<&'static str, Object>,
-                (&winit::event::DeviceEvent, &WinitInputHelper),
+                &winit::event::Event<()>,
                 &mut Camera,
+                (&mut wgpu::CommandEncoder, &wgpu::TextureView),
+                &mut Vec<T>,
             ),
     >(
         self,
@@ -98,14 +100,15 @@ impl Engine {
         let Self {
             event_loop,
             mut renderer,
-            window,
+            mut window,
             mut objects,
             mut camera,
+            mut event_fetch,
         } = self;
 
         // and get input events to handle them later
         let mut input = winit_input_helper::WinitInputHelper::new();
-        let mut device_event: winit::event::DeviceEvent =
+        let mut _device_event: winit::event::DeviceEvent =
             DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
         let mut current_window_size = window.inner_size();
 
@@ -170,6 +173,16 @@ impl Engine {
                 platform.handle_event(imgui.io_mut(), &window, &events);
             }
 
+            for i in 0..event_fetch.len() {
+                event_fetch[i].update_events(
+                    &mut renderer,
+                    &window,
+                    &mut objects,
+                    &events,
+                    &mut camera,
+                );
+            }
+
             match events {
                 Event::WindowEvent {
                     ref event,
@@ -195,7 +208,7 @@ impl Engine {
                     renderer.surface = None;
                 }
 
-                Event::DeviceEvent { event, .. } => device_event = event,
+                Event::DeviceEvent { event, .. } => _device_event = event,
                 Event::MainEventsCleared => {
                     let new_window_size = window.inner_size();
                     if new_window_size != current_window_size {
@@ -209,56 +222,67 @@ impl Engine {
                         current_window_size = new_window_size;
                     }
 
-                    #[cfg(feature = "gui")]
-                    platform
-                        .prepare_frame(imgui.io_mut(), &window)
-                        .expect("Failed to prepare frame");
-                    #[cfg(feature = "gui")]
-                    let ui = imgui.frame();
+                    let pre_render = renderer
+                        .pre_render(&objects, &camera)
+                        .expect("Couldn't get pre render data");
+                    if pre_render.is_some() {
+                        let (mut encoder, view, frame) = pre_render.unwrap();
 
-                    #[cfg(feature = "gui")]
-                    update_function(
-                        &mut renderer,
-                        &window,
-                        &mut objects,
-                        (&device_event, &input),
-                        &mut camera,
-                        &ui,
-                    );
-                    #[cfg(not(feature = "gui"))]
-                    update_function(
-                        &mut renderer,
-                        &window,
-                        &mut objects,
-                        (&device_event, &input),
-                        &mut camera,
-                    );
-                    camera
-                        .update_view_projection(&mut renderer)
-                        .expect("Couldn't update camera");
-                    objects.iter_mut().for_each(|i| {
-                        if i.1.changed {
-                            i.1.update(&mut renderer).expect("Couldn't update objects");
+                        #[cfg(feature = "gui")]
+                        platform
+                            .prepare_frame(imgui.io_mut(), &window)
+                            .expect("Failed to prepare frame");
+                        #[cfg(feature = "gui")]
+                        let ui = imgui.frame();
+
+                        #[cfg(feature = "gui")]
+                        update_function(
+                            &mut renderer,
+                            &window,
+                            &mut objects,
+                            (&device_event, &input),
+                            &mut camera,
+                            &ui,
+                        );
+                        #[cfg(not(feature = "gui"))]
+                        update_function(
+                            &mut renderer,
+                            &mut window,
+                            &mut objects,
+                            &events,
+                            &mut camera,
+                            (&mut encoder, &view),
+                            &mut event_fetch,
+                        );
+                        camera
+                            .update_view_projection(&mut renderer)
+                            .expect("Couldn't update camera");
+                        objects.iter_mut().for_each(|i| {
+                            if i.1.changed {
+                                i.1.update(&mut renderer).expect("Couldn't update objects");
+                            }
+                        });
+
+                        #[cfg(feature = "gui")]
+                        let ren = renderer.render(&objects, &camera, &mut imgui_renderer, ui);
+                        #[cfg(not(feature = "gui"))]
+                        let ren = renderer.render(encoder, frame);
+
+                        match ren {
+                            Ok(_) => {}
+                            // Recreate the swap_chain if lost
+                            Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
+                            // The system is out of memory, we should probably quit
+                            Err(wgpu::SurfaceError::OutOfMemory) => {
+                                *control_flow = ControlFlow::Exit
+                            }
+                            // All other errors (Outdated, Timeout) should be resolved by the next frame
+                            Err(e) => eprintln!("{:?}", e),
                         }
-                    });
-
-                    #[cfg(feature = "gui")]
-                    let ren = renderer.render(&objects, &camera, &mut imgui_renderer, ui);
-                    #[cfg(not(feature = "gui"))]
-                    let ren = renderer.render(&objects, &camera);
-
-                    match ren {
-                        Ok(_) => {}
-                        // Recreate the swap_chain if lost
-                        Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
-                        // The system is out of memory, we should probably quit
-                        Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                        // All other errors (Outdated, Timeout) should be resolved by the next frame
-                        Err(e) => eprintln!("{:?}", e),
                     }
-                    window.request_redraw();
 
-                    device_event = DeviceEvent::Text { codepoint: ' ' };
+                    _device_event = DeviceEvent::Text { codepoint: ' ' };
+                    window.request_redraw();
                 }
                 _ => (),
             }

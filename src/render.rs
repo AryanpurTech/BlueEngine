@@ -128,7 +128,6 @@ impl Renderer {
         let mut renderer = Self {
             #[cfg(feature = "android")]
             instance,
-            #[cfg(feature = "gui")]
             adapter,
             #[cfg(not(feature = "android"))]
             surface,
@@ -193,17 +192,22 @@ impl Renderer {
         }
     }
 
-    pub(crate) fn render(
+    pub(crate) fn pre_render(
         &mut self,
         objects: &std::collections::HashMap<&'static str, Object>,
         camera: &Camera,
-        #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
-        #[cfg(feature = "gui")] ui: imgui::Ui,
-    ) -> Result<(), wgpu::SurfaceError> {
+    ) -> Result<
+        Option<(
+            wgpu::CommandEncoder,
+            wgpu::TextureView,
+            wgpu::SurfaceTexture,
+        )>,
+        wgpu::SurfaceError,
+    > {
         let surface = if let Some(ref surface) = self.surface {
             surface
         } else {
-            return Ok(());
+            return Ok(None);
         };
 
         let frame = surface.get_current_texture()?;
@@ -262,11 +266,16 @@ impl Renderer {
         }
         drop(render_pass);
 
-        if self.custom_render_pass.is_some() {
-            let custom_render_pass = self.custom_render_pass.as_mut().unwrap().as_mut();
-            custom_render_pass(&mut encoder, &view);
-        }
+        Ok(Some((encoder, view, frame)))
+    }
 
+    pub(crate) fn render(
+        &mut self,
+        encoder: wgpu::CommandEncoder,
+        frame: wgpu::SurfaceTexture,
+        #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
+        #[cfg(feature = "gui")] ui: imgui::Ui,
+    ) -> Result<(), wgpu::SurfaceError> {
         #[cfg(feature = "gui")]
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {

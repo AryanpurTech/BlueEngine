@@ -7,6 +7,10 @@
 #[cfg(feature = "gui")]
 pub use imgui as gui;
 
+pub mod imports;
+pub mod uniform_buffer;
+pub use imports::*;
+pub use uniform_buffer::*;
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -70,168 +74,6 @@ pub fn style_block<F: FnMut()>(styles: Vec<Style>, mut ui_block: F, ui: &gui::Ui
         i.end();
     }
 }
-
-/// A container for uniform buffer types
-pub mod uniform_type {
-
-    /// 4 by 4, 32 bit float matrix uniform buffer
-    #[repr(C)]
-    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-    pub struct Matrix {
-        pub data: [[f32; 4]; 4],
-    }
-    impl Matrix {
-        /// Replaces it's values by the new values provided
-        pub fn update(&mut self, uniform: Matrix) {
-            self.data = uniform.data;
-        }
-
-        /// Converts internal matrix to the uniform matrix
-        pub fn from_im(matrix: nalgebra_glm::Mat4) -> Self {
-            let mtx = matrix.as_slice();
-
-            Self {
-                data: [
-                    [mtx[0], mtx[1], mtx[2], mtx[3]],
-                    [mtx[4], mtx[5], mtx[6], mtx[7]],
-                    [mtx[8], mtx[9], mtx[10], mtx[11]],
-                    [mtx[12], mtx[13], mtx[14], mtx[15]],
-                ],
-            }
-        }
-
-        /// Converts uniform matrix to internal matrix
-        pub fn to_im(&self) -> nalgebra_glm::Mat4 {
-            let mtx = self.data;
-
-            nalgebra_glm::mat4(
-                mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3], mtx[1][0], mtx[1][1], mtx[1][2],
-                mtx[1][3], mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3], mtx[3][0], mtx[3][1],
-                mtx[3][2], mtx[3][3],
-            )
-        }
-    }
-    impl std::ops::Mul for Matrix {
-        type Output = Matrix;
-
-        fn mul(self, rhs: Self) -> Self::Output {
-            let a = self.data;
-            let b = rhs.data;
-            Matrix {
-                data: [
-                    [
-                        a[0][0] * b[0][0],
-                        a[0][1] * b[1][0],
-                        a[0][2] * b[2][0],
-                        a[0][3] * b[3][0],
-                    ],
-                    [
-                        a[1][0] * b[0][1],
-                        a[1][1] * b[1][1],
-                        a[1][2] * b[2][1],
-                        a[1][3] * b[3][1],
-                    ],
-                    [
-                        a[2][0] * b[0][2],
-                        a[2][1] * b[1][2],
-                        a[2][2] * b[2][2],
-                        a[2][3] * b[3][2],
-                    ],
-                    [
-                        a[3][0] * b[0][3],
-                        a[3][1] * b[1][3],
-                        a[3][2] * b[2][3],
-                        a[3][3] * b[3][3],
-                    ],
-                ],
-            }
-        }
-    }
-
-    /// An array with length 3, each 32 bit float value, uniform buffer
-    #[repr(C)]
-    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-    pub struct Array3 {
-        pub data: [f32; 3],
-    }
-    impl std::ops::Mul<Array3> for Array3 {
-        type Output = Self;
-
-        fn mul(self, rhs: Self) -> Self::Output {
-            Self {
-                data: [
-                    self.data[0] * rhs.data[0],
-                    self.data[1] * rhs.data[1],
-                    self.data[2] * rhs.data[2],
-                ],
-            }
-        }
-    }
-    impl std::ops::Mul<f32> for Array3 {
-        type Output = Self;
-
-        fn mul(self, rhs: f32) -> Self::Output {
-            Self {
-                data: [self.data[0] * rhs, self.data[1] * rhs, self.data[2] * rhs],
-            }
-        }
-    }
-
-    /// An array with length 4, each 32 bit float value, uniform buffer
-    #[repr(C)]
-    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-    pub struct Array4 {
-        pub data: [f32; 4],
-    }
-    impl Array4 {
-        pub fn update(&mut self, uniform: Array4) {
-            self.data = uniform.data;
-        }
-    }
-    impl std::ops::Mul<Array4> for Array4 {
-        type Output = Self;
-
-        fn mul(self, rhs: Self) -> Self::Output {
-            Array4 {
-                data: [
-                    self.data[0] * rhs.data[0],
-                    self.data[1] * rhs.data[1],
-                    self.data[2] * rhs.data[2],
-                    self.data[3] * rhs.data[3],
-                ],
-            }
-        }
-    }
-    impl std::ops::Mul<f32> for Array4 {
-        type Output = Array4;
-
-        fn mul(self, rhs: f32) -> Self::Output {
-            Array4 {
-                data: [
-                    self.data[0] * rhs,
-                    self.data[1] * rhs,
-                    self.data[2] * rhs,
-                    self.data[3] * rhs,
-                ],
-            }
-        }
-    }
-
-    /// A 32 bit float uniform buffer
-    #[repr(C)]
-    #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-    pub struct Float {
-        pub data: f32,
-    }
-    impl Float {
-        pub fn update(&mut self, uniform: Float) {
-            self.data = uniform.data;
-        }
-    }
-}
-
-pub use bytemuck::Pod;
-pub use bytemuck::Zeroable;
 
 /// Objects make it easier to work with Blue Engine, it automates most of work needed for
 /// creating 3D objects and showing them on screen. A range of default objects are available
@@ -306,11 +148,16 @@ impl Default for ObjectSettings {
     }
 }
 
-pub struct Geometry {
-    /// A list of Vertex
-    pub vertices: Vec<Vertex>,
-    /// A list of indices that dictates the order that vertices appear
-    pub indices: Vec<u16>,
+/// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
+pub trait UpdateEvents {
+    fn update_events<T>(
+        &mut self,
+        _renderer: &mut Renderer,
+        _window: &Window,
+        _objects: &mut std::collections::HashMap<&'static str, Object>,
+        _events: &winit::event::Event<T>,
+        _camera: &mut Camera,
+    );
 }
 
 /// The engine is the main starting point of using the Blue Engine. Everything that runs on Blue Engine will be under this struct.
@@ -340,7 +187,7 @@ pub struct Geometry {
 ///
 /// ```
 /// [THE DATA HERE IS WORK IN PROGRESS!]
-pub struct Engine {
+pub struct Engine<T: UpdateEvents + 'static> {
     /// The renderer does exactly what it is called. It works with the GPU to render frames according to the data you gave it.
     pub renderer: Renderer,
     // The event_loop handles the events of the window and inputs, so it's used internally
@@ -352,6 +199,8 @@ pub struct Engine {
     pub objects: std::collections::HashMap<&'static str, Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
+    /// Structs that fetch all events directly
+    pub event_fetch: Vec<T>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
@@ -371,27 +220,20 @@ pub struct VertexBuffers {
     pub length: u32,
 }
 
-/// Shaders are programs that runs on the GPU
-pub type Shaders = wgpu::RenderPipeline;
-/// Uniform Buffers are small amount of data that are sent from CPU to GPU
-pub type UniformBuffers = wgpu::BindGroup;
-/// Textures are image data that are sent to GPU to be set to a surface
-pub type Textures = wgpu::BindGroup;
-
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
-    pub(crate) surface: Option<wgpu::Surface>,
+    pub surface: Option<wgpu::Surface>,
     #[cfg(feature = "android")]
-    pub(crate) instance: wgpu::Instance,
-    #[cfg(feature = "gui")]
-    pub(crate) adapter: wgpu::Adapter,
-    pub(crate) device: wgpu::Device,
-    pub(crate) queue: wgpu::Queue,
-    pub(crate) config: wgpu::SurfaceConfiguration,
-    pub(crate) size: winit::dpi::PhysicalSize<u32>,
-    pub(crate) texture_bind_group_layout: wgpu::BindGroupLayout,
-    pub(crate) default_uniform_bind_group_layout: wgpu::BindGroupLayout,
-    pub(crate) depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
+    pub instance: wgpu::Instance,
+    #[allow(unused)]
+    pub adapter: wgpu::Adapter,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    pub config: wgpu::SurfaceConfiguration,
+    pub size: winit::dpi::PhysicalSize<u32>,
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
+    pub default_uniform_bind_group_layout: wgpu::BindGroupLayout,
+    pub depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
     pub default_data: Option<(Textures, Shaders, UniformBuffers)>,
     pub camera: Option<UniformBuffers>,
     pub custom_render_pass:
@@ -459,16 +301,6 @@ pub struct LightManager {
     pub light_objects: std::collections::BTreeMap<&'static str, ([f32; 3], uniform_type::Array4)>,
 }
 
-/// Device Events
-pub use winit::event::DeviceEvent;
-/// The mouse button identifier
-pub use winit::event::MouseButton;
-/// Keyboard keys identifier
-pub use winit::event::VirtualKeyCode;
-
-pub use winit::window::Window;
-pub use winit_input_helper::WinitInputHelper as InputHelper;
-
 /// This function helps in converting pixel value to the value that is between -1 and +1
 pub fn normalize(value: f32, max: u32) -> f32 {
     let mut result = value / max as f32;
@@ -524,13 +356,6 @@ pub enum TextureFormat {
     JPEG,
     PNM,
 }
-
-pub type ShaderPrimitive = wgpu::PrimitiveTopology;
-pub type IndexFormat = wgpu::IndexFormat;
-pub type FrontFace = wgpu::FrontFace;
-pub type CullMode = wgpu::Face;
-pub type PolygonMode = wgpu::PolygonMode;
-pub type PowerPreference = wgpu::PowerPreference;
 
 // ? These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
