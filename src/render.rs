@@ -273,29 +273,7 @@ impl Renderer {
         &mut self,
         encoder: wgpu::CommandEncoder,
         frame: wgpu::SurfaceTexture,
-        #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
-        #[cfg(feature = "gui")] ui: imgui::Ui,
     ) -> Result<(), wgpu::SurfaceError> {
-        #[cfg(feature = "gui")]
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Load,
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: None,
-            });
-
-            imgui_renderer
-                .render(ui.render(), &self.queue, &self.device, &mut render_pass)
-                .unwrap();
-        }
-
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         frame.present();
