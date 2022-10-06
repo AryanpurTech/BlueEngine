@@ -1,8 +1,8 @@
 # Blue Engine
 
-[![Rust Linux](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-linux.yml/badge.svg)](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-linux.yml)
-[![Rust Windows](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-win.yml)
-[![Rust MacOS](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-osx.yml/badge.svg)](https://github.com/ElhamAryanpur/BlueEngine/actions/workflows/rust-osx.yml)
+[![Rust Linux](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml)
+[![Rust Windows](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml)
+[![Rust MacOS](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml)
 
 Make sure to use latest Rust version, as the engine is always kept up to date.
 
