@@ -8,7 +8,7 @@ To run the examples, run
 cargo run --example <EXAMPLE NAME>
 ```
 
-e.g. 
+e.g.
 
 ```bash
 cargo run --example square
