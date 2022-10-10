@@ -1,4 +1,4 @@
-# Blue Engine
+![logo](https://raw.githubusercontent.com/AryanpurTech/BlueEngine/master/resources/BlueLogoDiscord.png)
 
 [![Rust Linux](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml)
 [![Rust Windows](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml)

@@ -30,8 +30,12 @@ pub use wgpu::TextureView;
 pub use winit::dpi::*;
 /// Device Events
 pub use winit::event::DeviceEvent;
+/// Element State
+pub use winit::event::ElementState;
 /// Winit Events
 pub use winit::event::Event;
+/// Keyboard input identifier
+pub use winit::event::KeyboardInput;
 /// The mouse button identifier
 pub use winit::event::MouseButton;
 /// Keyboard keys identifier

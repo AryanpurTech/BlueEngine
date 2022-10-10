@@ -127,6 +127,7 @@ pub trait EnginePlugin {
         _window: &Window,
         _objects: &mut std::collections::HashMap<&'static str, Object>,
         _events: &winit::event::Event<()>,
+        _input: &winit_input_helper::WinitInputHelper,
         _camera: &mut Camera,
     );
 
@@ -180,7 +181,8 @@ pub struct Engine {
     pub objects: std::collections::HashMap<&'static str, Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
-    pub plugins: Vec<&'static mut dyn EnginePlugin>,
+    /// Handles all engine plugins
+    pub plugins: Vec<Box<dyn EnginePlugin>>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.

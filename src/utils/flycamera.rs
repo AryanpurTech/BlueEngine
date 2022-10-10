@@ -35,13 +35,35 @@ impl FlyCamera {
         }
     }
 
-    pub fn update(
+    fn update_vertices(camera: &mut Camera) -> nalgebra_glm::Vec3 {
+        let camera_right = nalgebra_glm::cross(&camera.target, &camera.up).normalize();
+
+        /*let up = nalgebra_glm::cross(&camera_right, &camera.target)
+            .normalize()
+            .data;
+        let up = up.as_slice();
+        camera.set_up(up[0], up[1], up[2]).unwrap(); */
+
+        camera_right
+    }
+}
+
+impl crate::EnginePlugin for FlyCamera {
+    fn update_events(
         &mut self,
-        camera: &mut Camera,
+        _renderer: &mut crate::Renderer,
         window: &Window,
-        event: &crate::DeviceEvent,
+        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        events: &winit::event::Event<()>,
         input: &winit_input_helper::WinitInputHelper,
+        camera: &mut Camera,
     ) {
+        // =========== MOVEMENT ============ //
+        let current_frame = self.timer.elapsed().as_secs_f32();
+        let delta = current_frame - self.last_frame;
+        self.last_frame = current_frame;
+        let mut camera_speed = self.camera_speed * delta;
+
         // ============ Window Focus ============= //
         if input.mouse_pressed(0) {
             if !self.is_focus {
@@ -53,52 +75,49 @@ impl FlyCamera {
             }
         }
 
-        if input.key_pressed(crate::VirtualKeyCode::Escape) {
-            window
-                .set_cursor_grab(winit::window::CursorGrabMode::None)
-                .expect("Couldn't release the cursor");
-            window.set_cursor_visible(true);
-            self.is_focus = false;
-        }
-
-        // =========== MOVEMENT ============ //
-        let current_frame = self.timer.elapsed().as_secs_f32();
-        let delta = current_frame - self.last_frame;
-        self.last_frame = current_frame;
-        let mut camera_speed = self.camera_speed * delta;
-
         if self.is_focus {
-            match event {
-                crate::DeviceEvent::MouseMotion { delta: (x, y) } => {
-                    let mut xoffset = *x as f32;
-                    let mut yoffset = *y as f32;
+            match events {
+                crate::Event::DeviceEvent { event, .. } => match event {
+                    crate::DeviceEvent::MouseMotion { delta: (x, y) } => {
+                        let mut xoffset = *x as f32;
+                        let mut yoffset = *y as f32;
 
-                    xoffset *= self.camera_sensitivity;
-                    yoffset *= self.camera_sensitivity;
+                        xoffset *= self.camera_sensitivity;
+                        yoffset *= self.camera_sensitivity;
 
-                    self.yaw += xoffset;
-                    self.pitch += yoffset;
+                        self.yaw += xoffset;
+                        self.pitch += yoffset;
 
-                    if self.pitch > 89f32 {
-                        self.pitch = 89f32;
+                        if self.pitch > 89f32 {
+                            self.pitch = 89f32;
+                        }
+                        if self.pitch < -89f32 {
+                            self.pitch = -89f32;
+                        }
+
+                        let direction = nalgebra_glm::vec3(
+                            self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
+                            (self.pitch * -1f32).to_radians().sin(),
+                            self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
+                        );
+                        let direction = direction.normalize().data;
+                        let direction = direction.as_slice();
+                        camera
+                            .set_target(direction[0], direction[1], direction[2])
+                            .unwrap();
+                        self.camera_right = Self::update_vertices(camera);
                     }
-                    if self.pitch < -89f32 {
-                        self.pitch = -89f32;
-                    }
-
-                    let direction = nalgebra_glm::vec3(
-                        self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
-                        (self.pitch * -1f32).to_radians().sin(),
-                        self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
-                    );
-                    let direction = direction.normalize().data;
-                    let direction = direction.as_slice();
-                    camera
-                        .set_target(direction[0], direction[1], direction[2])
-                        .unwrap();
-                    self.camera_right = Self::update_vertices(camera);
-                }
+                    _ => {}
+                },
                 _ => {}
+            }
+
+            if input.key_pressed(crate::VirtualKeyCode::Escape) {
+                window
+                    .set_cursor_grab(winit::window::CursorGrabMode::None)
+                    .expect("Couldn't release the cursor");
+                window.set_cursor_visible(true);
+                self.is_focus = false;
             }
 
             // SHIFT
@@ -146,15 +165,14 @@ impl FlyCamera {
         }
     }
 
-    fn update_vertices(camera: &mut Camera) -> nalgebra_glm::Vec3 {
-        let camera_right = nalgebra_glm::cross(&camera.target, &camera.up).normalize();
-
-        /*let up = nalgebra_glm::cross(&camera_right, &camera.target)
-            .normalize()
-            .data;
-        let up = up.as_slice();
-        camera.set_up(up[0], up[1], up[2]).unwrap(); */
-
-        camera_right
+    fn update(
+        &mut self,
+        _renderer: &mut crate::Renderer,
+        _window: &Window,
+        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        _camera: &mut Camera,
+        _encoder: &mut wgpu::CommandEncoder,
+        _view: &wgpu::TextureView,
+    ) {
     }
 }

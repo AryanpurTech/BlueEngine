@@ -106,7 +106,14 @@ impl Engine {
             input.update(&events);
 
             plugins.iter_mut().for_each(|i| {
-                i.update_events(&mut renderer, &window, &mut objects, &events, &mut camera);
+                i.update_events(
+                    &mut renderer,
+                    &window,
+                    &mut objects,
+                    &events,
+                    &input,
+                    &mut camera,
+                );
             });
 
             match events {
