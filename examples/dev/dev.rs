@@ -89,7 +89,7 @@ fn main() {
     let mut rotation = 0f32;
     let speed = -0.05;
 
-    let mut fly_camera = FlyCamera::new(&mut engine.camera);
+    //let mut fly_camera = FlyCamera::new(&mut engine.camera);
     let mut has_border = false;
     let mut val = 0f32;
 
@@ -114,8 +114,8 @@ fn main() {
     }));
 
     engine
-        .update_loop(move |renderer, window, objects, (event, input), camera| {
-            fly_camera.update(camera, window, event, input);
+        .update_loop(move |renderer, window, objects, input, camera| {
+            //fly_camera.update(camera, window, event, input);
             lm.update(objects, renderer, &camera)
                 .expect("Couldn't add light");
 

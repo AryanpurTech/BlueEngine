@@ -1,7 +1,5 @@
 #
 
-> Do not use these examples yet, they're being reworked
-
 To run the examples, run
 
 ```bash

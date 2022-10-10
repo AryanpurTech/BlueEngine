@@ -61,6 +61,7 @@ impl Engine {
             renderer,
             objects: std::collections::HashMap::new(),
             camera,
+            plugins: vec![],
         })
     }
 
@@ -74,24 +75,15 @@ impl Engine {
         F: 'static
             + FnMut(
                 // Core
-                (
-                    &mut Renderer,
-                    &mut Window,
-                    &mut std::collections::HashMap<&'static str, Object>,
-                ),
-                // Utils
-                (
-                    &winit_input_helper::WinitInputHelper,
-                    &mut Camera,
-                    (&mut wgpu::CommandEncoder, &wgpu::TextureView),
-                    &mut Vec<T>,
-                ),
+                &mut Renderer,
+                &mut Window,
+                &mut std::collections::HashMap<&'static str, Object>,
+                &winit_input_helper::WinitInputHelper,
+                &mut Camera,
             ),
-        T: crate::UpdateEvents + 'static,
     >(
         self,
         mut update_function: F,
-        mut event_fetch: Vec<T>,
     ) -> anyhow::Result<()> {
         let Self {
             event_loop,
@@ -99,6 +91,7 @@ impl Engine {
             mut window,
             mut objects,
             mut camera,
+            mut plugins,
         } = self;
 
         // and get input events to handle them later
@@ -112,7 +105,7 @@ impl Engine {
             // updates the data on what events happened before the frame start
             input.update(&events);
 
-            event_fetch.iter_mut().for_each(|i| {
+            plugins.iter_mut().for_each(|i| {
                 i.update_events(&mut renderer, &window, &mut objects, &events, &mut camera);
             });
 
@@ -161,10 +154,24 @@ impl Engine {
                     if pre_render.is_some() {
                         let (mut encoder, view, frame) = pre_render.unwrap();
 
+                        plugins.iter_mut().for_each(|i| {
+                            i.update(
+                                &mut renderer,
+                                &window,
+                                &mut objects,
+                                &mut camera,
+                                &mut encoder,
+                                &view,
+                            );
+                        });
+
                         #[cfg(not(feature = "gui"))]
                         update_function(
-                            (&mut renderer, &mut window, &mut objects),
-                            (&input, &mut camera, (&mut encoder, &view), &mut event_fetch),
+                            &mut renderer,
+                            &mut window,
+                            &mut objects,
+                            &input,
+                            &mut camera,
                         );
                         camera
                             .update_view_projection(&mut renderer)

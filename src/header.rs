@@ -120,14 +120,24 @@ impl Default for ObjectSettings {
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
-pub trait UpdateEvents {
-    fn update_events<T>(
+pub trait EnginePlugin {
+    fn update_events(
         &mut self,
         _renderer: &mut Renderer,
         _window: &Window,
         _objects: &mut std::collections::HashMap<&'static str, Object>,
-        _events: &winit::event::Event<T>,
+        _events: &winit::event::Event<()>,
         _camera: &mut Camera,
+    );
+
+    fn update(
+        &mut self,
+        _renderer: &mut Renderer,
+        _window: &Window,
+        _objects: &mut std::collections::HashMap<&'static str, Object>,
+        _camera: &mut Camera,
+        _encoder: &mut wgpu::CommandEncoder,
+        _view: &wgpu::TextureView,
     );
 }
 
@@ -170,6 +180,7 @@ pub struct Engine {
     pub objects: std::collections::HashMap<&'static str, Object>,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
+    pub plugins: Vec<&'static mut dyn EnginePlugin>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.

@@ -36,15 +36,12 @@ fn main() {
     let start = std::time::SystemTime::now();
 
     engine
-        .update_loop(
-            move |_, _, _, _, camera, _| {
-                let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
-                let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-                camera
-                    .set_position(camx, 0.0, camz)
-                    .expect("Couldn't update the camera eye");
-            },
-            vec![],
-        )
+        .update_loop(move |_, _, _, _, camera| {
+            let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
+            let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
+            camera
+                .set_position(camx, 0.0, camz)
+                .expect("Couldn't update the camera eye");
+        })
         .expect("Error during update loop");
 }
