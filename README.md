@@ -6,8 +6,6 @@
 
 Make sure to use latest Rust version, as the engine is always kept up to date.
 
-> Due to recent updates, it is not stable to use anything beyond this [commit](https://github.com/AryanpurTech/BlueEngine/commit/84156642c7d8e61968d951d0e68c4009d2730b5c). Please keep using version 0.4.8 as latest instead.
-
 ## About
 
 Blue Engine is a general-purpose, easy-to-use, extendable, and portable graphics engine written in rust. The engine can run on many popular back-end APIs including Vulkan, D3D-12, GL-ES 3, and Metal as well as Windows, Linux, Mobile, and OSX to ensure cross-platform compatibility.
@@ -27,11 +25,11 @@ fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     // create a triangle
-    let _ = triangle(ObjectSettings::default(), &mut engine).unwrap();
+    triangle("my triangle", ObjectSettings::default(), &mut engine).unwrap();
 
     // run the engine
     engine
-        .update_loop(move |_, _| {}, vec![])
+        .update_loop(move |_, _, _, _, _| {})
         .expect("Error during update loop");
 }
 ```
