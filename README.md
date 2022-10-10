@@ -39,7 +39,3 @@ fn main() {
 * [WIP] [Documentation](https://aryanpurtech.github.io/BlueEngineDocs/)
 
 * Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
-
----
-
-**NOTE:** You need to add `resolver = "2"` on your `Cargo.toml` under `[package]` section. This is because of migration to newer versions of Rust and dependencies of this engine.
