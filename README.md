@@ -29,7 +29,7 @@ fn main() {
 
     // run the engine
     engine
-        .update_loop(move |_, _, _, _, _| {})
+        .update_loop(move |_, _, _, _, _, _| {})
         .expect("Error during update loop");
 }
 ```
