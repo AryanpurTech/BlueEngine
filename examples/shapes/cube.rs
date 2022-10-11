@@ -23,7 +23,7 @@ fn main() {
     let radius = 5f32;
     let start = std::time::SystemTime::now();
     engine
-        .update_loop(move |_, _, _, _, camera| {
+        .update_loop(move |_, _, _, _, camera, _| {
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;

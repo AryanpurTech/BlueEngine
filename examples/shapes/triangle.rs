@@ -17,6 +17,6 @@ pub fn main() {
     triangle("Triangle", ObjectSettings::default(), &mut engine).unwrap();
 
     engine
-        .update_loop(move |_, _, _, _, _| {})
+        .update_loop(move |_, _, _, _, _, _| {})
         .expect("Error during update loop");
 }

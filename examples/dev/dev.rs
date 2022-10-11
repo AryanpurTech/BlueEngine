@@ -115,7 +115,7 @@ fn main() {
     }));
 
     engine
-        .update_loop(move |renderer, window, objects, input, camera| {
+        .update_loop(move |renderer, window, objects, input, camera, _| {
             lm.update(objects, renderer, &camera)
                 .expect("Couldn't add light");
 

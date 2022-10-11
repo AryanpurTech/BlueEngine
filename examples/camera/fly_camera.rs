@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
     let mut tick: u64 = 0;
     let mut fps: i32 = 0;
 
-    engine.update_loop(move |_, _, _, _, _| {
+    engine.update_loop(move |_, _, _, _, _, _| {
         let now = timer.elapsed().unwrap().as_secs();
         if tick < now {
             tick = now;
