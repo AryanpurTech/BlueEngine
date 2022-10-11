@@ -167,6 +167,7 @@ impl Engine {
                                 &window,
                                 &mut objects,
                                 &mut camera,
+                                &input,
                                 &mut encoder,
                                 &view,
                             );

@@ -171,6 +171,7 @@ impl crate::EnginePlugin for FlyCamera {
         _window: &Window,
         _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
         _camera: &mut Camera,
+        _input: &crate::InputHelper,
         _encoder: &mut wgpu::CommandEncoder,
         _view: &wgpu::TextureView,
     ) {

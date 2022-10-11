@@ -42,6 +42,8 @@ pub use winit::event::MouseButton;
 pub use winit::event::VirtualKeyCode;
 /// WindowEvents
 pub use winit::event::WindowEvent;
+/// Event Loop
+pub use winit::event_loop::EventLoop;
 /// Window export from winit
 pub use winit::window::Window;
 /// Input helper

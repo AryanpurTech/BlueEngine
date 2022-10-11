@@ -126,8 +126,8 @@ pub trait EnginePlugin {
         _renderer: &mut Renderer,
         _window: &Window,
         _objects: &mut std::collections::HashMap<&'static str, Object>,
-        _events: &winit::event::Event<()>,
-        _input: &winit_input_helper::WinitInputHelper,
+        _events: &crate::Event<()>,
+        _input: &crate::InputHelper,
         _camera: &mut Camera,
     );
 
@@ -137,8 +137,9 @@ pub trait EnginePlugin {
         _window: &Window,
         _objects: &mut std::collections::HashMap<&'static str, Object>,
         _camera: &mut Camera,
-        _encoder: &mut wgpu::CommandEncoder,
-        _view: &wgpu::TextureView,
+        _input: &crate::InputHelper,
+        _encoder: &mut crate::CommandEncoder,
+        _view: &crate::TextureView,
     );
 }
 
@@ -173,7 +174,7 @@ pub struct Engine {
     /// The renderer does exactly what it is called. It works with the GPU to render frames according to the data you gave it.
     pub renderer: Renderer,
     // The event_loop handles the events of the window and inputs, so it's used internally
-    pub(crate) event_loop: winit::event_loop::EventLoop<()>,
+    pub event_loop: winit::event_loop::EventLoop<()>,
     /// The window handles everything about window and inputs. This includes ability to modify window and listen to input devices for changes.
     pub window: winit::window::Window,
     /// The object system is a way to make it easier to work with the engine. Obviously you can work without it, but it's for those who
