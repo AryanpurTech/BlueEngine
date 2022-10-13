@@ -101,7 +101,6 @@ impl Engine {
         let mut input = winit_input_helper::WinitInputHelper::new();
         let mut _device_event: winit::event::DeviceEvent =
             DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
-        let mut current_window_size = window.inner_size();
 
         // The main loop
         event_loop.run(move |events, _, control_flow| {
@@ -124,7 +123,19 @@ impl Engine {
                     ref event,
                     window_id,
                 } if window_id == window.id() => match event {
-                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                        std::process::exit(0);
+                    }
+                    WindowEvent::Resized(size) => {
+                        renderer.resize(*size);
+                        camera
+                            .set_resolution(*size)
+                            .expect("Couldn't set the resize to camera");
+                        camera
+                            .update_view_projection(&mut renderer)
+                            .expect("Couldn't set the resize to camera in renderer");
+                    }
                     _ => {}
                 },
                 #[cfg(feature = "android")]
@@ -146,18 +157,6 @@ impl Engine {
 
                 Event::DeviceEvent { event, .. } => _device_event = event,
                 Event::MainEventsCleared => {
-                    let new_window_size = window.inner_size();
-                    if new_window_size != current_window_size {
-                        renderer.resize(new_window_size);
-                        camera
-                            .set_resolution(new_window_size)
-                            .expect("Couldn't set the resize to camera");
-                        camera
-                            .update_view_projection(&mut renderer)
-                            .expect("Couldn't set the resize to camera in renderer");
-                        current_window_size = new_window_size;
-                    }
-
                     let pre_render = renderer
                         .pre_render(&objects, &camera)
                         .expect("Couldn't get pre render data");

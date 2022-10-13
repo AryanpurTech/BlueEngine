@@ -167,6 +167,7 @@ impl Object {
         } else {
             0.0
         };
+
         let difference_in_height = if self.size.1 != 0.0 && height != 0.0 {
             let a = normalize(height, window_size.height);
             let b = normalize(self.size.1, window_size.height);

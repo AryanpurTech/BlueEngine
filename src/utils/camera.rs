@@ -47,8 +47,8 @@ impl Camera {
             &self.up,
         );
         let proj = nalgebra_glm::perspective(
-            self.fov,
             self.resolution.0 / self.resolution.1,
+            self.fov,
             self.near,
             self.far,
         );
