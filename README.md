@@ -1,4 +1,4 @@
-![logo](https://raw.githubusercontent.com/AryanpurTech/BlueEngine/master/resources/BlueLogoDiscord.png)
+<img src="https://raw.githubusercontent.com/AryanpurTech/BlueEngineDocs/master/resources/logo_3d.gif" loop=infinite width="100%" />
 
 [![Rust Linux](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-linux.yml)
 [![Rust Windows](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml)
@@ -39,3 +39,5 @@ fn main() {
 * [WIP] [Documentation](https://aryanpurtech.github.io/BlueEngineDocs/)
 
 * Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
+
+*the credits to the image on top is by NotPB*
