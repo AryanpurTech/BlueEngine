@@ -66,6 +66,7 @@ pub struct Object {
     pub scale: (f32, f32, f32),
     /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
+    pub rotation: (f32, f32, f32),
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matrix helps to apply changes to your object, including position, orientation, ...

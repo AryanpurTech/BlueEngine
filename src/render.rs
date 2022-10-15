@@ -80,6 +80,7 @@ impl Renderer {
             present_mode: wgpu::PresentMode::Mailbox,
             #[cfg(not(feature = "android"))]
             present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);

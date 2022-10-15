@@ -58,6 +58,7 @@ impl Renderer {
                 settings.position.1,
                 settings.position.2,
             ),
+            rotation: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
             inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
@@ -202,9 +203,18 @@ impl Object {
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
         let mut rotation_matrix = self.transformation_matrix;
         let axis = match axis {
-            RotateAxis::Z => nalgebra_glm::vec3(0.0, 0.0, 1.0),
-            RotateAxis::X => nalgebra_glm::vec3(0.0, 1.0, 0.0),
-            RotateAxis::Y => nalgebra_glm::vec3(1.0, 0.0, 0.0),
+            RotateAxis::X => {
+                self.rotation.0 += 1f32 * angle;
+                nalgebra_glm::vec3(0.0, 1.0, 0.0)
+            }
+            RotateAxis::Y => {
+                self.rotation.1 += 1f32 * angle;
+                nalgebra_glm::vec3(1.0, 0.0, 0.0)
+            }
+            RotateAxis::Z => {
+                self.rotation.2 += 1f32 * angle;
+                nalgebra_glm::vec3(0.0, 0.0, 1.0)
+            }
         };
         rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle, &axis);
         self.transformation_matrix = rotation_matrix;
@@ -217,6 +227,10 @@ impl Object {
 
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, x: f32, y: f32, z: f32) {
+        self.position.0 -= x;
+        self.position.1 -= y;
+        self.position.2 -= z;
+
         let mut position_matrix = self.transformation_matrix;
         position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
         self.transformation_matrix = position_matrix;
