@@ -280,9 +280,9 @@ impl Object {
         };*/
 
         self.translate(
-            self.position.0 - x,
-            self.position.1 - y,
-            self.position.2 - z,
+            (self.position.0 - x) * -1f32,
+            (self.position.1 - y) * -1f32,
+            (self.position.2 - z) * -1f32,
         );
 
         self.position.0 = x;

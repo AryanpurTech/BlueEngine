@@ -97,27 +97,10 @@ fn main() {
     let mut lm = LightManager::new();
     lm.set_object_as_light("cube");
 
-    engine.renderer.custom_render_pass = Some(Box::new(|encoder, view| {
-        let render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("Render pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: true,
-                },
-            })],
-            depth_stencil_attachment: None,
-        });
-
-        drop(render_pass);
-    }));
-
     engine
         .update_loop(move |renderer, window, objects, input, camera, _| {
             lm.update(objects, renderer, &camera)
-                .expect("Couldn't add light");
+            .expect("Couldn't add light");
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
