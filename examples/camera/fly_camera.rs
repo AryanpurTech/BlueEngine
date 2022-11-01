@@ -53,14 +53,6 @@ fn main() -> anyhow::Result<()> {
         },
     ));
 
-    animation.keyframes.push((
-        5,
-        Operation {
-            translation: (-5f32, 0f32, 0f32),
-            rotation: (0f32, 0f32, 0f32),
-        },
-    ));
-
     engine.update_loop(move |_, _, objects, input, _, _| {
         /*let cube = objects.get_mut("floor").unwrap();
         let elapsed = now.elapsed().as_millis();

@@ -37,9 +37,9 @@ impl Animation {
         let elapsed = self.time.elapsed().as_millis();
         if elapsed <= self.target {
             objects.get_mut(self.object).unwrap().position(
-                self.progressed_translation.0 +(self.difference_translate.0 * elapsed as f32),
-                (self.difference_translate.1 + self.progressed_translation.1)  * elapsed as f32,
-                (self.difference_translate.2 + self.progressed_translation.2)  * elapsed as f32,
+                self.progressed_translation.0 + (self.difference_translate.0 * elapsed as f32),
+                self.progressed_translation.1 + (self.difference_translate.1 * elapsed as f32),
+                self.progressed_translation.2 + (self.difference_translate.2 * elapsed as f32),
             );
         } else {
             {
@@ -51,17 +51,13 @@ impl Animation {
                         target_translation.2 + self.progressed_translation.2,
                     );
 
-                    println!("{:?} - keyframe: {}", target_translation.0 + self.progressed_translation.0, self.current_frame);
-
                     if self.current_frame < self.keyframes.len() {
                         self.progressed_translation = (
-                            target_translation.0,
-                            target_translation.1,
-                            target_translation.2,
+                            target_translation.0 + self.progressed_translation.0,
+                            target_translation.1 + self.progressed_translation.1,
+                            target_translation.2 + self.progressed_translation.2,
                         );
                     }
-
-                    
                 }
             }
 
