@@ -49,9 +49,10 @@ fn main() -> anyhow::Result<()> {
         2,
         Operation {
             translation: (0f32, 0f32, 0f32),
-            rotation: (100f32, 100f32, 0f32),
+            rotation: (30f32, 100f32, 0f32),
         },
     ));
+
 
     engine.update_loop(move |_, _, objects, input, _, _| {
         /*let cube = objects.get_mut("floor").unwrap();

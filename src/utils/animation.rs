@@ -51,23 +51,40 @@ impl Animation {
                 self.progressed_translation.1 + (self.difference_translate.1 * elapsed as f32),
                 self.progressed_translation.2 + (self.difference_translate.2 * elapsed as f32),
             );
-            obj.rotate((self.difference_rotation.0 *  elapsed as f32) + x_rotation,  crate::RotateAxis::X);
+            obj.rotate(((self.difference_rotation.0 *  elapsed as f32) + x_rotation).to_radians(),  crate::RotateAxis::X);
             //obj.rotate(self.difference_rotation.0 + x_rotation, crate::RotateAxis::X);
             //obj.rotate(self.difference_rotation.0 + x_rotation, crate::RotateAxis::X);
         } else {
             if self.current_frame != 0 {
                 let target_translation = self.keyframes[self.current_frame - 1].1.translation;
-                objects.get_mut(self.object).unwrap().position(
+                let target_rotation = self.keyframes[self.current_frame - 1].1.rotation;
+                let obj = objects.get_mut(self.object).unwrap();
+                
+                obj.rotate(obj.rotation.0 * -1f32, crate::RotateAxis::X);
+                obj.rotate(obj.rotation.1 * -1f32, crate::RotateAxis::Y);
+                obj.rotate(obj.rotation.2 * -1f32, crate::RotateAxis::Z);
+
+                obj.position(
                     target_translation.0 + self.progressed_translation.0,
                     target_translation.1 + self.progressed_translation.1,
                     target_translation.2 + self.progressed_translation.2,
                 );
+                
+                obj.rotate((target_translation.0 + self.progressed_rotation.0).to_radians(), crate::RotateAxis::X);
+                obj.rotate((target_translation.1 + self.progressed_rotation.1).to_radians(), crate::RotateAxis::Y);
+                obj.rotate((target_translation.2 + self.progressed_rotation.2).to_radians(), crate::RotateAxis::Z);
 
                 if self.current_frame < self.keyframes.len() {
                     self.progressed_translation = (
                         target_translation.0 + self.progressed_translation.0,
                         target_translation.1 + self.progressed_translation.1,
                         target_translation.2 + self.progressed_translation.2,
+                    );
+
+                    self.progressed_rotation = (
+                        target_rotation.0 + self.progressed_rotation.0,
+                        target_rotation.1 + self.progressed_rotation.1,
+                        target_rotation.2 + self.progressed_rotation.2,
                     );
                 }
             }
