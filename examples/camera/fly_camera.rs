@@ -48,8 +48,8 @@ fn main() -> anyhow::Result<()> {
     animation.keyframes.push((
         2,
         Operation {
-            translation: (5f32, 0f32, 0f32),
-            rotation: (0f32, 0f32, 0f32),
+            translation: (0f32, 0f32, 0f32),
+            rotation: (100f32, 100f32, 0f32),
         },
     ));
 

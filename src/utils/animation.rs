@@ -12,6 +12,7 @@ pub struct Animation {
     pub difference_translate: (f32, f32, f32),
     pub progressed_translation: (f32, f32, f32),
     pub difference_rotation: (f32, f32, f32),
+    pub progressed_rotation: (f32, f32, f32),
     pub current_frame: usize,
     pub object: &'static str,
 }
@@ -25,6 +26,7 @@ impl Animation {
             difference_translate: (0f32, 0f32, 0f32),
             progressed_translation: (0f32, 0f32, 0f32),
             difference_rotation: (0f32, 0f32, 0f32),
+            progressed_rotation: (0f32, 0f32, 0f32),
             current_frame: 0,
             object,
         }
@@ -36,28 +38,37 @@ impl Animation {
     ) {
         let elapsed = self.time.elapsed().as_millis();
         if elapsed <= self.target {
-            objects.get_mut(self.object).unwrap().position(
+            let obj = objects.get_mut(self.object).unwrap();
+            let x_rotation = obj.rotation.0;
+            let y_rotation = obj.rotation.1;
+            let z_rotation = obj.rotation.2;
+            
+            obj.rotate(x_rotation * -1f32, crate::RotateAxis::X);
+            obj.rotate(y_rotation * -1f32, crate::RotateAxis::Y);
+            obj.rotate(z_rotation * -1f32, crate::RotateAxis::Z);
+            obj.position(
                 self.progressed_translation.0 + (self.difference_translate.0 * elapsed as f32),
                 self.progressed_translation.1 + (self.difference_translate.1 * elapsed as f32),
                 self.progressed_translation.2 + (self.difference_translate.2 * elapsed as f32),
             );
+            obj.rotate((self.difference_rotation.0 *  elapsed as f32) + x_rotation,  crate::RotateAxis::X);
+            //obj.rotate(self.difference_rotation.0 + x_rotation, crate::RotateAxis::X);
+            //obj.rotate(self.difference_rotation.0 + x_rotation, crate::RotateAxis::X);
         } else {
-            {
-                if self.current_frame != 0 {
-                    let target_translation = self.keyframes[self.current_frame - 1].1.translation;
-                    objects.get_mut(self.object).unwrap().position(
+            if self.current_frame != 0 {
+                let target_translation = self.keyframes[self.current_frame - 1].1.translation;
+                objects.get_mut(self.object).unwrap().position(
+                    target_translation.0 + self.progressed_translation.0,
+                    target_translation.1 + self.progressed_translation.1,
+                    target_translation.2 + self.progressed_translation.2,
+                );
+
+                if self.current_frame < self.keyframes.len() {
+                    self.progressed_translation = (
                         target_translation.0 + self.progressed_translation.0,
                         target_translation.1 + self.progressed_translation.1,
                         target_translation.2 + self.progressed_translation.2,
                     );
-
-                    if self.current_frame < self.keyframes.len() {
-                        self.progressed_translation = (
-                            target_translation.0 + self.progressed_translation.0,
-                            target_translation.1 + self.progressed_translation.1,
-                            target_translation.2 + self.progressed_translation.2,
-                        );
-                    }
                 }
             }
 
@@ -68,6 +79,11 @@ impl Animation {
                     (next_frame.1.translation.0 - self.difference_translate.0) / self.target as f32,
                     (next_frame.1.translation.1 - self.difference_translate.1) / self.target as f32,
                     (next_frame.1.translation.2 - self.difference_translate.2) / self.target as f32,
+                );
+                self.difference_rotation = (
+                    (next_frame.1.rotation.0 - self.difference_rotation.0) / self.target as f32,
+                    (next_frame.1.rotation.1 - self.difference_rotation.1) / self.target as f32,
+                    (next_frame.1.rotation.2 - self.difference_rotation.2) / self.target as f32,
                 );
                 self.time = std::time::Instant::now();
                 self.current_frame += 1;
