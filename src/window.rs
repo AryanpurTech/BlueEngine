@@ -163,6 +163,16 @@ impl Engine {
                     if pre_render.is_some() {
                         let (mut encoder, view, frame) = pre_render.unwrap();
 
+                        #[cfg(not(feature = "gui"))]
+                        update_function(
+                            &mut renderer,
+                            &mut window,
+                            &mut objects,
+                            &input,
+                            &mut camera,
+                            &mut plugin_data_storage,
+                        );
+
                         plugins.iter_mut().for_each(|i| {
                             i.update(
                                 &mut renderer,
@@ -176,15 +186,6 @@ impl Engine {
                             );
                         });
 
-                        #[cfg(not(feature = "gui"))]
-                        update_function(
-                            &mut renderer,
-                            &mut window,
-                            &mut objects,
-                            &input,
-                            &mut camera,
-                            &mut plugin_data_storage,
-                        );
                         camera
                             .update_view_projection(&mut renderer)
                             .expect("Couldn't update camera");
