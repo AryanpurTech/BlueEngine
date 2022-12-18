@@ -62,7 +62,6 @@ impl Engine {
             objects: std::collections::HashMap::new(),
             camera,
             plugins: vec![],
-            plugin_data_storage: std::collections::HashMap::new(),
         })
     }
 
@@ -81,7 +80,7 @@ impl Engine {
                 &mut std::collections::HashMap<&'static str, Object>,
                 &winit_input_helper::WinitInputHelper,
                 &mut Camera,
-                &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
+                &mut Vec<Box<dyn crate::EnginePlugin>>,
             ),
     >(
         self,
@@ -93,8 +92,7 @@ impl Engine {
             mut window,
             mut objects,
             mut camera,
-            mut plugins,
-            mut plugin_data_storage,
+            mut plugins
         } = self;
 
         // and get input events to handle them later
@@ -170,7 +168,7 @@ impl Engine {
                             &mut objects,
                             &input,
                             &mut camera,
-                            &mut plugin_data_storage,
+                            &mut plugins,
                         );
 
                         plugins.iter_mut().for_each(|i| {
@@ -180,7 +178,6 @@ impl Engine {
                                 &mut objects,
                                 &mut camera,
                                 &input,
-                                &mut plugin_data_storage,
                                 &mut encoder,
                                 &view,
                             );

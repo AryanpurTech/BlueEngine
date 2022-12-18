@@ -48,3 +48,9 @@ pub use winit::event_loop::EventLoop;
 pub use winit::window::Window;
 /// Input helper
 pub use winit_input_helper::WinitInputHelper as InputHelper;
+/// all of wgpu
+pub use wgpu;
+/// all of winit
+pub use winit;
+
+pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;

@@ -9,6 +9,8 @@ pub mod uniform_buffer;
 pub use imports::*;
 pub use uniform_buffer::*;
 
+use downcast::{downcast, Any};
+
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -162,8 +164,6 @@ pub struct Engine {
     pub camera: Camera,
     /// Handles all engine plugins
     pub plugins: Vec<Box<dyn crate::EnginePlugin>>,
-    /// Data storage that is shared with all plugins
-    pub plugin_data_storage: std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
@@ -336,7 +336,7 @@ impl Default for ShaderSettings {
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
-pub trait EnginePlugin {
+pub trait EnginePlugin: Any {
     fn update_events(
         &mut self,
         _renderer: &mut crate::Renderer,
@@ -354,11 +354,11 @@ pub trait EnginePlugin {
         _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
         _camera: &mut crate::Camera,
         _input: &crate::InputHelper,
-        _plugin_data_storage: &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
         _encoder: &mut crate::CommandEncoder,
         _view: &crate::TextureView,
     );
 }
+downcast!(dyn EnginePlugin);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RotateAxis {

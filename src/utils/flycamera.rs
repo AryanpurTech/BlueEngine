@@ -14,6 +14,8 @@ pub struct FlyCamera {
     pub camera_sensitivity: f32,
     pub timer: std::time::Instant,
     pub last_frame: f32,
+
+    pub test_counter: u32,
 }
 
 impl FlyCamera {
@@ -32,6 +34,8 @@ impl FlyCamera {
             camera_sensitivity: 0.10f32,
             timer: std::time::Instant::now(),
             last_frame: 0f32,
+
+            test_counter: 0
         }
     }
 
@@ -45,6 +49,12 @@ impl FlyCamera {
         camera.set_up(up[0], up[1], up[2]).unwrap(); */
 
         camera_right
+    }
+
+    // purely for testing plugin system
+    pub fn test(&mut self) {
+        self.test_counter += 1;
+        println!("IT WORKS! {}", self.test_counter);
     }
 }
 
@@ -172,7 +182,6 @@ impl crate::EnginePlugin for FlyCamera {
         _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
         _camera: &mut Camera,
         _input: &crate::InputHelper,
-        _plugin_data_storage: &mut std::collections::HashMap<&'static str, Box<dyn std::any::Any>>,
         _encoder: &mut wgpu::CommandEncoder,
         _view: &wgpu::TextureView,
     ) {

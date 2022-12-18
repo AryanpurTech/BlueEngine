@@ -89,18 +89,22 @@ fn main() {
     let mut rotation = 0f32;
     let speed = -0.05;
 
-    let fly_camera = FlyCamera::new(&mut engine.camera);
-    engine.plugins.push(Box::new(fly_camera));
     let mut has_border = false;
     let mut val = 0f32;
 
     let mut lm = LightManager::new();
     lm.set_object_as_light("cube");
 
+    let fly_camera = FlyCamera::new(&mut engine.camera);
+    engine.plugins.push(Box::new(fly_camera));
+
     engine
-        .update_loop(move |renderer, window, objects, input, camera, _| {
+        .update_loop(move |renderer, _window, objects, input, camera, plugins| {
+            let fly_camera = plugins[0].downcast_mut::<FlyCamera>().unwrap();
+            fly_camera.test();
+
             lm.update(objects, renderer, &camera)
-            .expect("Couldn't add light");
+                .expect("Couldn't add light");
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
