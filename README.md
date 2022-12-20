@@ -25,7 +25,7 @@ fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
     // create a triangle
-    triangle("my triangle", ObjectSettings::default(), &mut engine).unwrap();
+    triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();
 
     // run the engine
     engine
