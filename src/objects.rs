@@ -19,7 +19,7 @@ impl Renderer {
         indicies: Vec<u16>,
         settings: ObjectSettings,
     ) -> anyhow::Result<Object> {
-        let vertex_buffer = self.build_vertex_buffer(verticies.clone(), indicies.clone())?;
+        let vertex_buffer = self.build_vertex_buffer(&verticies, &indicies)?;
 
         let uniform = self.build_uniform_buffer(&vec![
             self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
@@ -334,7 +334,7 @@ impl Object {
 
     pub(crate) fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer =
-            renderer.build_vertex_buffer(self.vertices.clone(), self.indices.clone())?;
+            renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = updated_buffer;
 
         Ok(())

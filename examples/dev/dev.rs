@@ -22,7 +22,7 @@ fn main() {
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let window_size = engine.window.inner_size();
 
-    uv_sphere("cube", &mut engine, (18, 36, 1f32)).unwrap();
+    uv_sphere("cube", (18, 36, 1f32), &mut engine.renderer, &mut engine.objects).unwrap();
     engine.objects.get_mut("cube").unwrap().scale(0.6, 0.6, 0.6);
     engine
         .objects
@@ -105,6 +105,9 @@ fn main() {
 
             lm.update(objects, renderer, &camera)
                 .expect("Couldn't add light");
+
+            let o = renderer.build_object("haha", Vec::new(), Vec::new(), ObjectSettings::default());
+            
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;

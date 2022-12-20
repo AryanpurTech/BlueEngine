@@ -335,8 +335,8 @@ impl crate::header::Renderer {
     /// Creates a new vertex buffer and indecies
     pub fn build_vertex_buffer(
         &mut self,
-        verticies: Vec<Vertex>,
-        indicies: Vec<u16>,
+        verticies: &Vec<Vertex>,
+        indicies: &Vec<u16>,
     ) -> Result<VertexBuffers, anyhow::Error> {
         let vertex_buffer = self
             .device

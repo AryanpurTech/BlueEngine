@@ -4,15 +4,16 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{Engine, ObjectSettings, Vertex};
+use crate::{header::{ObjectSettings, Vertex}, Renderer, Object};
 
 /// Creates a 2D triangle
 pub fn triangle(
     name: &'static str,
     settings: ObjectSettings,
-    engine: &mut Engine,
+    renderer: &mut Renderer,
+    objects: &mut std::collections::HashMap<&'static str, Object>,
 ) -> anyhow::Result<()> {
-    engine.new_object(
+    let object = renderer.build_object(
         name,
         vec![
             Vertex {
@@ -34,6 +35,7 @@ pub fn triangle(
         vec![0, 1, 2],
         settings,
     )?;
+    objects.insert(name, object);
 
     Ok(())
 }
@@ -42,9 +44,10 @@ pub fn triangle(
 pub fn square(
     name: &'static str,
     settings: ObjectSettings,
-    engine: &mut Engine,
+    renderer: &mut Renderer,
+    objects: &mut std::collections::HashMap<&'static str, Object>,
 ) -> anyhow::Result<()> {
-    engine.new_object(
+    let object = renderer.build_object(
         name,
         vec![
             Vertex {
@@ -71,6 +74,7 @@ pub fn square(
         vec![2, 1, 0, 2, 0, 3],
         settings,
     )?;
+    objects.insert(name, object);
 
     Ok(())
 }

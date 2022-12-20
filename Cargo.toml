@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.16"
+version = "0.4.17"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -79,3 +79,7 @@ path = "examples/gui/styling.rs"
 [[example]]
 name = "dev"
 path = "examples/dev/dev.rs"
+
+[[example]]
+name = "animation"
+path = "examples/dev/animation.rs"

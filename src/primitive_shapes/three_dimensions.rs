@@ -1,7 +1,11 @@
-use crate::{Engine, ObjectSettings, Vertex};
+use crate::{ObjectSettings, Vertex, Renderer, Object};
 
-pub fn cube(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
-    engine.new_object(
+pub fn cube(
+    name: &'static str,
+    renderer: &mut Renderer,
+    objects: &mut std::collections::HashMap<&'static str, Object>,
+) -> anyhow::Result<()> {
+    let object = renderer.build_object(
         name,
         vec![
             // Front Face
@@ -144,6 +148,7 @@ pub fn cube(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
             ..Default::default()
         },
     )?;
+    objects.insert(name, object);
 
     Ok(())
 }
@@ -151,8 +156,9 @@ pub fn cube(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
 /// details = (stacks, sectors, radius)
 pub fn uv_sphere(
     name: &'static str,
-    engine: &mut Engine,
     details: (usize, usize, f32),
+    renderer: &mut Renderer,
+    objects: &mut std::collections::HashMap<&'static str, Object>,
 ) -> anyhow::Result<()> {
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
@@ -199,7 +205,7 @@ pub fn uv_sphere(
         }
     }
 
-    engine.new_object(
+    let object = renderer.build_object(
         name,
         vertices,
         indices,
@@ -208,6 +214,7 @@ pub fn uv_sphere(
             ..Default::default()
         },
     )?;
+    objects.insert(name, object);
 
     Ok(())
 }

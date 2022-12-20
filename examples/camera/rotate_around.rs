@@ -28,7 +28,7 @@ fn main() {
             // and have default settings for the rest
             ..Default::default()
         },
-        &mut engine,
+        &mut engine.renderer, &mut engine.objects,
     )
     .unwrap();
 
