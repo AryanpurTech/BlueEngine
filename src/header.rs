@@ -53,6 +53,7 @@ impl Vertex {
 /// creating 3D objects and showing them on screen. A range of default objects are available
 /// as well as ability to customize each of them and even create your own! You can also
 /// customize almost everything there is about them!
+#[derive(Debug)]
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
     pub name: &'static str,
@@ -167,6 +168,7 @@ pub struct Engine {
 }
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
+#[derive(Debug)]
 pub struct Pipeline {
     pub shader: crate::Shaders,
     pub vertex_buffer: VertexBuffers,
@@ -175,6 +177,7 @@ pub struct Pipeline {
 }
 
 /// Container for vertex and index buffer
+#[derive(Debug)]
 pub struct VertexBuffers {
     /// An array of vertices. A vertex is a point in 3D space containing an X, Y, and a Z coordinate between -1 and +1
     pub vertex_buffer: wgpu::Buffer,
@@ -257,6 +260,7 @@ pub struct Camera {
     pub(crate) add_position_and_target: bool,
 }
 
+#[derive(Debug, Clone)]
 pub struct LightManager {
     pub ambient_color: crate::uniform_type::Array4,
     pub ambient_strength: f32,
@@ -337,6 +341,7 @@ impl Default for ShaderSettings {
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait EnginePlugin: Any {
+    /// This is ran before any of the render events, it's generally used to capture raw input.
     fn update_events(
         &mut self,
         _renderer: &mut crate::Renderer,
@@ -347,6 +352,7 @@ pub trait EnginePlugin: Any {
         _camera: &mut crate::Camera,
     );
 
+    /// ran after an update loop code is done on each frame
     fn update(
         &mut self,
         _renderer: &mut crate::Renderer,
@@ -394,7 +400,7 @@ pub enum TextureFormat {
 }
 
 /// This function helps in converting pixel value to the value that is between -1 and +1
-pub fn normalize(value: f32, max: u32) -> f32 {
+pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
     let mut result = value / max as f32;
 
     if value == max as f32 {
@@ -407,11 +413,4 @@ pub fn normalize(value: f32, max: u32) -> f32 {
     } else {
         return -1.0;
     }
-}
-
-/// Returns
-pub fn percentage(amount: f32, of: f32) -> f32 {
-    let result = amount / of;
-
-    return result;
 }

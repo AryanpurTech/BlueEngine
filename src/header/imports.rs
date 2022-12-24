@@ -52,5 +52,11 @@ pub use winit_input_helper::WinitInputHelper as InputHelper;
 pub use wgpu;
 /// all of winit
 pub use winit;
+/// all of nalgebra_glm
+pub use nalgebra_glm as glm;
+/// all of image
+pub use image as image;
+/// all of downcast
+pub use downcast as downcast;
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;

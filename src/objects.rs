@@ -5,8 +5,8 @@
 */
 
 use crate::header::{
-    normalize, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
-    TextureData, Textures, Vertex,
+    pixel_to_cartesian, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer,
+    RotateAxis, TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -132,12 +132,6 @@ impl Engine {
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
-        /*for i in self.vertices.iter_mut() {
-            i.position[0] *= x;
-            i.position[1] *= y;
-            i.position[2] *= z;
-        }*/
-
         self.size.0 *= x;
         self.size.1 *= y;
         self.size.2 *= z;
@@ -158,8 +152,8 @@ impl Object {
         window_size: winit::dpi::PhysicalSize<u32>,
     ) {
         let difference_in_width = if self.size.0 != 0.0 && width != 0.0 {
-            let a = normalize(width, window_size.width);
-            let b = normalize(self.size.0, window_size.width);
+            let a = pixel_to_cartesian(width, window_size.width);
+            let b = pixel_to_cartesian(self.size.0, window_size.width);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -170,8 +164,8 @@ impl Object {
         };
 
         let difference_in_height = if self.size.1 != 0.0 && height != 0.0 {
-            let a = normalize(height, window_size.height);
-            let b = normalize(self.size.1, window_size.height);
+            let a = pixel_to_cartesian(height, window_size.height);
+            let b = pixel_to_cartesian(self.size.1, window_size.height);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -181,8 +175,8 @@ impl Object {
             0.0
         };
         let difference_in_depth = if self.size.2 != 0.0 && depth != 0.0 {
-            let a = normalize(depth, window_size.width);
-            let b = normalize(self.size.2, window_size.width);
+            let a = pixel_to_cartesian(depth, window_size.width);
+            let b = pixel_to_cartesian(self.size.2, window_size.width);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -243,42 +237,6 @@ impl Object {
 
     /// Sets the position of the object in 3D space relative to the window
     pub fn position(&mut self, x: f32, y: f32, z: f32) {
-        /*
-        let difference = ((self.position.0 - x).powf(2.0)
-            + (self.position.1 - y).powf(2.0)
-            + (self.position.2 - z).powf(2.0))
-        .sqrt();
-        let normalized_target_x = if (self.position.0 - x) == 0.0 {
-            0.0
-        } else {
-            let new_difference = normalize(difference, window_size.width);
-            if self.position.0 > x {
-                new_difference * -1.0
-            } else {
-                new_difference
-            }
-        };
-        let normalized_target_y = if (self.position.1 - y) == 0.0 {
-            0.0
-        } else {
-            let new_difference = normalize(difference, window_size.height);
-            if self.position.1 > y {
-                new_difference * -1.0
-            } else {
-                new_difference
-            }
-        };
-        let normalized_target_z = if (self.position.2 - z) == 0.0 {
-            0.0
-        } else {
-            let new_difference = normalize(difference, window_size.width);
-            if self.position.2 > z {
-                new_difference * -1.0
-            } else {
-                new_difference
-            }
-        };*/
-
         self.translate(
             (self.position.0 - x) * -1f32,
             (self.position.1 - y) * -1f32,
@@ -333,8 +291,7 @@ impl Object {
     }
 
     pub(crate) fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
-        let updated_buffer =
-            renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
+        let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = updated_buffer;
 
         Ok(())
@@ -368,6 +325,7 @@ impl Object {
     }
 }
 
+#[derive(Debug)]
 pub struct ShaderBuilder {
     pub blocks: String,
     pub input_and_output: String,

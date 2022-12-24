@@ -40,4 +40,4 @@ fn main() {
 
 * Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
-*the credits to the image on top is by NotPB*
+*the credits to the image on top: NotPB*
