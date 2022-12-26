@@ -4,6 +4,7 @@
  * The license is same as the one on the root.
 */
 
+use crate::{StringBuffer, ObjectStorage};
 use crate::header::{
     pixel_to_cartesian, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer,
     RotateAxis, TextureData, Textures, Vertex,
@@ -14,7 +15,7 @@ use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_
 impl Renderer {
     pub fn build_object(
         &mut self,
-        name: &'static str,
+        name: impl StringBuffer,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
@@ -27,7 +28,7 @@ impl Renderer {
         ])?;
 
         let shader = self.build_shader(
-            name,
+            name.as_str(),
             DEFAULT_SHADER.to_string(),
             Some(&uniform.1),
             settings.shader_settings,
@@ -41,7 +42,7 @@ impl Renderer {
         )?;
 
         Ok(Object {
-            name: name,
+            name: name.as_string(),
             vertices: verticies,
             indices: indicies,
             pipeline: Pipeline {
@@ -81,16 +82,16 @@ impl Engine {
     /// Creates a new object
     pub fn new_object(
         &mut self,
-        name: &'static str,
+        name: impl StringBuffer,
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
     ) -> anyhow::Result<()> {
         Self::add_object(
             &mut self.objects,
-            name,
+            name.clone(),
             self.renderer
-                .build_object(name, verticies, indicies, settings)?,
+                .build_object(name.clone(), verticies, indicies, settings)?,
         )?;
 
         Self::update_object(&mut self.objects, name, |object| {
@@ -108,22 +109,22 @@ impl Engine {
     }
 
     pub fn add_object(
-        objects: &mut std::collections::HashMap<&'static str, Object>,
-        key: &'static str,
+        objects: &mut ObjectStorage,
+        key: impl StringBuffer,
         object: Object,
     ) -> anyhow::Result<()> {
-        objects.insert(key, object);
+        objects.insert(key.as_string(), object);
 
         Ok(())
     }
 
     /// Allows for safe update of objects
     pub fn update_object<T: Fn(&mut Object)>(
-        objects: &mut std::collections::HashMap<&'static str, Object>,
-        key: &'static str,
+        objects: &mut ObjectStorage,
+        key: impl StringBuffer,
         callback: T,
     ) {
-        let object = objects.get_mut(key);
+        let object = objects.get_mut(&key.as_string());
         if object.is_some() {
             callback(object.unwrap())
         }
@@ -299,7 +300,7 @@ impl Object {
 
     pub(crate) fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_shader = renderer.build_shader(
-            self.name,
+            self.name.as_str(),
             self.shader_builder.build_shader(),
             Some(&self.uniform_layout),
             self.shader_settings,

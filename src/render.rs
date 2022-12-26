@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    header::{uniform_type, Camera, Object, Renderer, ShaderSettings, TextureData},
-    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
+    header::{uniform_type, Camera, Renderer, ShaderSettings, TextureData},
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE}, ObjectStorage,
 };
 use anyhow::Result;
 use wgpu::Features;
@@ -195,7 +195,7 @@ impl Renderer {
 
     pub(crate) fn pre_render(
         &mut self,
-        objects: &std::collections::HashMap<&'static str, Object>,
+        objects: &ObjectStorage,
         camera: &Camera,
     ) -> Result<
         Option<(

@@ -4,17 +4,17 @@
  * The license is same as the one on the root.
 */
 
-use crate::{header::{ObjectSettings, Vertex}, Renderer, Object};
+use crate::{header::{ObjectSettings, Vertex}, Renderer, StringBuffer, ObjectStorage};
 
 /// Creates a 2D triangle
 pub fn triangle(
-    name: &'static str,
+    name: impl StringBuffer,
     settings: ObjectSettings,
     renderer: &mut Renderer,
-    objects: &mut std::collections::HashMap<&'static str, Object>,
+    objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
     let object = renderer.build_object(
-        name,
+        name.clone(),
         vec![
             Vertex {
                 position: [0.0, 1.0, 0.0],
@@ -35,20 +35,20 @@ pub fn triangle(
         vec![0, 1, 2],
         settings,
     )?;
-    objects.insert(name, object);
+    objects.insert(name.as_string(), object);
 
     Ok(())
 }
 
 /// Creates a 2D square
 pub fn square(
-    name: &'static str,
+    name: impl StringBuffer,
     settings: ObjectSettings,
     renderer: &mut Renderer,
-    objects: &mut std::collections::HashMap<&'static str, Object>,
+    objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
     let object = renderer.build_object(
-        name,
+        name.clone(),
         vec![
             Vertex {
                 position: [1.0, 1.0, 0.0],
@@ -74,7 +74,7 @@ pub fn square(
         vec![2, 1, 0, 2, 0, 3],
         settings,
     )?;
-    objects.insert(name, object);
+    objects.insert(name.as_string(), object);
 
     Ok(())
 }

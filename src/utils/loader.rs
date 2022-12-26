@@ -1,14 +1,14 @@
-use crate::{Engine, ObjectSettings, Vertex};
+use crate::{Engine, ObjectSettings, Vertex, StringBuffer};
 
 pub fn load_gltf<'a>(
-    name: &'static str,
-    path: &'static str,
+    name: impl StringBuffer,
+    path: impl StringBuffer,
     engine: &mut Engine,
 ) -> anyhow::Result<()> {
     let mut verticies = Vec::<Vertex>::new();
     let mut indicies = Vec::<u16>::new();
 
-    let (gltf, buffers, _) = gltf::import(path)?;
+    let (gltf, buffers, _) = gltf::import(path.as_str())?;
     for mesh in gltf.meshes() {
         for primitive in mesh.primitives() {
             let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));

@@ -6,9 +6,9 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::header::{Engine, ObjectSettings, Vertex, WindowDescriptor};
+use blue_engine::{header::{Engine, ObjectSettings, Vertex, WindowDescriptor}, StringBuffer};
 
-pub fn square(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
+pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()> {
     engine.new_object(
         name,
         vec![
@@ -35,7 +35,6 @@ pub fn square(name: &'static str, engine: &mut Engine) -> anyhow::Result<()> {
         ],
         vec![2, 1, 0, 2, 0, 3],
         ObjectSettings {
-            name: name,
             camera_effect: false,
             ..Default::default()
         },

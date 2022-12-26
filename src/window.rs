@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{Camera, Engine, Object, Renderer, WindowDescriptor};
+use crate::{header::{Camera, Engine, Renderer, WindowDescriptor}, ObjectStorage};
 
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
@@ -77,7 +77,7 @@ impl Engine {
                 // Core
                 &mut Renderer,
                 &mut Window,
-                &mut std::collections::HashMap<&'static str, Object>,
+                &mut ObjectStorage,
                 &winit_input_helper::WinitInputHelper,
                 &mut Camera,
                 &mut Vec<Box<dyn crate::EnginePlugin>>,

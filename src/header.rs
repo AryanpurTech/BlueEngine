@@ -11,6 +11,8 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
+pub type ObjectStorage = std::collections::HashMap<String, Object>;
+
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -56,7 +58,7 @@ impl Vertex {
 #[derive(Debug)]
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
-    pub name: &'static str,
+    pub name: String,
     /// A list of Vertex
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
@@ -94,8 +96,6 @@ pub struct Object {
 /// Extra settings to customize objects on time of creation
 #[derive(Debug, Clone, Copy)]
 pub struct ObjectSettings {
-    /// Give your object a name, which can help later on for debugging.
-    pub name: &'static str,
     /// Dictates the size of your object in pixels
     pub size: (f32, f32, f32),
     pub scale: (f32, f32, f32),
@@ -111,7 +111,6 @@ pub struct ObjectSettings {
 impl Default for ObjectSettings {
     fn default() -> Self {
         Self {
-            name: "Object!",
             size: (100f32, 100f32, 100f32),
             scale: (1f32, 1f32, 1f32),
             position: (0f32, 0f32, 0f32),
@@ -160,7 +159,7 @@ pub struct Engine {
     pub window: winit::window::Window,
     /// The object system is a way to make it easier to work with the engine. Obviously you can work without it, but it's for those who
     /// do not have the know-how, or wish to handle all the work of rendering data manually.
-    pub objects: std::collections::HashMap<&'static str, Object>,
+    pub objects: ObjectStorage,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
     /// Handles all engine plugins
@@ -264,9 +263,9 @@ pub struct Camera {
 pub struct LightManager {
     pub ambient_color: crate::uniform_type::Array4,
     pub ambient_strength: f32,
-    pub affected_objects: Vec<&'static str>,
+    pub affected_objects: Vec<String>,
     pub light_objects:
-        std::collections::BTreeMap<&'static str, ([f32; 3], crate::uniform_type::Array4)>,
+        std::collections::BTreeMap<String, ([f32; 3], crate::uniform_type::Array4)>,
 }
 
 // ? These definitions are taken from wgpu API docs
@@ -346,7 +345,7 @@ pub trait EnginePlugin: Any {
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
-        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        _objects: &mut ObjectStorage,
         _events: &crate::Event<()>,
         _input: &crate::InputHelper,
         _camera: &mut crate::Camera,
@@ -357,7 +356,7 @@ pub trait EnginePlugin: Any {
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
-        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        _objects: &mut ObjectStorage,
         _camera: &mut crate::Camera,
         _input: &crate::InputHelper,
         _encoder: &mut crate::CommandEncoder,
@@ -414,3 +413,28 @@ pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
         return -1.0;
     }
 }
+
+pub trait StringBuffer: StringBufferTrait + Clone {}
+pub trait StringBufferTrait {
+    fn as_str(&self) -> &str;
+    fn as_string(&self) -> String;
+}
+
+impl StringBufferTrait for String {
+    fn as_str(&self) -> &str {
+        self.as_ref()
+    }
+    fn as_string(&self) -> String {
+        self.clone()
+    }
+}
+impl StringBuffer for String {}
+impl StringBufferTrait for &str {
+    fn as_str(&self) -> &str {
+        self
+    }
+    fn as_string(&self) -> String {
+        self.to_string()
+    }
+}
+impl StringBuffer for &str {}

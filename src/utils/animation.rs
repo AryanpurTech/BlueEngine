@@ -1,3 +1,5 @@
+use crate::ObjectStorage;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Operation {
     pub translation: (f32, f32, f32),
@@ -34,7 +36,7 @@ impl Animation {
 
     pub fn animate(
         &mut self,
-        objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        objects: &mut ObjectStorage,
     ) {
         let elapsed = self.time.elapsed().as_millis();
         if elapsed <= self.target {

@@ -93,7 +93,7 @@ fn main() {
     let mut val = 0f32;
 
     let mut lm = LightManager::new();
-    lm.set_object_as_light("cube");
+    lm.set_object_as_light("cube".to_string());
 
     let fly_camera = FlyCamera::new(&mut engine.camera);
     engine.plugins.push(Box::new(fly_camera));

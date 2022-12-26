@@ -1,12 +1,12 @@
-use crate::{ObjectSettings, Vertex, Renderer, Object};
+use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
 
 pub fn cube(
-    name: &'static str,
+    name: impl StringBuffer,
     renderer: &mut Renderer,
-    objects: &mut std::collections::HashMap<&'static str, Object>,
+    objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
     let object = renderer.build_object(
-        name,
+        name.clone(),
         vec![
             // Front Face
             Vertex {
@@ -143,22 +143,19 @@ pub fn cube(
             16, 17, 18, 18, 19, 16, // front
             20, 21, 22, 22, 23, 20, // back
         ],
-        ObjectSettings {
-            name,
-            ..Default::default()
-        },
+        ObjectSettings::default(),
     )?;
-    objects.insert(name, object);
+    objects.insert(name.as_string(), object);
 
     Ok(())
 }
 
 /// details = (stacks, sectors, radius)
 pub fn uv_sphere(
-    name: &'static str,
+    name: impl StringBuffer,
     details: (usize, usize, f32),
     renderer: &mut Renderer,
-    objects: &mut std::collections::HashMap<&'static str, Object>,
+    objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
@@ -206,15 +203,12 @@ pub fn uv_sphere(
     }
 
     let object = renderer.build_object(
-        name,
+        name.clone(),
         vertices,
         indices,
-        ObjectSettings {
-            name,
-            ..Default::default()
-        },
+        ObjectSettings::default(),
     )?;
-    objects.insert(name, object);
+    objects.insert(name.as_string(), object);
 
     Ok(())
 }

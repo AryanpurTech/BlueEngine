@@ -1,4 +1,4 @@
-use crate::Object;
+use crate::{ObjectStorage};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
@@ -25,17 +25,17 @@ impl crate::LightManager {
 
     pub fn update(
         &mut self,
-        objects: &mut std::collections::HashMap<&'static str, Object>,
+        objects: &mut ObjectStorage,
         renderer: &mut crate::Renderer,
         camera: &crate::Camera,
     ) -> anyhow::Result<()> {
-        let light_keys: Vec<&'static str> = self.light_objects.keys().map(|x| *x).collect();
+        let light_keys: Vec<String> = self.light_objects.keys().map(|x| x.clone()).collect();
 
         for i in objects {
             let i = i.1;
             if light_keys.contains(&i.name) {
                 self.light_objects.insert(
-                    i.name,
+                    i.name.clone(),
                     ([i.position.0, i.position.1, i.position.2], i.color),
                 );
             } else {
@@ -170,12 +170,12 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }"#
                     );
                     i.pipeline.shader = renderer.build_shader(
-                        i.name,
+                        i.name.as_str(),
                         i.shader_builder.build_shader(),
                         Some(&i.uniform_layout),
                         i.shader_settings,
                     )?;
-                    self.affected_objects.push(i.name);
+                    self.affected_objects.push(i.name.clone());
                 }
             }
         }
@@ -183,7 +183,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         Ok(())
     }
 
-    pub fn set_object_as_light(&mut self, object: &'static str) {
+    pub fn set_object_as_light(&mut self, object: String) {
         self.light_objects.insert(
             object,
             (

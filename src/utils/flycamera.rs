@@ -1,6 +1,6 @@
 use winit::window::Window;
 
-use crate::Camera;
+use crate::{Camera, ObjectStorage};
 
 pub struct FlyCamera {
     pub camera_right: nalgebra_glm::Vec3,
@@ -63,7 +63,7 @@ impl crate::EnginePlugin for FlyCamera {
         &mut self,
         _renderer: &mut crate::Renderer,
         window: &Window,
-        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        _objects: &mut ObjectStorage,
         events: &winit::event::Event<()>,
         input: &winit_input_helper::WinitInputHelper,
         camera: &mut Camera,
@@ -179,7 +179,7 @@ impl crate::EnginePlugin for FlyCamera {
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &Window,
-        _objects: &mut std::collections::HashMap<&'static str, crate::Object>,
+        _objects: &mut ObjectStorage,
         _camera: &mut Camera,
         _input: &crate::InputHelper,
         _encoder: &mut wgpu::CommandEncoder,
