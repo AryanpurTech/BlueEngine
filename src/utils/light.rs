@@ -31,7 +31,7 @@ impl crate::LightManager {
     ) -> anyhow::Result<()> {
         let light_keys: Vec<String> = self.light_objects.keys().map(|x| x.clone()).collect();
 
-        for i in objects {
+        for i in objects.iter_mut() {
             let i = i.1;
             if light_keys.contains(&i.name) {
                 self.light_objects.insert(

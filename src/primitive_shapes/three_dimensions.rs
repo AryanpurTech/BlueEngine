@@ -5,7 +5,7 @@ pub fn cube(
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
-    let object = renderer.build_object(
+    objects.new_object(
         name.clone(),
         vec![
             // Front Face
@@ -144,8 +144,8 @@ pub fn cube(
             20, 21, 22, 22, 23, 20, // back
         ],
         ObjectSettings::default(),
+        renderer
     )?;
-    objects.insert(name.as_string(), object);
 
     Ok(())
 }
@@ -202,13 +202,13 @@ pub fn uv_sphere(
         }
     }
 
-    let object = renderer.build_object(
+    objects.new_object(
         name.clone(),
         vertices,
         indices,
         ObjectSettings::default(),
+        renderer
     )?;
-    objects.insert(name.as_string(), object);
 
     Ok(())
 }

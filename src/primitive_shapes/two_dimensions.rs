@@ -13,7 +13,7 @@ pub fn triangle(
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
-    let object = renderer.build_object(
+    objects.new_object(
         name.clone(),
         vec![
             Vertex {
@@ -34,8 +34,8 @@ pub fn triangle(
         ],
         vec![0, 1, 2],
         settings,
+        renderer
     )?;
-    objects.insert(name.as_string(), object);
 
     Ok(())
 }
@@ -47,7 +47,7 @@ pub fn square(
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> anyhow::Result<()> {
-    let object = renderer.build_object(
+    objects.new_object(
         name.clone(),
         vec![
             Vertex {
@@ -73,8 +73,8 @@ pub fn square(
         ],
         vec![2, 1, 0, 2, 0, 3],
         settings,
+        renderer
     )?;
-    objects.insert(name.as_string(), object);
 
     Ok(())
 }

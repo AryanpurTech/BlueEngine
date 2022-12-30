@@ -9,7 +9,7 @@
 use blue_engine::{header::{Engine, ObjectSettings, Vertex, WindowDescriptor}, StringBuffer};
 
 pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()> {
-    engine.new_object(
+    engine.objects.new_object(
         name,
         vec![
             Vertex {
@@ -38,6 +38,7 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()
             camera_effect: false,
             ..Default::default()
         },
+        &mut engine.renderer
     )?;
 
     Ok(())

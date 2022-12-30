@@ -11,7 +11,25 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
-pub type ObjectStorage = std::collections::HashMap<String, Object>;
+#[derive(Debug)]
+pub struct ObjectStorage(std::collections::HashMap<String, Object>);
+impl std::ops::Deref for ObjectStorage {
+    type Target = std::collections::HashMap<String, Object>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl std::ops::DerefMut for ObjectStorage {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl ObjectStorage {
+    pub fn new() -> Self {
+        ObjectStorage(std::collections::HashMap::new())
+    }
+}
 
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU

@@ -52,7 +52,7 @@ pub fn load_gltf<'a>(
         }
     }
 
-    engine.new_object(name, verticies, indicies, ObjectSettings::default())?;
+    engine.objects.new_object(name, verticies, indicies, ObjectSettings::default(), &mut engine.renderer)?;
 
     Ok(())
 }

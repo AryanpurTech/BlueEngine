@@ -59,7 +59,7 @@ impl Engine {
             window,
             event_loop,
             renderer,
-            objects: std::collections::HashMap::new(),
+            objects: ObjectStorage::new(),
             camera,
             plugins: vec![],
         })

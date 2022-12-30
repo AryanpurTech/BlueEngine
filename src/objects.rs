@@ -6,7 +6,7 @@
 
 use crate::{StringBuffer, ObjectStorage};
 use crate::header::{
-    pixel_to_cartesian, uniform_type, Engine, Object, ObjectSettings, Pipeline, Renderer,
+    pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer,
     RotateAxis, TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
@@ -78,7 +78,7 @@ impl Renderer {
     }
 }
 
-impl Engine {
+impl ObjectStorage {
     /// Creates a new object
     pub fn new_object(
         &mut self,
@@ -86,15 +86,15 @@ impl Engine {
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
+        renderer: &mut Renderer
     ) -> anyhow::Result<()> {
-        Self::add_object(
-            &mut self.objects,
+        self.add_object(
             name.clone(),
-            self.renderer
+            renderer
                 .build_object(name.clone(), verticies, indicies, settings)?,
         )?;
 
-        Self::update_object(&mut self.objects, name, |object| {
+        self.update_object( name, |object| {
             object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
             object.position(
                 settings.position.0,
@@ -103,33 +103,32 @@ impl Engine {
             );
         });
 
-        //object.update(&mut self.renderer)?;
-
         Ok(())
     }
 
     pub fn add_object(
-        objects: &mut ObjectStorage,
+        &mut self,
         key: impl StringBuffer,
         object: Object,
     ) -> anyhow::Result<()> {
-        objects.insert(key.as_string(), object);
+        self.insert(key.as_string(), object);
 
         Ok(())
     }
 
     /// Allows for safe update of objects
     pub fn update_object<T: Fn(&mut Object)>(
-        objects: &mut ObjectStorage,
+        &mut self,
         key: impl StringBuffer,
         callback: T,
     ) {
-        let object = objects.get_mut(&key.as_string());
+        let object = self.get_mut(&key.as_string());
         if object.is_some() {
-            callback(object.unwrap())
+            callback(object.unwrap());
         }
     }
 }
+
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
@@ -143,6 +142,8 @@ impl Object {
         self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
             &nalgebra_glm::inverse(&self.transformation_matrix),
         ));
+
+        self.changed = true;
     }
     /// Resizes an object in pixels which are relative to the window
     pub fn resize(
