@@ -4,13 +4,13 @@
  * The license is same as the one on the root.
 */
 
-use crate::{StringBuffer, ObjectStorage};
 use crate::header::{
-    pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer,
-    RotateAxis, TextureData, Textures, Vertex,
+    pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
+    TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use crate::{ObjectStorage, StringBuffer};
 
 impl Renderer {
     pub fn build_object(
@@ -24,7 +24,12 @@ impl Renderer {
 
         let uniform = self.build_uniform_buffer(&vec![
             self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-            self.build_uniform_buffer_part("Color", settings.color),
+            self.build_uniform_buffer_part(
+                "Color",
+                crate::uniform_type::Array4 {
+                    data: crate::utils::default_resources::DEFAULT_COLOR,
+                },
+            ),
         ])?;
 
         let shader = self.build_shader(
@@ -53,26 +58,31 @@ impl Renderer {
             },
             uniform_layout: uniform.1,
             size: (100f32, 100f32, 100f32),
-            scale: settings.scale,
-            position: (
-                settings.position.0,
-                settings.position.1,
-                settings.position.2,
-            ),
+            scale: (1f32, 1f32, 1f32),
+            position: (0f32, 0f32, 0f32),
             rotation: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
             inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
                 &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
             )),
-            uniform_color: settings.color,
-            color: settings.color,
+            uniform_color: crate::uniform_type::Array4 {
+                data: crate::utils::default_resources::DEFAULT_COLOR,
+            },
+            color: crate::uniform_type::Array4 {
+                data: crate::utils::default_resources::DEFAULT_COLOR,
+            },
             shader_builder: ShaderBuilder::new(settings.camera_effect),
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
             uniform_buffers: vec![
                 self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-                self.build_uniform_buffer_part("Color", settings.color),
+                self.build_uniform_buffer_part(
+                    "Color",
+                    crate::uniform_type::Array4 {
+                        data: crate::utils::default_resources::DEFAULT_COLOR,
+                    },
+                ),
             ],
         })
     }
@@ -86,42 +96,31 @@ impl ObjectStorage {
         verticies: Vec<Vertex>,
         indicies: Vec<u16>,
         settings: ObjectSettings,
-        renderer: &mut Renderer
+        renderer: &mut Renderer,
     ) -> anyhow::Result<()> {
         self.add_object(
             name.clone(),
-            renderer
-                .build_object(name.clone(), verticies, indicies, settings)?,
+            renderer.build_object(name.clone(), verticies, indicies, settings)?,
         )?;
 
-        self.update_object( name, |object| {
-            object.scale(settings.scale.0, settings.scale.1, settings.scale.2);
+        /*self.update_object(name, |object| {
+            object.scale(1f32, 1f32, 1f32);
             object.position(
-                settings.position.0,
-                settings.position.1,
-                settings.position.2,
+                0f32, 0f32, 0f32
             );
-        });
+        }); */
 
         Ok(())
     }
 
-    pub fn add_object(
-        &mut self,
-        key: impl StringBuffer,
-        object: Object,
-    ) -> anyhow::Result<()> {
+    pub fn add_object(&mut self, key: impl StringBuffer, object: Object) -> anyhow::Result<()> {
         self.insert(key.as_string(), object);
 
         Ok(())
     }
 
     /// Allows for safe update of objects
-    pub fn update_object<T: Fn(&mut Object)>(
-        &mut self,
-        key: impl StringBuffer,
-        callback: T,
-    ) {
+    pub fn update_object<T: Fn(&mut Object)>(&mut self, key: impl StringBuffer, callback: T) {
         let object = self.get_mut(&key.as_string());
         if object.is_some() {
             callback(object.unwrap());
@@ -259,7 +258,7 @@ impl Object {
         Ok(())
     }
 
-    /// Changes the main color of the object. If textures exist, the color of textures will change
+    /// Changes the main color of the object hat is sent to GPU. If textures exist, the color of textures will change
     pub fn set_uniform_color(
         &mut self,
         red: f32,
@@ -281,6 +280,13 @@ impl Object {
         self.changed = true;
 
         Ok(())
+    }
+
+    /// This will flag object as changed and altered, leading to rebuilding parts, or entirety on next frame.
+    /// Best used if you directly altered fields of the object. The functions normally flag the object as
+    /// changed on every call anyways. But this function is to manually flag it yourself.
+    pub fn flag_as_changed(&mut self) {
+        self.changed = true;
     }
 
     /// Update and apply changes done to an object
