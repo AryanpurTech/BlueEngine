@@ -52,7 +52,7 @@ impl Renderer {
                 uniform: Some(uniform.0),
             },
             uniform_layout: uniform.1,
-            size: settings.size,
+            size: (100f32, 100f32, 100f32),
             scale: settings.scale,
             position: (
                 settings.position.0,

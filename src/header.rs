@@ -114,8 +114,7 @@ pub struct Object {
 /// Extra settings to customize objects on time of creation
 #[derive(Debug, Clone, Copy)]
 pub struct ObjectSettings {
-    /// Dictates the size of your object in pixels
-    pub size: (f32, f32, f32),
+    /// Dictates the scale of your object in pixels
     pub scale: (f32, f32, f32),
     /// Dictates the position of your object in pixels
     pub position: (f32, f32, f32),
@@ -129,7 +128,6 @@ pub struct ObjectSettings {
 impl Default for ObjectSettings {
     fn default() -> Self {
         Self {
-            size: (100f32, 100f32, 100f32),
             scale: (1f32, 1f32, 1f32),
             position: (0f32, 0f32, 0f32),
             color: crate::uniform_type::Array4 {
