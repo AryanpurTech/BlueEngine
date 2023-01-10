@@ -2,9 +2,9 @@ use blue_engine::{
     header::{Engine, WindowDescriptor},
     primitive_shapes::cube,
     utils::{
-        animation::{Animation, Operation},
+        animation::{Animation},
         flycamera::FlyCamera,
-    },
+    }, AnimationKeyframe,
 };
 
 fn main() -> anyhow::Result<()> {
@@ -46,13 +46,21 @@ fn main() -> anyhow::Result<()> {
 
     let mut animation = Animation::new("floor");
     animation.keyframes.push((
-        2,
-        Operation {
-            translation: (0f32, 0f32, 0f32),
-            rotation: (30f32, 100f32, 0f32),
+        0.0,
+        AnimationKeyframe::default(),
+    ));
+    animation.keyframes.push((
+        5.0,
+        AnimationKeyframe {
+            position: (3f32, 0f32, 0f32).into(),
+            rotation: (45f32, 45f32, 0f32).into(),
+            ..Default::default()
         },
     ));
 
+    animation.start();
+
+    //engine.objects.get_mut("floor").unwrap().rotate(90f32, blue_engine::RotateAxis::X);
 
     engine.update_loop(move |_, _, objects, input, _, _| {
         /*let cube = objects.get_mut("floor").unwrap();

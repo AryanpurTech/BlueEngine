@@ -11,24 +11,21 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
-#[derive(Debug)]
-pub struct ObjectStorage(std::collections::HashMap<String, Object>);
-impl std::ops::Deref for ObjectStorage {
-    type Target = std::collections::HashMap<String, Object>;
+macro_rules! impl_deref {
+    ($struct:ty,$type:ty) => {
+        impl std::ops::Deref for $struct {
+            type Target = $type;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::ops::DerefMut for ObjectStorage {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-impl ObjectStorage {
-    pub fn new() -> Self {
-        ObjectStorage(std::collections::HashMap::new())
-    }
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+        impl std::ops::DerefMut for $struct {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+    };
 }
 
 /// Will contain all details about a vertex and will be sent to GPU
@@ -95,6 +92,7 @@ pub struct Object {
     /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub transformation_matrix: nalgebra_glm::Mat4,
+    pub rotation_matrix: nalgebra_glm::Mat4,
     /// Transformation matrix, but inversed
     pub inverse_transformation_matrix: crate::uniform_type::Matrix,
     /// The main color of your object
@@ -269,8 +267,7 @@ pub struct LightManager {
     pub ambient_color: crate::uniform_type::Array4,
     pub ambient_strength: f32,
     pub affected_objects: Vec<String>,
-    pub light_objects:
-        std::collections::BTreeMap<String, ([f32; 3], crate::uniform_type::Array4)>,
+    pub light_objects: std::collections::BTreeMap<String, ([f32; 3], crate::uniform_type::Array4)>,
 }
 
 // ? These definitions are taken from wgpu API docs
@@ -443,3 +440,62 @@ impl StringBufferTrait for &str {
     }
 }
 impl StringBuffer for &str {}
+
+// ========== For keyframe animation =============== //
+use keyframe_derive::CanTween;
+
+#[derive(CanTween, Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Point3 {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+impl Point3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+}
+impl Default for Point3 {
+    fn default() -> Self {
+        Self {
+            x: 0f32,
+            y: 0f32,
+            z: 0f32,
+        }
+    }
+}
+impl From<(f32, f32, f32)> for Point3 {
+    fn from(data: (f32, f32, f32)) -> Self {
+        Self {
+            x: data.0,
+            y: data.1,
+            z: data.2,
+        }
+    }
+}
+
+#[derive(CanTween, Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct AnimationKeyframe {
+    pub position: Point3,
+    pub rotation: Point3,
+    pub size: Point3,
+}
+impl Default for AnimationKeyframe {
+    fn default() -> Self {
+        Self {
+            position: Point3::default(),
+            rotation: Point3::default(),
+            size: Point3::default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ObjectStorage(std::collections::HashMap<String, Object>);
+impl ObjectStorage {
+    pub fn new() -> Self {
+        ObjectStorage(std::collections::HashMap::new())
+    }
+}
+
+impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);

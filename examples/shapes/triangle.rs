@@ -14,7 +14,13 @@ use blue_engine::{
 pub fn main() {
     let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    triangle("Triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();
+    triangle(
+        "Triangle",
+        ObjectSettings::default(),
+        &mut engine.renderer,
+        &mut engine.objects,
+    )
+    .unwrap();
 
     engine
         .update_loop(move |_, _, _, _, _, _| {})

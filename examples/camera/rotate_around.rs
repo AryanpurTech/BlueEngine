@@ -19,7 +19,6 @@ fn main() {
         "Rotating Square",
         ObjectSettings {
             // and set the size
-            size: (500f32, 500f32, 1f32),
             // we need it to not cull it's back face so that it's visible on both side
             shader_settings: ShaderSettings {
                 cull_mode: None,

@@ -45,7 +45,7 @@ impl Engine {
 
         // bind the loop to window
         #[cfg(not(feature = "android"))]
-        let window = new_window.build(&event_loop).unwrap();
+        let window = new_window.build(&event_loop)?;
         #[cfg(feature = "android")]
         let window = Window::new(&event_loop).unwrap();
 

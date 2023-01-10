@@ -63,6 +63,7 @@ impl Renderer {
             rotation: (0f32, 0f32, 0f32),
             changed: false,
             transformation_matrix: DEFAULT_MATRIX_4.to_im(),
+            rotation_matrix: DEFAULT_MATRIX_4.to_im(),
             inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
                 &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
             )),
@@ -196,25 +197,30 @@ impl Object {
 
     /// Rotates the object in the axis you specify
     pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
-        let mut rotation_matrix = self.transformation_matrix;
+        // The reason for using different transformation matrix is because
+        // of alteration of translation that happens due to rotation. The
+        // solution suggested by https://github.com/tksuoran fixed this through
+        // separating the matrices and multiplying them back at the end.
+        let mut rotation_matrix = self.rotation_matrix;
         let axis = match axis {
             RotateAxis::X => {
-                self.rotation.0 += 1f32 * angle;
-                nalgebra_glm::vec3(0.0, 1.0, 0.0)
+                self.rotation.0 += angle;
+                nalgebra_glm::Vec3::x_axis()
             }
             RotateAxis::Y => {
-                self.rotation.1 += 1f32 * angle;
-                nalgebra_glm::vec3(1.0, 0.0, 0.0)
+                self.rotation.1 += angle;
+                nalgebra_glm::Vec3::y_axis()
             }
             RotateAxis::Z => {
-                self.rotation.2 += 1f32 * angle;
-                nalgebra_glm::vec3(0.0, 0.0, 1.0)
+                self.rotation.2 += angle;
+                nalgebra_glm::Vec3::z_axis()
             }
         };
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle, &axis);
-        self.transformation_matrix = rotation_matrix;
+
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis);
+        self.rotation_matrix = rotation_matrix;
         self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
-            &nalgebra_glm::inverse(&self.transformation_matrix),
+            &nalgebra_glm::inverse(&(self.transformation_matrix * rotation_matrix)),
         ));
 
         self.changed = true;
@@ -320,7 +326,7 @@ impl Object {
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            uniform_type::Matrix::from_im(self.transformation_matrix),
+            uniform_type::Matrix::from_im(self.transformation_matrix * self.rotation_matrix),
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
 
