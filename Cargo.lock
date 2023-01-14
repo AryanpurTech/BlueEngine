@@ -150,7 +150,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
 name = "blue_engine"
-version = "0.4.21"
+version = "0.4.22"
 dependencies = [
  "android_logger",
  "anyhow",
@@ -160,8 +160,6 @@ dependencies = [
  "futures",
  "gltf",
  "image 0.24.3",
- "keyframe",
- "keyframe_derive",
  "log",
  "nalgebra-glm",
  "wgpu",
@@ -1090,26 +1088,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keyframe"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60708bf7981518d09095d6f5673ce5cf6a64f1e0d9708b554f670e6d9d2bd9a9"
-dependencies = [
- "mint",
- "num-traits",
-]
-
-[[package]]
-name = "keyframe_derive"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "377d191d4db9904c659a7336fc943feb17bc737e18e8d7dbf4c3cfc86698f610"
-dependencies = [
- "quote",
- "syn",
-]
-
-[[package]]
 name = "khronos-egl"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1147,12 +1125,6 @@ dependencies = [
  "cfg-if",
  "winapi",
 ]
-
-[[package]]
-name = "libm"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
 
 [[package]]
 name = "linux-raw-sys"
@@ -1258,12 +1230,6 @@ checksum = "d2b29bd4bc3f33391105ebee3589c19197c4271e3e5a9ec9bfe8127eeff8f082"
 dependencies = [
  "adler",
 ]
-
-[[package]]
-name = "mint"
-version = "0.5.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
 name = "mio"
@@ -1485,7 +1451,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
- "libm",
 ]
 
 [[package]]
