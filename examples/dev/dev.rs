@@ -1,7 +1,7 @@
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4, flycamera::FlyCamera, loader::load_gltf},
+    utils::{default_resources::DEFAULT_MATRIX_4, loader::load_gltf},
     Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
@@ -95,13 +95,8 @@ fn main() {
     let mut lm = LightManager::new();
     lm.set_object_as_light("cube".to_string());
 
-    let fly_camera = FlyCamera::new(&mut engine.camera);
-    engine.plugins.push(Box::new(fly_camera));
-
     engine
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
-            let fly_camera = plugins[0].downcast_mut::<FlyCamera>().unwrap();
-            fly_camera.test();
 
             lm.update(objects, renderer, &camera)
                 .expect("Couldn't add light");

@@ -89,9 +89,10 @@ pub struct Object {
     pub rotation: (f32, f32, f32),
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
-    /// Transformation matrix helps to apply changes to your object, including position, orientation, ...
+    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub transformation_matrix: nalgebra_glm::Mat4,
+    pub position_matrix: nalgebra_glm::Mat4,
+    pub scale_matrix: nalgebra_glm::Mat4,
     pub rotation_matrix: nalgebra_glm::Mat4,
     /// Transformation matrix, but inversed
     pub inverse_transformation_matrix: crate::uniform_type::Matrix,

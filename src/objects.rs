@@ -62,7 +62,8 @@ impl Renderer {
             position: (0f32, 0f32, 0f32),
             rotation: (0f32, 0f32, 0f32),
             changed: false,
-            transformation_matrix: DEFAULT_MATRIX_4.to_im(),
+            position_matrix: DEFAULT_MATRIX_4.to_im(),
+            scale_matrix: DEFAULT_MATRIX_4.to_im(),
             rotation_matrix: DEFAULT_MATRIX_4.to_im(),
             inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
                 &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
@@ -136,12 +137,10 @@ impl Object {
         self.size.1 *= y;
         self.size.2 *= z;
 
-        let transformation_matrix = self.transformation_matrix;
+        let transformation_matrix = self.scale_matrix;
         let result = nalgebra_glm::scale(&transformation_matrix, &nalgebra_glm::vec3(x, y, z));
-        self.transformation_matrix = result;
-        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
-            &nalgebra_glm::inverse(&self.transformation_matrix),
-        ));
+        self.scale_matrix = result;
+        self.inverse_matrices();
 
         self.changed = true;
     }
@@ -219,9 +218,7 @@ impl Object {
 
         rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis);
         self.rotation_matrix = rotation_matrix;
-        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
-            &nalgebra_glm::inverse(&(self.transformation_matrix * rotation_matrix)),
-        ));
+        self.inverse_matrices();
 
         self.changed = true;
     }
@@ -232,13 +229,11 @@ impl Object {
         self.position.1 -= y;
         self.position.2 -= z;
 
-        let mut position_matrix = self.transformation_matrix;
+        let mut position_matrix = self.position_matrix;
         position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
-        self.transformation_matrix = position_matrix;
-        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
-            &nalgebra_glm::inverse(&self.transformation_matrix),
-        ));
+        self.position_matrix = position_matrix;
 
+        self.inverse_matrices();
         self.changed = true;
     }
 
@@ -295,6 +290,12 @@ impl Object {
         self.changed = true;
     }
 
+    pub fn inverse_matrices(&mut self) {
+        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
+            &nalgebra_glm::inverse(&(self.position_matrix * self.rotation_matrix * self.scale_matrix)),
+        ));
+    }
+
     /// Update and apply changes done to an object
     pub fn update(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.update_vertex_buffer(renderer)?;
@@ -326,7 +327,7 @@ impl Object {
     pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            uniform_type::Matrix::from_im(self.transformation_matrix * self.rotation_matrix),
+            uniform_type::Matrix::from_im(self.position_matrix * self.rotation_matrix * self.scale_matrix),
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
 
