@@ -263,14 +263,6 @@ pub struct Camera {
     pub(crate) add_position_and_target: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct LightManager {
-    pub ambient_color: crate::uniform_type::Array4,
-    pub ambient_strength: f32,
-    pub affected_objects: Vec<String>,
-    pub light_objects: std::collections::BTreeMap<String, ([f32; 3], crate::uniform_type::Array4)>,
-}
-
 // ? These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
 pub struct ShaderSettings {

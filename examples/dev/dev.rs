@@ -1,8 +1,8 @@
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4, loader::load_gltf},
-    Engine, LightManager, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
+    utils::{default_resources::DEFAULT_MATRIX_4},
+    Engine, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
 
@@ -30,13 +30,6 @@ fn main() {
         .unwrap()
         .set_color(1f32, 0f32, 0f32, 1f32);
     //cube.scale(0.3, 0.3, 0.3);
-
-    let test = load_gltf(
-        "monke",
-        "/home/elhamaryanpur/Desktop/Projects/Blue Engine/Blue Engine/resources/monkey.glb",
-        &mut engine,
-    )
-    .unwrap();
 
     engine
         .objects
@@ -92,14 +85,9 @@ fn main() {
     let mut has_border = false;
     let mut val = 0f32;
 
-    let mut lm = LightManager::new();
-    lm.set_object_as_light("cube".to_string());
-
     engine
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
 
-            lm.update(objects, renderer, &camera)
-                .expect("Couldn't add light");
 
             let o = renderer.build_object("haha", Vec::new(), Vec::new(), ObjectSettings::default());
             

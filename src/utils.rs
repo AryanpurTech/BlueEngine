@@ -6,7 +6,3 @@
 
 pub mod camera;
 pub mod default_resources;
-pub mod light;
-
-#[cfg(feature = "model_loader")]
-pub mod loader;

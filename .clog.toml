@@ -1,0 +1,4 @@
+[clog]
+repository = "https://github.com/AryanpurTech/BlueEngine"
+changelog = "CHANGELOG.md"
+from-latest-tag = true

@@ -290,10 +290,16 @@ impl Object {
         self.changed = true;
     }
 
+    /// same as flag_as_changed, but inverse
+    pub fn flag_as_unchanged(&mut self) {
+        self.changed = false;
+    }
+
     pub fn inverse_matrices(&mut self) {
-        self.inverse_transformation_matrix = Matrix::from_im(nalgebra_glm::transpose(
-            &nalgebra_glm::inverse(&(self.position_matrix * self.rotation_matrix * self.scale_matrix)),
-        ));
+        self.inverse_transformation_matrix =
+            Matrix::from_im(nalgebra_glm::transpose(&nalgebra_glm::inverse(
+                &(self.position_matrix * self.rotation_matrix * self.scale_matrix),
+            )));
     }
 
     /// Update and apply changes done to an object
@@ -305,17 +311,17 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+    pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = updated_buffer;
 
         Ok(())
     }
 
-    pub(crate) fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+    pub fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_shader = renderer.build_shader(
             self.name.as_str(),
-            self.shader_builder.build_shader(),
+            self.shader_builder.shader.clone(),
             Some(&self.uniform_layout),
             self.shader_settings,
         )?;
@@ -324,10 +330,12 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+    pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            uniform_type::Matrix::from_im(self.position_matrix * self.rotation_matrix * self.scale_matrix),
+            uniform_type::Matrix::from_im(
+                self.position_matrix * self.rotation_matrix * self.scale_matrix,
+            ),
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
 
@@ -342,46 +350,44 @@ impl Object {
 
 #[derive(Debug)]
 pub struct ShaderBuilder {
-    pub blocks: String,
-    pub input_and_output: String,
-    pub texture_data: String,
-    pub vertex_stage: String,
-    pub fragment_stage: String,
+    pub shader: String,
 }
 
 impl ShaderBuilder {
     pub fn new(camera_effect: bool) -> Self {
         Self {
-            blocks: format!(
-                // step 1 define blocks
-                "\n{}\n{}\n{}",
-                r#"
+            shader: format!(
+                "{}{}{}",
+                format!(
+                    // step 1 define blocks
+                    "\n{}\n{}\n{}",
+                    r#"
 struct TransformationUniforms {
     transform_matrix: mat4x4<f32>,
 };
 @group(2) @binding(0)
 var<uniform> transform_uniform: TransformationUniforms;"#,
-                r#"
+                    r#"
 struct FragmentUniforms {
     color: vec4<f32>,
 };
 @group(2) @binding(1)
 var<uniform> fragment_uniforms: FragmentUniforms;"#,
-                if camera_effect {
-                    r#"
+                    if camera_effect {
+                        r#"
 struct CameraUniforms {
     camera_matrix: mat4x4<f32>,
 };
 @group(1) @binding(0)
 var<uniform> camera_uniform: CameraUniforms;"#
-                } else {
-                    ""
-                }
-            ),
-            input_and_output: format!(
-                // step 2 define input and output for vertex
-                "\n{}",
-                r#"struct VertexInput {
+                    } else {
+                        ""
+                    }
+                ),
+                format!(
+                    // step 2 define input and output for vertex
+                    "\n{}",
+                    r#"struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) texture_coordinates: vec2<f32>,
 };
@@ -389,51 +395,36 @@ var<uniform> camera_uniform: CameraUniforms;"#
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) texture_coordinates: vec2<f32>,
-};"#
-            ),
-            texture_data: format!(
-                // step 3 define texture data
-                "\n{}",
-                r#"@group(0) @binding(0)
+};
+
+@group(0) @binding(0)
 var texture_diffuse: texture_2d<f32>;
 
 @group(0) @binding(1)
 var sampler_diffuse: sampler;"#
-            ),
-            vertex_stage: format!(
-                // step 4 vertex stage according to data before
-                "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
-                r#"@vertex
+                ),
+                format!(
+                    // step 4 vertex stage according to data before
+                    "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
+                    r#"@vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;"#,
-                if camera_effect {
-                    "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
-                } else {
-                    "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
-                },
-                r#"return out;
-}"#
-            ),
-            fragment_stage: format!(
-                // step 5 fragment stage
-                "\n// ===== Fragment STAGE ===== //\n{}",
-                r#"@fragment
+                    if camera_effect {
+                        "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
+                    } else {
+                        "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
+                    },
+                    r#"return out;
+}
+
+// ===== Fragment STAGE ===== //
+@fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
 }"#
+                )
             ),
         }
-    }
-
-    pub(crate) fn build_shader(&self) -> String {
-        format!(
-            "{}{}{}{}{}",
-            self.blocks,
-            self.input_and_output,
-            self.texture_data,
-            self.vertex_stage,
-            self.fragment_stage
-        )
     }
 }

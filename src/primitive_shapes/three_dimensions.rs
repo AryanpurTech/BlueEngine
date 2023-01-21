@@ -151,6 +151,7 @@ pub fn cube(
 }
 
 /// details = (stacks, sectors, radius)
+/// example = (18, 36, 1f32)
 pub fn uv_sphere(
     name: impl StringBuffer,
     details: (usize, usize, f32),
