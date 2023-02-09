@@ -42,4 +42,6 @@ fn main() {
 
 * Check out the [utilities library](https://github.com/AryanpurTech/BlueEngineUtilities) for extra functionality with the engine
 
+* Check out the [editor](https://github.com/rustylabs/blue_flame)
+
 *the credits to the image on top: NotPB*
