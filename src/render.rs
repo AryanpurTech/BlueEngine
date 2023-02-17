@@ -6,7 +6,8 @@
 
 use crate::{
     header::{uniform_type, Camera, Renderer, ShaderSettings, TextureData},
-    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE}, ObjectStorage,
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
+    ObjectStorage,
 };
 use anyhow::Result;
 use wgpu::Features;
@@ -145,7 +146,6 @@ impl Renderer {
 
             default_data: None,
             camera: None,
-            custom_render_pass: None,
         };
 
         let default_texture = renderer.build_texture(
@@ -252,18 +252,20 @@ impl Renderer {
         render_pass.set_bind_group(1, &camera.uniform_data, &[]);
 
         for i in objects.iter() {
-            let i = i.1;
-            render_pass.set_pipeline(&i.pipeline.shader);
-            render_pass.set_bind_group(0, &i.pipeline.texture, &[]);
-            if i.pipeline.uniform.is_some() {
-                render_pass.set_bind_group(2, &i.pipeline.uniform.as_ref().unwrap(), &[]);
+            if i.1.is_visible {
+                let i = i.1;
+                render_pass.set_pipeline(&i.pipeline.shader);
+                render_pass.set_bind_group(0, &i.pipeline.texture, &[]);
+                if i.pipeline.uniform.is_some() {
+                    render_pass.set_bind_group(2, &i.pipeline.uniform.as_ref().unwrap(), &[]);
+                }
+                render_pass.set_vertex_buffer(0, i.pipeline.vertex_buffer.vertex_buffer.slice(..));
+                render_pass.set_index_buffer(
+                    i.pipeline.vertex_buffer.index_buffer.slice(..),
+                    wgpu::IndexFormat::Uint16,
+                );
+                render_pass.draw_indexed(0..i.pipeline.vertex_buffer.length, 0, 0..1);
             }
-            render_pass.set_vertex_buffer(0, i.pipeline.vertex_buffer.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(
-                i.pipeline.vertex_buffer.index_buffer.slice(..),
-                wgpu::IndexFormat::Uint16,
-            );
-            render_pass.draw_indexed(0..i.pipeline.vertex_buffer.length, 0, 0..1);
         }
         drop(render_pass);
 

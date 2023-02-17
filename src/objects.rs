@@ -86,6 +86,7 @@ impl Renderer {
                     },
                 ),
             ],
+            is_visible: true,
         })
     }
 }
@@ -311,11 +312,35 @@ impl Object {
         Ok(())
     }
 
+    /// Update and apply changes done to an object and returns a pipeline
+    pub fn update_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> anyhow::Result<(crate::VertexBuffers, crate::UniformBuffers, crate::Shaders)> {
+        let vertex_buffer = self.update_vertex_buffer_and_return(renderer)?;
+        let unifrom_buffer = self.update_uniform_buffer_and_return(renderer)?;
+        let shader = self.update_shader_and_return(renderer)?;
+        self.changed = false;
+        Ok((vertex_buffer, unifrom_buffer, shader))
+    }
+
     pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = updated_buffer;
 
         Ok(())
+    }
+
+    /// Returns the buffer with ownership
+    pub fn update_vertex_buffer_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> anyhow::Result<crate::VertexBuffers> {
+        let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
+        let updated_buffer_2 = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
+        self.pipeline.vertex_buffer = updated_buffer;
+
+        Ok(updated_buffer_2)
     }
 
     pub fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
@@ -328,6 +353,28 @@ impl Object {
         self.pipeline.shader = updated_shader;
 
         Ok(())
+    }
+
+    /// Returns the buffer with ownership
+    pub fn update_shader_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> anyhow::Result<crate::Shaders> {
+        let updated_shader = renderer.build_shader(
+            self.name.as_str(),
+            self.shader_builder.shader.clone(),
+            Some(&self.uniform_layout),
+            self.shader_settings,
+        )?;
+        let updated_shader2 = renderer.build_shader(
+            self.name.as_str(),
+            self.shader_builder.shader.clone(),
+            Some(&self.uniform_layout),
+            self.shader_settings,
+        )?;
+        self.pipeline.shader = updated_shader;
+
+        Ok(updated_shader2)
     }
 
     pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
@@ -345,6 +392,28 @@ impl Object {
         self.uniform_layout = updated_buffer.1;
 
         Ok(())
+    }
+
+    /// Returns the buffer with ownership
+    pub fn update_uniform_buffer_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> anyhow::Result<crate::UniformBuffers> {
+        self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
+            "Transformation Matrix",
+            uniform_type::Matrix::from_im(
+                self.position_matrix * self.rotation_matrix * self.scale_matrix,
+            ),
+        );
+        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
+
+        let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
+        let updated_buffer2 = renderer.build_uniform_buffer(&self.uniform_buffers)?;
+
+        self.pipeline.uniform = Some(updated_buffer.0);
+        self.uniform_layout = updated_buffer.1;
+
+        Ok(updated_buffer2.0)
     }
 }
 

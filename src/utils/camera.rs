@@ -166,4 +166,21 @@ impl Camera {
 
         Ok(())
     }
+
+    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame, and returns the bindgroup
+    pub fn update_view_projection_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> Result<crate::UniformBuffers> {
+        let updated_buffer = renderer
+            .build_uniform_buffer(&vec![renderer.build_uniform_buffer_part(
+                "Camera Uniform",
+                self.camera_uniform_buffer()
+                    .expect("Couldn't build camera projection"),
+            )])
+            .expect("Couldn't update the camera uniform buffer")
+            .0;
+
+        Ok(updated_buffer)
+    }
 }

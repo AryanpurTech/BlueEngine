@@ -65,6 +65,8 @@ impl Vertex {
         }
     }
 }
+unsafe impl Send for Vertex {}
+unsafe impl Sync for Vertex {}
 
 /// Objects make it easier to work with Blue Engine, it automates most of work needed for
 /// creating 3D objects and showing them on screen. A range of default objects are available
@@ -108,7 +110,11 @@ pub struct Object {
     pub camera_effect: bool,
     /// Uniform Buffers to be sent to GPU
     pub uniform_buffers: Vec<wgpu::Buffer>,
+    /// Should be rendered or not
+    pub is_visible: bool,
 }
+unsafe impl Send for Object {}
+unsafe impl Sync for Object {}
 
 /// Extra settings to customize objects on time of creation
 #[derive(Debug, Clone, Copy)]
@@ -126,6 +132,8 @@ impl Default for ObjectSettings {
         }
     }
 }
+unsafe impl Send for ObjectSettings {}
+unsafe impl Sync for ObjectSettings {}
 
 /// The engine is the main starting point of using the Blue Engine. Everything that runs on Blue Engine will be under this struct.
 /// The structure of engine is monolithic, but the underlying data and the way it works is not.
@@ -169,6 +177,8 @@ pub struct Engine {
     /// Handles all engine plugins
     pub plugins: Vec<Box<dyn crate::EnginePlugin>>,
 }
+unsafe impl Send for Engine {}
+unsafe impl Sync for Engine {}
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
 #[derive(Debug)]
@@ -178,6 +188,8 @@ pub struct Pipeline {
     pub texture: crate::Textures,
     pub uniform: Option<crate::UniformBuffers>,
 }
+unsafe impl Send for Pipeline {}
+unsafe impl Sync for Pipeline {}
 
 /// Container for vertex and index buffer
 #[derive(Debug)]
@@ -188,8 +200,11 @@ pub struct VertexBuffers {
     pub index_buffer: wgpu::Buffer,
     pub length: u32,
 }
+unsafe impl Send for VertexBuffers {}
+unsafe impl Sync for VertexBuffers {}
 
 // Main renderer class. this will contain all methods and data related to the renderer
+#[derive(Debug)]
 pub struct Renderer {
     pub surface: Option<wgpu::Surface>,
     #[cfg(feature = "android")]
@@ -205,9 +220,9 @@ pub struct Renderer {
     pub depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
     pub default_data: Option<(crate::Textures, crate::Shaders, crate::UniformBuffers)>,
     pub camera: Option<crate::UniformBuffers>,
-    pub custom_render_pass:
-        Option<Box<dyn FnMut(&mut wgpu::CommandEncoder, &wgpu::TextureView) + 'static>>,
 }
+unsafe impl Sync for Renderer {}
+unsafe impl Send for Renderer {}
 
 /// Descriptor and settings for a window.
 #[derive(Debug, Clone, Copy)]
@@ -238,6 +253,8 @@ impl std::default::Default for WindowDescriptor {
         }
     }
 }
+unsafe impl Send for WindowDescriptor {}
+unsafe impl Sync for WindowDescriptor {}
 
 /// Container for the camera feature. The settings here are needed for
 /// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
@@ -259,9 +276,11 @@ pub struct Camera {
     pub view_data: nalgebra_glm::Mat4,
     // For checking and rebuilding it's uniform buffer
     pub(crate) changed: bool,
-    pub(crate) uniform_data: crate::UniformBuffers,
+    pub uniform_data: crate::UniformBuffers,
     pub(crate) add_position_and_target: bool,
 }
+unsafe impl Send for Camera {}
+unsafe impl Sync for Camera {}
 
 // ? These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
@@ -332,6 +351,8 @@ impl Default for ShaderSettings {
         }
     }
 }
+unsafe impl Send for ShaderSettings {}
+unsafe impl Sync for ShaderSettings {}
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait EnginePlugin: Any {
@@ -366,6 +387,8 @@ pub enum RotateAxis {
     Y,
     Z,
 }
+unsafe impl Send for RotateAxis {}
+unsafe impl Sync for RotateAxis {}
 
 #[derive(Debug, Clone)]
 pub enum TextureData {
@@ -373,6 +396,8 @@ pub enum TextureData {
     Image(image::DynamicImage),
     Path(&'static str),
 }
+unsafe impl Send for TextureData {}
+unsafe impl Sync for TextureData {}
 
 /// Defines how the borders of texture would look like
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -384,14 +409,8 @@ pub enum TextureMode {
     /// Repeats the texture, but mirrors it on edges
     MirrorRepeat,
 }
-
-/// Defines file format of the texture to load
-pub enum TextureFormat {
-    PNG,
-    BMP,
-    JPEG,
-    PNM,
-}
+unsafe impl Send for TextureMode {}
+unsafe impl Sync for TextureMode {}
 
 /// This function helps in converting pixel value to the value that is between -1 and +1
 pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
@@ -441,5 +460,7 @@ impl ObjectStorage {
         ObjectStorage(std::collections::HashMap::new())
     }
 }
+unsafe impl Send for ObjectStorage {}
+unsafe impl Sync for ObjectStorage {}
 
 impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
