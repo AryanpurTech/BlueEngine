@@ -26,6 +26,16 @@ pub use wgpu::RenderPassDescriptor;
 /// Surface Texture
 pub use wgpu::TextureView;
 
+/// all of downcast
+pub use downcast;
+/// all of image
+pub use image;
+/// all of nalgebra_glm
+pub use nalgebra_glm as glm;
+/// all of wgpu
+pub use wgpu;
+/// all of winit
+pub use winit;
 /// WindowSize
 pub use winit::dpi::*;
 /// Device Events
@@ -44,19 +54,12 @@ pub use winit::event::VirtualKeyCode;
 pub use winit::event::WindowEvent;
 /// Event Loop
 pub use winit::event_loop::EventLoop;
+/// Fullscreen enum
+pub use winit::window::Fullscreen;
 /// Window export from winit
 pub use winit::window::Window;
 /// Input helper
 pub use winit_input_helper::WinitInputHelper as InputHelper;
-/// all of wgpu
-pub use wgpu;
-/// all of winit
-pub use winit;
-/// all of nalgebra_glm
-pub use nalgebra_glm as glm;
-/// all of image
-pub use image as image;
-/// all of downcast
-pub use downcast as downcast;
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+

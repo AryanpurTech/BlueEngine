@@ -5,13 +5,13 @@
 */
 
 use blue_engine::{
-    header::{Engine, ObjectSettings, ShaderSettings, WindowDescriptor},
+    header::{Engine, ObjectSettings, ShaderSettings},
     primitive_shapes::square,
 };
 
 fn main() {
     // Create the engine
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    let mut engine = Engine::new().expect("win");
 
     // create a square
     square(
@@ -27,7 +27,8 @@ fn main() {
             // and have default settings for the rest
             ..Default::default()
         },
-        &mut engine.renderer, &mut engine.objects,
+        &mut engine.renderer,
+        &mut engine.objects,
     )
     .unwrap();
 

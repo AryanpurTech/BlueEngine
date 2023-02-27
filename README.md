@@ -14,15 +14,13 @@ Hello World:
 
 ```rust
 use blue_engine::{
-    header::{
-        Engine, ObjectSettings, WindowDescriptor
-    },
+    header::{ Engine, ObjectSettings },
     primitive_shapes::triangle
 };
 
 fn main() {
     // initialize the engine
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    let mut engine = Engine::new().expect("win");
 
     // create a triangle
     triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();

@@ -4,13 +4,27 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{
-    header::{Engine, WindowDescriptor},
-    primitive_shapes::cube,
-};
+use blue_engine::{header::Engine, primitive_shapes::cube, PowerPreference, WindowDescriptor};
 
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    let mut engine = Engine::new_config(WindowDescriptor {
+        width: 1920,
+        height: 1080,
+        power_preference: blue_engine::PowerPreference::HighPerformance,
+        ..Default::default()
+    })
+    .expect("win");
+    engine
+        .window
+        .set_fullscreen(Some(blue_engine::winit::window::Fullscreen::Exclusive(
+            engine
+                .window
+                .current_monitor()
+                .unwrap()
+                .video_modes()
+                .next()
+                .unwrap(),
+        )));
 
     cube("Cube", &mut engine.renderer, &mut engine.objects).unwrap();
     engine

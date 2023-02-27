@@ -6,7 +6,10 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{header::{Engine, ObjectSettings, Vertex, WindowDescriptor}, StringBuffer};
+use blue_engine::{
+    header::{Engine, ObjectSettings, Vertex},
+    StringBuffer,
+};
 
 pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()> {
     engine.objects.new_object(
@@ -38,14 +41,14 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()
             camera_effect: false,
             ..Default::default()
         },
-        &mut engine.renderer
+        &mut engine.renderer,
     )?;
 
     Ok(())
 }
 
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    let mut engine = Engine::new().expect("win");
 
     let _ = square("Square", &mut engine).unwrap();
 

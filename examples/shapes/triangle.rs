@@ -7,12 +7,12 @@
 */
 
 use blue_engine::{
-    header::{Engine, ObjectSettings, WindowDescriptor},
+    header::{Engine, ObjectSettings},
     primitive_shapes::triangle,
 };
 
 pub fn main() {
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    let mut engine = Engine::new().expect("win");
 
     triangle(
         "Triangle",

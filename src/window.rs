@@ -4,7 +4,10 @@
  * The license is same as the one on the root.
 */
 
-use crate::{header::{Camera, Engine, Renderer, WindowDescriptor}, ObjectStorage};
+use crate::{
+    header::{Camera, Engine, Renderer, WindowDescriptor},
+    ObjectStorage,
+};
 
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
@@ -13,9 +16,19 @@ use winit::{
 };
 
 impl Engine {
+    /// Creates a new window in current thread using default settings.
+    pub fn new() -> anyhow::Result<Self> {
+        Self::new_inner(WindowDescriptor::default())
+    }
+
+    /// Creates a new window in current thread using provided settings.
+    pub fn new_config(settings: WindowDescriptor) -> anyhow::Result<Self> {
+        Self::new_inner(settings)
+    }
+
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
-    pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
+    pub(crate) fn new_inner(settings: WindowDescriptor) -> anyhow::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimentions of the window, as width and height
@@ -92,7 +105,7 @@ impl Engine {
             mut window,
             mut objects,
             mut camera,
-            mut plugins
+            mut plugins,
         } = self;
 
         // and get input events to handle them later
