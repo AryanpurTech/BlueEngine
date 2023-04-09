@@ -30,10 +30,10 @@ impl Renderer {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
 
         #[cfg(not(feature = "android"))]
-        let surface = Some(unsafe { instance.create_surface(window) });
+        let surface = Some(unsafe { instance.create_surface(window) }.unwrap());
         #[cfg(feature = "android")]
         let surface = None;
 
@@ -41,7 +41,7 @@ impl Renderer {
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: power_preference,
                 #[cfg(not(feature = "android"))]
-                compatible_surface: Some(surface.as_ref().unwrap()),
+                compatible_surface: Some(&surface.as_ref().unwrap()),
                 #[cfg(feature = "android")]
                 compatible_surface: surface,
                 force_fallback_adapter: false,
@@ -62,7 +62,16 @@ impl Renderer {
             .unwrap();
 
         #[cfg(not(feature = "android"))]
-        let tex_format = surface.as_ref().unwrap().get_supported_formats(&adapter)[0];
+        let tex_format = {
+            let format = surface.as_ref().unwrap().get_capabilities(&adapter);
+            format
+                .formats
+                .iter()
+                .copied()
+                .filter(|f| f.describe().srgb)
+                .next()
+                .unwrap_or(format.formats[0])
+        };
         #[cfg(feature = "android")]
         let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
 
@@ -82,6 +91,7 @@ impl Renderer {
             #[cfg(not(feature = "android"))]
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![],
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);

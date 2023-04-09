@@ -1,13 +1,13 @@
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
-    utils::{default_resources::DEFAULT_MATRIX_4},
-    Engine, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
-    TextureData, Vertex, WindowDescriptor,
+    utils::default_resources::DEFAULT_MATRIX_4,
+    Engine, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings, TextureData,
+    Vertex, WindowDescriptor,
 };
 
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor {
+    let mut engine = Engine::new_config(WindowDescriptor {
         width: 1600,
         height: 1200,
         title: "diffuse light test",
@@ -22,7 +22,13 @@ fn main() {
     //let triangle_id = triangle(Some("Triangleee"), &mut engine, camera).unwrap();
     let window_size = engine.window.inner_size();
 
-    uv_sphere("cube", (18, 36, 1f32), &mut engine.renderer, &mut engine.objects).unwrap();
+    uv_sphere(
+        "cube",
+        (18, 36, 1f32),
+        &mut engine.renderer,
+        &mut engine.objects,
+    )
+    .unwrap();
     engine.objects.get_mut("cube").unwrap().scale(0.6, 0.6, 0.6);
     engine
         .objects
@@ -87,10 +93,8 @@ fn main() {
 
     engine
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
-
-
-            let o = renderer.build_object("haha", Vec::new(), Vec::new(), ObjectSettings::default());
-            
+            let o =
+                renderer.build_object("haha", Vec::new(), Vec::new(), ObjectSettings::default());
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
