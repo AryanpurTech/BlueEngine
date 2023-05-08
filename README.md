@@ -20,7 +20,7 @@ use blue_engine::{
 
 fn main() {
     // initialize the engine
-    let mut engine = Engine::new().expect("win");
+    let mut engine = Engine::new().expect("engine couldn't be initialized");
 
     // create a triangle
     triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();
@@ -34,7 +34,7 @@ fn main() {
 
 * [Join our discord server](https://discord.gg/s7xsj9q)
 
-* [WIP] [Documentation](https://aryanpurtech.github.io/BlueEngineDocs/)
+* [WIP] [Guide](https://aryanpurtech.github.io/BlueEngineDocs/)
 
 * Check out the [workflow](https://github.com/orgs/AryanpurTech/projects/2) for roadmap, status, ...
 
@@ -45,3 +45,4 @@ fn main() {
 * Check out the [editor](https://github.com/rustylabs/blue_flame)
 
 *the credits to the image on top: NotPB*
+*the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow.*
