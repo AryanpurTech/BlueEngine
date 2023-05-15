@@ -37,21 +37,8 @@ impl Camera {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
-        let view = nalgebra_glm::look_at_rh(
-            &self.position,
-            &if self.add_position_and_target {
-                self.position + self.target
-            } else {
-                self.target
-            },
-            &self.up,
-        );
-        let proj = nalgebra_glm::perspective(
-            self.resolution.0 / self.resolution.1,
-            self.fov,
-            self.near,
-            self.far,
-        );
+        let view = self.build_view_matrix();
+        let proj = self.build_projection_matrix();
         self.view_data = proj * view;
         self.changed = true;
 
@@ -60,15 +47,7 @@ impl Camera {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_orthographic_matrix(&mut self) -> Result<()> {
-        let view = nalgebra_glm::look_at_rh(
-            &self.position,
-            &if self.add_position_and_target {
-                self.position + self.target
-            } else {
-                self.target
-            },
-            &self.up,
-        );
+        let view = self.build_view_matrix();
         let ortho = nalgebra_glm::ortho(
             0f32,
             self.resolution.0,
@@ -182,5 +161,26 @@ impl Camera {
             .0;
 
         Ok(updated_buffer)
+    }
+
+    pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
+        nalgebra_glm::look_at_rh(
+            &self.position,
+            &if self.add_position_and_target {
+                self.position + self.target
+            } else {
+                self.target
+            },
+            &self.up,
+        )
+    }
+
+    pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
+        nalgebra_glm::perspective(
+            self.resolution.0 / self.resolution.1,
+            self.fov,
+            self.near,
+            self.far,
+        )
     }
 }

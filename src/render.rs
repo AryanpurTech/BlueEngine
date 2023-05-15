@@ -23,6 +23,11 @@ fn get_render_features() -> Features {
 }
 
 impl Renderer {
+    /// Creates a new renderer.
+    ///
+    /// # Arguments
+    /// * `window` - The window to create the renderer for.
+    /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
         window: &Window,
         power_preference: crate::PowerPreference,
@@ -187,6 +192,9 @@ impl Renderer {
         Ok(renderer)
     }
 
+    /// Resize the window.
+    /// # Arguments
+    /// * `new_size` - The new window size.
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.size = new_size;
         self.config.width = new_size.width;
@@ -203,6 +211,11 @@ impl Renderer {
         }
     }
 
+    /// Render the scene. Returns the command encoder, the texture view, and the surface texture.
+    ///
+    /// # Arguments
+    /// * `objects` - The object storage.
+    /// * `camera` - The camera.
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
@@ -282,6 +295,11 @@ impl Renderer {
         Ok(Some((encoder, view, frame)))
     }
 
+    /// Render the scene.
+    ///
+    /// # Arguments
+    /// * `encoder` - The command encoder.
+    /// * `frame` - The surface texture.
     pub(crate) fn render(
         &mut self,
         encoder: wgpu::CommandEncoder,

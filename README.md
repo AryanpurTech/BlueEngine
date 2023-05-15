@@ -45,4 +45,8 @@ fn main() {
 * Check out the [editor](https://github.com/rustylabs/blue_flame)
 
 *the credits to the image on top: NotPB*
+<<<<<<< HEAD
 *the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow.*
+=======
+*the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow.*
+>>>>>>> 9b91382 (chore: added a docs and changes to the downstream)
