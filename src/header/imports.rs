@@ -17,6 +17,8 @@ pub use bytemuck::Pod;
 /// Zeroable trait for custom uniform buffer structure
 pub use bytemuck::Zeroable;
 
+/// Backends
+pub use wgpu::Backends;
 /// Encoder from wgpu
 pub use wgpu::CommandEncoder;
 pub use wgpu::LoadOp;
@@ -62,4 +64,3 @@ pub use winit::window::Window;
 pub use winit_input_helper::WinitInputHelper as InputHelper;
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
-

@@ -31,11 +31,15 @@ impl Renderer {
     pub(crate) async fn new(
         window: &Window,
         power_preference: crate::PowerPreference,
+        backends: crate::Backends,
     ) -> anyhow::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            ..Default::default()
+        });
 
         #[cfg(not(feature = "android"))]
         let surface = Some(unsafe { instance.create_surface(window) }.unwrap());

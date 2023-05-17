@@ -239,6 +239,8 @@ pub struct WindowDescriptor {
     pub resizable: bool,
     /// Define how much power should the app ask for
     pub power_preference: crate::PowerPreference,
+    /// The backend to use for the draw
+    pub backends: crate::Backends,
 }
 impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
@@ -250,6 +252,7 @@ impl std::default::Default for WindowDescriptor {
             decorations: true,
             resizable: true,
             power_preference: crate::PowerPreference::LowPower,
+            backends: crate::Backends::all(),
         }
     }
 }

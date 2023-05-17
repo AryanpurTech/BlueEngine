@@ -63,8 +63,11 @@ impl Engine {
         let window = Window::new(&event_loop).unwrap();
 
         // The renderer init on current window
-        let mut renderer =
-            futures::executor::block_on(Renderer::new(&window, settings.power_preference))?;
+        let mut renderer = futures::executor::block_on(Renderer::new(
+            &window,
+            settings.power_preference,
+            settings.backends,
+        ))?;
 
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
 
