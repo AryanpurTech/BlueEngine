@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.26"
+version = "0.4.27"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -14,32 +14,29 @@ license = "Apache-2.0"
 name = "blue_engine"
 
 [features]
-default = ["model_loader", "debug"]
+default = ["debug"]
 debug = ["dep:env_logger"]
 android = ["dep:log", "dep:android_logger"]
 NON_FILL_POLYGON_MODE = []
-model_loader = ["dep:gltf"]
 
 [dependencies]
 image = { version = "0.24" }
 futures = "0.3"
 winit = "0.28"
-bytemuck = { version = "1.12", features = ["derive"] }
+bytemuck = { version = "1.13", features = ["derive"] }
 winit_input_helper = "0.14"
 anyhow = "1.0"
-wgpu = { version = "0.15" }
+wgpu = { version = "0.16.0" }
 downcast = "0.11"
 nalgebra-glm = "0.18"
 # debug logs
 env_logger = { version = "0.10", optional = true }
-# model_loader
-gltf = { version = "1.0", optional = true }
 # android
 log = { version = "0.4", optional = true }
 android_logger = { version = "0.13", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "0.15", features = ["webgl"] }
+wgpu = { version = "0.16", features = ["webgl"] }
 
 # ========== EXAMPLES ========== #
 

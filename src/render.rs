@@ -71,16 +71,8 @@ impl Renderer {
             .unwrap();
 
         #[cfg(not(feature = "android"))]
-        let tex_format = {
-            let format = surface.as_ref().unwrap().get_capabilities(&adapter);
-            format
-                .formats
-                .iter()
-                .copied()
-                .filter(|f| f.describe().srgb)
-                .next()
-                .unwrap_or(format.formats[0])
-        };
+        let tex_format = surface.as_ref().unwrap().get_capabilities(&adapter).formats[0];
+
         #[cfg(feature = "android")]
         let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
 
