@@ -84,11 +84,11 @@ pub struct Object {
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures
     pub pipeline: Pipeline,
     /// Dictates the size of your object in pixels
-    pub size: (f32, f32, f32),
-    pub scale: (f32, f32, f32),
+    pub size: glm::Vec3,
+    pub scale: glm::Vec3,
     /// Dictates the position of your object in pixels
-    pub position: (f32, f32, f32),
-    pub rotation: (f32, f32, f32),
+    pub position: glm::Vec3,
+    pub rotation: glm::Vec3,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matricies helps to apply changes to your object, including position, orientation, ...

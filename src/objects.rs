@@ -5,7 +5,7 @@
 */
 
 use crate::header::{
-    pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
+    glm, pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
     TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
@@ -57,10 +57,10 @@ impl Renderer {
                 uniform: Some(uniform.0),
             },
             uniform_layout: uniform.1,
-            size: (100f32, 100f32, 100f32),
-            scale: (1f32, 1f32, 1f32),
-            position: (0f32, 0f32, 0f32),
-            rotation: (0f32, 0f32, 0f32),
+            size: glm::vec3(100f32, 100f32, 100f32),
+            scale: glm::vec3(1f32, 1f32, 1f32),
+            position: glm::vec3(0f32, 0f32, 0f32),
+            rotation: glm::vec3(0f32, 0f32, 0f32),
             changed: false,
             position_matrix: DEFAULT_MATRIX_4.to_im(),
             scale_matrix: DEFAULT_MATRIX_4.to_im(),
@@ -134,9 +134,9 @@ impl ObjectStorage {
 impl Object {
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
     pub fn scale(&mut self, x: f32, y: f32, z: f32) {
-        self.size.0 *= x;
-        self.size.1 *= y;
-        self.size.2 *= z;
+        self.size.x *= x;
+        self.size.y *= y;
+        self.size.z *= z;
 
         let transformation_matrix = self.scale_matrix;
         let result = nalgebra_glm::scale(&transformation_matrix, &nalgebra_glm::vec3(x, y, z));
@@ -153,9 +153,9 @@ impl Object {
         depth: f32,
         window_size: winit::dpi::PhysicalSize<u32>,
     ) {
-        let difference_in_width = if self.size.0 != 0.0 && width != 0.0 {
+        let difference_in_width = if self.size.x != 0.0 && width != 0.0 {
             let a = pixel_to_cartesian(width, window_size.width);
-            let b = pixel_to_cartesian(self.size.0, window_size.width);
+            let b = pixel_to_cartesian(self.size.x, window_size.width);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -165,9 +165,9 @@ impl Object {
             0.0
         };
 
-        let difference_in_height = if self.size.1 != 0.0 && height != 0.0 {
+        let difference_in_height = if self.size.y != 0.0 && height != 0.0 {
             let a = pixel_to_cartesian(height, window_size.height);
-            let b = pixel_to_cartesian(self.size.1, window_size.height);
+            let b = pixel_to_cartesian(self.size.y, window_size.height);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -176,9 +176,9 @@ impl Object {
         } else {
             0.0
         };
-        let difference_in_depth = if self.size.2 != 0.0 && depth != 0.0 {
+        let difference_in_depth = if self.size.z != 0.0 && depth != 0.0 {
             let a = pixel_to_cartesian(depth, window_size.width);
-            let b = pixel_to_cartesian(self.size.2, window_size.width);
+            let b = pixel_to_cartesian(self.size.z, window_size.width);
             if a != 0f32 && b != 0f32 {
                 a / b
             } else {
@@ -204,15 +204,15 @@ impl Object {
         let mut rotation_matrix = self.rotation_matrix;
         let axis = match axis {
             RotateAxis::X => {
-                self.rotation.0 += angle;
+                self.rotation.x += angle;
                 nalgebra_glm::Vec3::x_axis()
             }
             RotateAxis::Y => {
-                self.rotation.1 += angle;
+                self.rotation.y += angle;
                 nalgebra_glm::Vec3::y_axis()
             }
             RotateAxis::Z => {
-                self.rotation.2 += angle;
+                self.rotation.z += angle;
                 nalgebra_glm::Vec3::z_axis()
             }
         };
@@ -226,9 +226,9 @@ impl Object {
 
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, x: f32, y: f32, z: f32) {
-        self.position.0 -= x;
-        self.position.1 -= y;
-        self.position.2 -= z;
+        self.position.x -= x;
+        self.position.y -= y;
+        self.position.z -= z;
 
         let mut position_matrix = self.position_matrix;
         position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
@@ -241,14 +241,14 @@ impl Object {
     /// Sets the position of the object in 3D space relative to the window
     pub fn position(&mut self, x: f32, y: f32, z: f32) {
         self.translate(
-            (self.position.0 - x) * -1f32,
-            (self.position.1 - y) * -1f32,
-            (self.position.2 - z) * -1f32,
+            (self.position.x - x) * -1f32,
+            (self.position.y - y) * -1f32,
+            (self.position.z - z) * -1f32,
         );
 
-        self.position.0 = x;
-        self.position.1 = y;
-        self.position.2 = z;
+        self.position.x = x;
+        self.position.y = y;
+        self.position.z = z;
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
