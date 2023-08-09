@@ -132,8 +132,13 @@ impl ObjectStorage {
 }
 
 impl Object {
+    /// Sets the name of the object
+    pub fn set_name(&mut self, name: impl StringBuffer) {
+        self.name = name.as_string();
+    }
+
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
-    pub fn scale(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) {
         self.size.x *= x;
         self.size.y *= y;
         self.size.z *= z;
@@ -145,6 +150,7 @@ impl Object {
 
         self.changed = true;
     }
+
     /// Resizes an object in pixels which are relative to the window
     pub fn resize(
         &mut self,
@@ -188,7 +194,7 @@ impl Object {
             0.0
         };
 
-        self.scale(
+        self.set_scale(
             difference_in_width,
             difference_in_height,
             difference_in_depth,
@@ -196,7 +202,7 @@ impl Object {
     }
 
     /// Rotates the object in the axis you specify
-    pub fn rotate(&mut self, angle: f32, axis: RotateAxis) {
+    pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) {
         // The reason for using different transformation matrix is because
         // of alteration of translation that happens due to rotation. The
         // solution suggested by https://github.com/tksuoran fixed this through
@@ -225,7 +231,7 @@ impl Object {
     }
 
     /// Moves the object by the amount you specify in the axis you specify
-    pub fn translate(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_translation(&mut self, x: f32, y: f32, z: f32) {
         self.position.x -= x;
         self.position.y -= y;
         self.position.z -= z;
@@ -239,8 +245,8 @@ impl Object {
     }
 
     /// Sets the position of the object in 3D space relative to the window
-    pub fn position(&mut self, x: f32, y: f32, z: f32) {
-        self.translate(
+    pub fn set_position(&mut self, x: f32, y: f32, z: f32) {
+        self.set_translation(
             (self.position.x - x) * -1f32,
             (self.position.y - y) * -1f32,
             (self.position.z - z) * -1f32,
