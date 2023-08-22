@@ -117,17 +117,31 @@ impl ObjectStorage {
     }
 
     pub fn add_object(&mut self, key: impl StringBuffer, object: Object) -> anyhow::Result<()> {
-        self.insert(key.as_string(), object);
+        fn add_object_inner(
+            object_storage: &mut ObjectStorage,
+            key: String,
+            object: Object,
+        ) -> anyhow::Result<()> {
+            object_storage.insert(key, object);
 
-        Ok(())
+            Ok(())
+        }
+        add_object_inner(self, key.as_string(), object)
     }
 
     /// Allows for safe update of objects
     pub fn update_object<T: Fn(&mut Object)>(&mut self, key: impl StringBuffer, callback: T) {
-        let object = self.get_mut(&key.as_string());
-        if object.is_some() {
-            callback(object.unwrap());
+        fn update_object_inner<T: Fn(&mut Object)>(
+            object_storage: &mut ObjectStorage,
+            key: String,
+            callback: T,
+        ) {
+            let object = object_storage.get_mut(&key);
+            if object.is_some() {
+                callback(object.unwrap());
+            }
         }
+        update_object_inner(self, key.as_string(), callback);
     }
 }
 
