@@ -7,15 +7,7 @@ use blue_engine::{
 };
 
 fn main() {
-    let mut engine = Engine::new_config(WindowDescriptor {
-        width: 1600,
-        height: 1200,
-        title: "diffuse light test",
-        decorations: true,
-        resizable: true,
-        power_preference: PowerPreference::HighPerformance,
-    })
-    .expect("win");
+    let mut engine = Engine::new().expect("win");
 
     // ===============================
 
@@ -29,7 +21,7 @@ fn main() {
         &mut engine.objects,
     )
     .unwrap();
-    engine.objects.get_mut("cube").unwrap().scale(0.6, 0.6, 0.6);
+    // engine.objects.get_mut("cube").unwrap().scale(0.6, 0.6, 0.6);
     engine
         .objects
         .get_mut("cube")
@@ -93,7 +85,7 @@ fn main() {
 
     engine
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
-            let o =
+            /*let o =
                 renderer.build_object("haha", Vec::new(), Vec::new(), ObjectSettings::default());
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
@@ -151,7 +143,7 @@ fn main() {
                     sprite.position.1,
                     sprite.position.2 + speed,
                 );
-            }
+            } */
         })
         .expect("Error during update loop");
 }
