@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.29] - 2023-08-28
+
+### Bug Fixes
+
+- Potential fix for #27
+
+### Features
+
+- _and_return functions now return buffers and bindgroups - Objects can now be hidden from rendering
+- Added backends option to the window descriptor
+- Added justfiles instead of clog
+- Added inline impl for ObjectStorage functions for cheaper trait usage
+- PipelineData added to allow sharing pipeline resources
+- Resource sharing now fully working. with example
+
+### Miscellaneous Tasks
+
+- Updated all dependency versions to latest
+- Added CHANGELOG and workflow for it
+- Deleted changelog workflow as not working
+- Added a docs and changes to the downstream
+- Upgraded versions of dependency and engine
+- Added appropriate function names to objects
+- Added some doc to lib.rs
+
+### Refactor
+
+- Moved light and model loader and added clog for changelog
+- Added some docs, and cleaned up code a bit
+
 ## [0.4.28] - 2023-07-24
 
 ### Bug Fixes
