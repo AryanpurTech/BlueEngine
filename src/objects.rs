@@ -5,8 +5,8 @@
 */
 
 use crate::header::{
-    glm, pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, Renderer, RotateAxis,
-    TextureData, Textures, Vertex,
+    glm, pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, PipelineData,
+    Renderer, RotateAxis, TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -51,10 +51,10 @@ impl Renderer {
             vertices: verticies,
             indices: indicies,
             pipeline: Pipeline {
-                vertex_buffer,
-                shader: shader,
-                texture: texture,
-                uniform: Some(uniform.0),
+                vertex_buffer: PipelineData::Data(vertex_buffer),
+                shader: PipelineData::Data(shader),
+                texture: PipelineData::Data(texture),
+                uniform: PipelineData::Data(Some(uniform.0)),
             },
             uniform_layout: uniform.1,
             size: glm::vec3(100f32, 100f32, 100f32),
@@ -298,7 +298,7 @@ impl Object {
 
     /// Replaces the object's texture with provided one
     pub fn set_texture(&mut self, texture: Textures) -> anyhow::Result<()> {
-        self.pipeline.texture = texture;
+        self.pipeline.texture = PipelineData::Data(texture);
         self.changed = true;
 
         Ok(())
@@ -346,7 +346,7 @@ impl Object {
 
     pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
-        self.pipeline.vertex_buffer = updated_buffer;
+        self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
 
         Ok(())
     }
@@ -358,7 +358,7 @@ impl Object {
     ) -> anyhow::Result<crate::VertexBuffers> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         let updated_buffer_2 = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
-        self.pipeline.vertex_buffer = updated_buffer;
+        self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
 
         Ok(updated_buffer_2)
     }
@@ -370,7 +370,7 @@ impl Object {
             Some(&self.uniform_layout),
             self.shader_settings,
         )?;
-        self.pipeline.shader = updated_shader;
+        self.pipeline.shader = PipelineData::Data(updated_shader);
 
         Ok(())
     }
@@ -392,7 +392,7 @@ impl Object {
             Some(&self.uniform_layout),
             self.shader_settings,
         )?;
-        self.pipeline.shader = updated_shader;
+        self.pipeline.shader = PipelineData::Data(updated_shader);
 
         Ok(updated_shader2)
     }
@@ -408,7 +408,7 @@ impl Object {
 
         let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
 
-        self.pipeline.uniform = Some(updated_buffer.0);
+        self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
 
         Ok(())
@@ -430,7 +430,7 @@ impl Object {
         let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
         let updated_buffer2 = renderer.build_uniform_buffer(&self.uniform_buffers)?;
 
-        self.pipeline.uniform = Some(updated_buffer.0);
+        self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
 
         Ok(updated_buffer2.0)

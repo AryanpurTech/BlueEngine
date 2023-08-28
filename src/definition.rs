@@ -8,8 +8,8 @@ use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout, Sampler, Texture, TextureView};
 
 use crate::header::{
-    Pipeline, ShaderSettings, Shaders, TextureData, TextureMode, Textures, UniformBuffers, Vertex,
-    VertexBuffers,
+    Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
+    Textures, UniformBuffers, Vertex, VertexBuffers,
 };
 
 impl crate::header::Renderer {
@@ -22,17 +22,17 @@ impl crate::header::Renderer {
         uniform: Option<UniformBuffers>,
     ) -> Result<Pipeline, anyhow::Error> {
         Ok(Pipeline {
-            shader,
-            vertex_buffer,
-            texture,
-            uniform,
+            shader: PipelineData::Data(shader),
+            vertex_buffer: PipelineData::Data(vertex_buffer),
+            texture: PipelineData::Data(texture),
+            uniform: PipelineData::Data(uniform),
         })
     }
 
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
     pub fn build_shader(
         &mut self,
-        name: &str,
+        name: impl StringBuffer,
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
@@ -40,7 +40,7 @@ impl crate::header::Renderer {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some(format!("{} Shader", name).as_str()),
+                label: Some(format!("{} Shader", name.as_str()).as_str()),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
             });
 
@@ -63,7 +63,7 @@ impl crate::header::Renderer {
         let render_pipeline = self
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some(name),
+                label: Some(name.as_str()),
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
@@ -110,7 +110,7 @@ impl crate::header::Renderer {
     /// Creates a new texture data
     pub fn build_texture(
         &mut self,
-        name: &'static str,
+        name: impl StringBuffer,
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
@@ -131,10 +131,10 @@ impl crate::header::Renderer {
 
         let img = match texture_data {
             TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
-                .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str()),
+                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
             TextureData::Image(data) => data,
             TextureData::Path(path) => image::open(path)
-                .expect(format!("Couldn't Load Image For Texture Of {}", name).as_str()),
+                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
         };
 
         let rgba = img.to_rgba8();
@@ -146,7 +146,7 @@ impl crate::header::Renderer {
             depth_or_array_layers: 1,
         };
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some(name),
+            label: Some(name.as_str()),
             size,
             mip_level_count: 1,
             sample_count: 1,
@@ -202,7 +202,7 @@ impl crate::header::Renderer {
     }
 
     pub(crate) fn build_depth_buffer(
-        label: &str,
+        label: impl StringBuffer,
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
     ) -> (Texture, TextureView, Sampler) {
@@ -212,7 +212,7 @@ impl crate::header::Renderer {
             depth_or_array_layers: 1,
         };
         let desc = wgpu::TextureDescriptor {
-            label: Some(label),
+            label: Some(label.as_str()),
             size,
             mip_level_count: 1,
             sample_count: 1,
@@ -242,12 +242,12 @@ impl crate::header::Renderer {
 
     pub fn build_uniform_buffer_part<T: bytemuck::Zeroable + bytemuck::Pod>(
         &self,
-        name: &str,
+        name: impl StringBuffer,
         value: T,
     ) -> wgpu::Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(name),
+                label: Some(name.as_str()),
                 contents: bytemuck::cast_slice(&[value]),
                 usage: wgpu::BufferUsages::UNIFORM,
             })
@@ -260,46 +260,7 @@ impl crate::header::Renderer {
     ) -> Result<(UniformBuffers, BindGroupLayout), anyhow::Error> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
-        /*for i in uniforms.iter() {
-            match i {
-                UniformBuffer::Matrix(name, value) => {
-                    buffer_vec.push(self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(*name),
-                            contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsages::UNIFORM,
-                        },
-                    ));
-                }
-                UniformBuffer::Array3(name, value) => {
-                    buffer_vec.push(self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(*name),
-                            contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsages::UNIFORM,
-                        },
-                    ));
-                }
-                UniformBuffer::Array4(name, value) => {
-                    buffer_vec.push(self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(*name),
-                            contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsages::UNIFORM,
-                        },
-                    ));
-                }
-                UniformBuffer::Float(name, value) => {
-                    buffer_vec.push(self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(*name),
-                            contents: bytemuck::cast_slice(&[*value]),
-                            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                        },
-                    ));
-                }
-            }
-        } */
+
         for i in 0..uniforms.len() {
             let descriptor = wgpu::BindGroupEntry {
                 binding: i as u32,

@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.28"
+version = "0.4.29"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -26,7 +26,7 @@ winit = "0.28"
 bytemuck = { version = "1.13", features = ["derive"] }
 winit_input_helper = "0.14"
 anyhow = "1.0"
-wgpu = { version = "0.16.0" }
+wgpu = { version = "0.17.0" }
 downcast = "0.11"
 nalgebra-glm = "0.18"
 # debug logs
@@ -36,7 +36,7 @@ log = { version = "0.4", optional = true }
 android_logger = { version = "0.13", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "0.16", features = ["webgl"] }
+wgpu = { version = "0.17", features = ["webgl"] }
 
 # ========== EXAMPLES ========== #
 

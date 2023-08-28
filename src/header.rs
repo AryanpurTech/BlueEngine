@@ -183,13 +183,21 @@ unsafe impl Sync for Engine {}
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader, 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
 #[derive(Debug)]
 pub struct Pipeline {
-    pub shader: crate::Shaders,
-    pub vertex_buffer: VertexBuffers,
-    pub texture: crate::Textures,
-    pub uniform: Option<crate::UniformBuffers>,
+    pub shader: PipelineData<crate::Shaders>,
+    pub vertex_buffer: PipelineData<VertexBuffers>,
+    pub texture: PipelineData<crate::Textures>,
+    pub uniform: PipelineData<Option<crate::UniformBuffers>>,
 }
 unsafe impl Send for Pipeline {}
 unsafe impl Sync for Pipeline {}
+
+/// Container for pipeline data. Allows for sharing resources with other objects
+#[derive(Debug)]
+pub enum PipelineData<T> {
+    Copy(String),
+    Data(T),
+}
+//? ADD IT TO ALL OF PIPELINE
 
 /// Container for vertex and index buffer
 #[derive(Debug)]
