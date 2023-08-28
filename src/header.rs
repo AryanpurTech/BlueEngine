@@ -197,7 +197,6 @@ pub enum PipelineData<T> {
     Copy(String),
     Data(T),
 }
-//? ADD IT TO ALL OF PIPELINE
 
 /// Container for vertex and index buffer
 #[derive(Debug)]

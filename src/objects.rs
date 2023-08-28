@@ -435,6 +435,27 @@ impl Object {
 
         Ok(updated_buffer2.0)
     }
+
+    // ============================= FOR COPY OF PIPELINES =============================
+    /// References another object's vertices
+    pub fn reference_vertices(&mut self, object_id: impl StringBuffer) {
+        self.pipeline.vertex_buffer = PipelineData::Copy(object_id.as_string());
+    }
+
+    /// References another object's shader
+    pub fn reference_shader(&mut self, object_id: impl StringBuffer) {
+        self.pipeline.shader = PipelineData::Copy(object_id.as_string());
+    }
+
+    /// References another object's texture
+    pub fn reference_texture(&mut self, object_id: impl StringBuffer) {
+        self.pipeline.texture = PipelineData::Copy(object_id.as_string());
+    }
+
+    /// References another object's uniform buffer
+    pub fn reference_uniform_buffer(&mut self, object_id: impl StringBuffer) {
+        self.pipeline.uniform = PipelineData::Copy(object_id.as_string());
+    }
 }
 
 #[derive(Debug)]

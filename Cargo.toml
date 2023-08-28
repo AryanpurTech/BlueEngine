@@ -58,18 +58,10 @@ path = "examples/shapes/cube.rs"
 name = "rotate_around"
 path = "examples/camera/rotate_around.rs"
 
+# Utils
 [[example]]
-name = "fly_camera"
-path = "examples/camera/fly_camera.rs"
-
-# GUI
-[[example]]
-name = "hello_gui"
-path = "examples/gui/hello_gui.rs"
-
-[[example]]
-name = "styling_gui"
-path = "examples/gui/styling.rs"
+name = "resource_sharing"
+path = "examples/utils/resource_sharing.rs"
 
 # Development ONLY
 [[example]]
