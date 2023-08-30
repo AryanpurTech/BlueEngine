@@ -194,6 +194,7 @@ unsafe impl Sync for Pipeline {}
 /// Container for pipeline data. Allows for sharing resources with other objects
 #[derive(Debug)]
 pub enum PipelineData<T> {
+    /// No data, just a reference to a buffer
     Copy(String),
     Data(T),
 }
@@ -292,7 +293,7 @@ pub struct Camera {
 unsafe impl Send for Camera {}
 unsafe impl Sync for Camera {}
 
-// ? These definitions are taken from wgpu API docs
+// These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
 pub struct ShaderSettings {
     // ===== PRIMITIVE ===== //
@@ -363,6 +364,21 @@ impl Default for ShaderSettings {
 }
 unsafe impl Send for ShaderSettings {}
 unsafe impl Sync for ShaderSettings {}
+
+/// Instance buffer data that is sent to GPU
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct InstanceRaw {
+    pub model: uniform_type::Matrix,
+}
+
+/// Instance buffer data storage
+#[derive(Debug, Clone, Copy)]
+pub struct Instance {
+    pub position: nalgebra_glm::Vec3,
+    pub rotation: nalgebra_glm::Vec3,
+    pub scale: nalgebra_glm::Vec3,
+}
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait EnginePlugin: Any {
@@ -438,6 +454,7 @@ pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
     }
 }
 
+/// A unified way to handle strings
 pub trait StringBuffer: StringBufferTrait + Clone {}
 pub trait StringBufferTrait {
     fn as_str(&self) -> &str;

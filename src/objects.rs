@@ -5,8 +5,8 @@
 */
 
 use crate::header::{
-    glm, pixel_to_cartesian, uniform_type, Object, ObjectSettings, Pipeline, PipelineData,
-    Renderer, RotateAxis, TextureData, Textures, Vertex,
+    glm, pixel_to_cartesian, uniform_type, Instance, InstanceRaw, Object, ObjectSettings, Pipeline,
+    PipelineData, Renderer, RotateAxis, TextureData, Textures, Vertex,
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -535,6 +535,52 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }"#
                 )
             ),
+        }
+    }
+}
+
+impl Instance {
+    /// Creates a new instance
+    pub fn new(position: glm::Vec3, rotation: glm::Vec3, scale: glm::Vec3) -> Self {
+        Self {
+            position,
+            rotation,
+            scale,
+        }
+    }
+
+    /// Gathers all information and builds a Raw Instance to be sent to GPU
+    pub fn to_raw(&self) -> InstanceRaw {
+        let position_matrix = glm::Mat4::from_vec(self.position.as_slice().to_vec());
+        let rotation_matrix = glm::Mat4::from_vec(self.rotation.as_slice().to_vec());
+        let scale_matrix = glm::Mat4::from_vec(self.scale.as_slice().to_vec());
+        InstanceRaw {
+            model: Matrix::from_im(position_matrix * rotation_matrix * scale_matrix),
+        }
+    }
+
+    /// Sets the position
+    pub fn set_position(&mut self, position: glm::Vec3) {
+        self.position = position;
+    }
+
+    /// Sets the rotation
+    pub fn set_rotation(&mut self, rotation: glm::Vec3) {
+        self.rotation = rotation;
+    }
+
+    /// Sets the scale
+    pub fn set_scale(&mut self, scale: glm::Vec3) {
+        self.scale = scale;
+    }
+}
+
+impl Default for Instance {
+    fn default() -> Self {
+        Self {
+            position: glm::Vec3::new(0.0, 0.0, 0.0),
+            rotation: glm::Vec3::new(0.0, 0.0, 0.0),
+            scale: glm::Vec3::new(1.0, 1.0, 1.0),
         }
     }
 }
