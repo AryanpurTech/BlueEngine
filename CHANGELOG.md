@@ -2,35 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.29] - 2023-08-28
-
-### Bug Fixes
-
-- Potential fix for #27
+## [0.4.30] - 2023-09-02
 
 ### Features
 
-- _and_return functions now return buffers and bindgroups - Objects can now be hidden from rendering
-- Added backends option to the window descriptor
-- Added justfiles instead of clog
-- Added inline impl for ObjectStorage functions for cheaper trait usage
-- PipelineData added to allow sharing pipeline resources
-- Resource sharing now fully working. with example
+- Instancing now works, with example. fix #40 ([8e5e2db](https://github.com/AryanpurTech/BlueEngine/commit/8e5e2db84775e91e8ccf919c82e8f5f40312885b))
+- Transparency in textures now working ([1dafadf](https://github.com/AryanpurTech/BlueEngine/commit/1dafadfcaea8ae0acf2a8d8ac80e54c3f4c6dfed))
+
+## [0.4.29] - 2023-09-02
+
+### Features
+
+- Resource sharing now fully working. with example ([be915ed](https://github.com/AryanpurTech/BlueEngine/commit/be915edf0e4f920b5b0f8578d71b33e4635ac8ed))
+- PipelineData added to allow sharing pipeline resources ([e4c58d7](https://github.com/AryanpurTech/BlueEngine/commit/e4c58d792b22a3dbd419648437c30664929c4ab6))
+- Added inline impl for ObjectStorage functions for cheaper trait usage ([b0d48bb](https://github.com/AryanpurTech/BlueEngine/commit/b0d48bb8fc47b83dac261352d34c5f1be88024d4))
 
 ### Miscellaneous Tasks
 
-- Updated all dependency versions to latest
-- Added CHANGELOG and workflow for it
-- Deleted changelog workflow as not working
-- Added a docs and changes to the downstream
-- Upgraded versions of dependency and engine
-- Added appropriate function names to objects
-- Added some doc to lib.rs
-
-### Refactor
-
-- Moved light and model loader and added clog for changelog
-- Added some docs, and cleaned up code a bit
+- Added some doc to lib.rs ([142a683](https://github.com/AryanpurTech/BlueEngine/commit/142a6832e71fe43b48dbfa18931f17ce82da2ce2))
 
 ## [0.4.28] - 2023-07-24
 

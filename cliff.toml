@@ -18,7 +18,7 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
     {% for commit in commits %}
-        - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first }}\
+        - {{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/AryanpurTech/BlueEngine/commit/{{ commit.id }}))\
     {% endfor %}
 {% endfor %}\n
 """
@@ -42,16 +42,16 @@ commit_preprocessors = [
 ]
 # regex for parsing and grouping commits
 commit_parsers = [
-    { message = "^feat", group = "Features"},
-    { message = "^fix", group = "Bug Fixes"},
-    { message = "^doc", group = "Documentation"},
-    { message = "^perf", group = "Performance"},
-    { message = "^refactor", group = "Refactor"},
-    { message = "^style", group = "Styling"},
-    { message = "^test", group = "Testing"},
-    { message = "^chore\\(release\\): prepare for", skip = true},
-    { message = "^chore", group = "Miscellaneous Tasks"},
-    { body = ".*security", group = "Security"},
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^doc", group = "Documentation" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactor" },
+    { message = "^style", group = "Styling" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore", group = "Miscellaneous Tasks" },
+    { body = ".*security", group = "Security" },
 ]
 # protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false
@@ -66,6 +66,6 @@ ignore_tags = ""
 # sort the tags topologically
 topo_order = false
 # sort the commits inside sections by oldest/newest order
-sort_commits = "oldest"
+sort_commits = "newest"
 # limit the number of commits included in the changelog.
 # limit_commits = 42
