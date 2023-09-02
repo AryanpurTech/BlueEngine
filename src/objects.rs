@@ -46,6 +46,14 @@ impl Renderer {
             //crate::header::TextureFormat::PNG
         )?;
 
+        let instance = Instance::new(
+            [0f32, 0f32, 0f32].into(),
+            [0f32, 0f32, 0f32].into(),
+            [1f32, 1f32, 1f32].into(),
+        );
+
+        let instance_buffer = self.build_instance(vec![instance.to_raw()]);
+
         Ok(Object {
             name: name.as_string(),
             vertices: verticies,
@@ -56,6 +64,8 @@ impl Renderer {
                 texture: PipelineData::Data(texture),
                 uniform: PipelineData::Data(Some(uniform.0)),
             },
+            instances: vec![instance],
+            instance_buffer,
             uniform_layout: uniform.1,
             size: glm::vec3(100f32, 100f32, 100f32),
             scale: glm::vec3(1f32, 1f32, 1f32),
@@ -328,6 +338,7 @@ impl Object {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
         self.update_shader(renderer)?;
+        self.update_instance_buffer(renderer)?;
         self.changed = false;
         Ok(())
     }
@@ -436,6 +447,33 @@ impl Object {
         Ok(updated_buffer2.0)
     }
 
+    pub fn update_instance_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
+        let instance_data = self
+            .instances
+            .iter()
+            .map(Instance::to_raw)
+            .collect::<Vec<_>>();
+        let instance_buffer = renderer.build_instance(instance_data);
+        self.instance_buffer = instance_buffer;
+        Ok(())
+    }
+
+    pub fn update_instance_buffer_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> anyhow::Result<wgpu::Buffer> {
+        let instance_data = self
+            .instances
+            .iter()
+            .map(Instance::to_raw)
+            .collect::<Vec<_>>();
+        let instance_buffer = renderer.build_instance(instance_data.clone());
+        let instance_buffer2 = renderer.build_instance(instance_data);
+
+        self.instance_buffer = instance_buffer;
+        Ok(instance_buffer2)
+    }
+
     // ============================= FOR COPY OF PIPELINES =============================
     /// References another object's vertices
     pub fn reference_vertices(&mut self, object_id: impl StringBuffer) {
@@ -455,6 +493,12 @@ impl Object {
     /// References another object's uniform buffer
     pub fn reference_uniform_buffer(&mut self, object_id: impl StringBuffer) {
         self.pipeline.uniform = PipelineData::Copy(object_id.as_string());
+    }
+
+    // ============================= Instances =============================
+    pub fn add_instance(&mut self, instance: Instance) {
+        self.instances.push(instance);
+        self.changed = true;
     }
 }
 
@@ -507,6 +551,13 @@ struct VertexOutput {
     @location(0) texture_coordinates: vec2<f32>,
 };
 
+struct InstanceInput {
+    @location(3) model_matrix_0: vec4<f32>,
+    @location(4) model_matrix_1: vec4<f32>,
+    @location(5) model_matrix_2: vec4<f32>,
+    @location(6) model_matrix_3: vec4<f32>,
+};
+
 @group(0) @binding(0)
 var texture_diffuse: texture_2d<f32>;
 
@@ -517,13 +568,20 @@ var sampler_diffuse: sampler;"#
                     // step 4 vertex stage according to data before
                     "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
                     r#"@vertex
-fn vs_main(input: VertexInput) -> VertexOutput {
+fn vs_main(input: VertexInput, instance: InstanceInput,) -> VertexOutput {
+    let model_matrix = mat4x4<f32>(
+        instance.model_matrix_0,
+        instance.model_matrix_1,
+        instance.model_matrix_2,
+        instance.model_matrix_3,
+    );
+
     var out: VertexOutput;
     out.texture_coordinates = input.texture_coordinates;"#,
                     if camera_effect {
-                        "out.position = camera_uniform.camera_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
+                        "out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
                     } else {
-                        "out.position = transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0);"
+                        "out.position = model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
                     },
                     r#"return out;
 }
@@ -551,11 +609,11 @@ impl Instance {
 
     /// Gathers all information and builds a Raw Instance to be sent to GPU
     pub fn to_raw(&self) -> InstanceRaw {
-        let position_matrix = glm::Mat4::from_vec(self.position.as_slice().to_vec());
-        let rotation_matrix = glm::Mat4::from_vec(self.rotation.as_slice().to_vec());
-        let scale_matrix = glm::Mat4::from_vec(self.scale.as_slice().to_vec());
+        let position_matrix = glm::translate(&DEFAULT_MATRIX_4.to_im(), &self.position);
+        let rotation_matrix = nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation);
+        let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale);
         InstanceRaw {
-            model: Matrix::from_im(position_matrix * rotation_matrix * scale_matrix),
+            model: (position_matrix * rotation_matrix * scale_matrix).into(),
         }
     }
 
@@ -581,6 +639,43 @@ impl Default for Instance {
             position: glm::Vec3::new(0.0, 0.0, 0.0),
             rotation: glm::Vec3::new(0.0, 0.0, 0.0),
             scale: glm::Vec3::new(1.0, 1.0, 1.0),
+        }
+    }
+}
+
+impl InstanceRaw {
+    pub fn desc() -> wgpu::VertexBufferLayout<'static> {
+        use std::mem;
+        wgpu::VertexBufferLayout {
+            array_stride: mem::size_of::<InstanceRaw>() as wgpu::BufferAddress,
+            // We need to switch from using a step mode of Vertex to Instance
+            // This means that our shaders will only change to use the next
+            // instance when the shader starts processing a new instance
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &[
+                // A mat4 takes up 4 vertex slots as it is technically 4 vec4s. We need to define a slot
+                // for each vec4. We'll have to reassemble the mat4 in the shader.
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 3,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                    shader_location: 4,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
+                    shader_location: 5,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
+                    shader_location: 6,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+            ],
         }
     }
 }

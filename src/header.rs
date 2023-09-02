@@ -83,6 +83,10 @@ pub struct Object {
     pub uniform_layout: wgpu::BindGroupLayout,
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures
     pub pipeline: Pipeline,
+    /// List of instances of this object
+    pub instances: Vec<Instance>,
+    /// instance buffer
+    pub instance_buffer: wgpu::Buffer,
     /// Dictates the size of your object in pixels
     pub size: glm::Vec3,
     pub scale: glm::Vec3,
@@ -94,7 +98,11 @@ pub struct Object {
     /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub position_matrix: nalgebra_glm::Mat4,
+    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
     pub scale_matrix: nalgebra_glm::Mat4,
+    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
     pub rotation_matrix: nalgebra_glm::Mat4,
     /// Transformation matrix, but inversed
     pub inverse_transformation_matrix: crate::uniform_type::Matrix,
@@ -369,7 +377,7 @@ unsafe impl Sync for ShaderSettings {}
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
-    pub model: uniform_type::Matrix,
+    pub model: [[f32; 4]; 4],
 }
 
 /// Instance buffer data storage

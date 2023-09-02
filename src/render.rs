@@ -283,6 +283,7 @@ impl Renderer {
                 if vertex_buffer.is_some() {
                     let vertex_buffer = vertex_buffer.unwrap();
                     render_pass.set_vertex_buffer(0, vertex_buffer.vertex_buffer.slice(..));
+                    render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
                         vertex_buffer.index_buffer.slice(..),
                         wgpu::IndexFormat::Uint16,
@@ -303,7 +304,7 @@ impl Renderer {
                             render_pass.set_bind_group(2, uniform.as_ref().unwrap(), &[]);
                         }
                     }
-                    render_pass.draw_indexed(0..vertex_buffer.length, 0, 0..1);
+                    render_pass.draw_indexed(0..vertex_buffer.length, 0, 0..i.instances.len() as _);
                 }
             }
         }

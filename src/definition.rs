@@ -7,9 +7,12 @@
 use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout, Sampler, Texture, TextureView};
 
-use crate::header::{
-    Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
-    Textures, UniformBuffers, Vertex, VertexBuffers,
+use crate::{
+    header::{
+        Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
+        Textures, UniformBuffers, Vertex, VertexBuffers,
+    },
+    InstanceRaw,
 };
 
 impl crate::header::Renderer {
@@ -68,7 +71,7 @@ impl crate::header::Renderer {
                 vertex: wgpu::VertexState {
                     module: &shader,
                     entry_point: "vs_main",
-                    buffers: &[Vertex::desc()],
+                    buffers: &[Vertex::desc(), InstanceRaw::desc()],
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
@@ -325,5 +328,14 @@ impl crate::header::Renderer {
             index_buffer,
             length: indicies.len() as u32,
         })
+    }
+
+    pub fn build_instance(&self, instance_data: Vec<InstanceRaw>) -> wgpu::Buffer {
+        self.device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(&instance_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            })
     }
 }

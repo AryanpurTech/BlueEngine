@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.4.29"
+version = "0.4.30"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -62,6 +62,10 @@ path = "examples/camera/rotate_around.rs"
 [[example]]
 name = "resource_sharing"
 path = "examples/utils/resource_sharing.rs"
+
+[[example]]
+name = "instancing"
+path = "examples/utils/instancing.rs"
 
 # Development ONLY
 [[example]]
