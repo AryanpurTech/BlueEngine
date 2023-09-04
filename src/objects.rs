@@ -32,9 +32,11 @@ impl Renderer {
             ),
         ])?;
 
+        let shader_source = ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect);
+
         let shader = self.build_shader(
             name.as_str(),
-            DEFAULT_SHADER.to_string(),
+            shader_source.shader.clone(),
             Some(&uniform.1),
             settings.shader_settings,
         )?;
@@ -84,7 +86,7 @@ impl Renderer {
             color: crate::uniform_type::Array4 {
                 data: crate::utils::default_resources::DEFAULT_COLOR,
             },
-            shader_builder: ShaderBuilder::new(settings.camera_effect),
+            shader_builder: shader_source,
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
             uniform_buffers: vec![
@@ -505,94 +507,50 @@ impl Object {
 #[derive(Debug)]
 pub struct ShaderBuilder {
     pub shader: String,
+    pub camera_effect: bool,
+    pub configs: Vec<(String, (String, String))>,
 }
 
 impl ShaderBuilder {
-    pub fn new(camera_effect: bool) -> Self {
-        Self {
-            shader: format!(
-                "{}{}{}",
-                format!(
-                    // step 1 define blocks
-                    "\n{}\n{}\n{}",
+    pub fn new(shader_source: String, camera_effect: bool) -> Self {
+        let mut shader_builder = Self {
+            shader: shader_source,
+            camera_effect,
+            configs: vec![(
+                "//@CAMERA_STRUCT".to_string(),
+                (
                     r#"
-struct TransformationUniforms {
-    transform_matrix: mat4x4<f32>,
-};
-@group(2) @binding(0)
-var<uniform> transform_uniform: TransformationUniforms;"#,
-                    r#"
-struct FragmentUniforms {
-    color: vec4<f32>,
-};
-@group(2) @binding(1)
-var<uniform> fragment_uniforms: FragmentUniforms;"#,
-                    if camera_effect {
-                        r#"
-struct CameraUniforms {
-    camera_matrix: mat4x4<f32>,
-};
-@group(1) @binding(0)
-var<uniform> camera_uniform: CameraUniforms;"#
-                    } else {
-                        ""
-                    }
+            struct CameraUniforms {
+                camera_matrix: mat4x4<f32>,
+            };
+            @group(1) @binding(0)
+            var<uniform> camera_uniform: CameraUniforms;"#
+                        .to_string(),
+                    r#""#.to_string(),
                 ),
-                format!(
-                    // step 2 define input and output for vertex
-                    "\n{}",
-                    r#"struct VertexInput {
-    @location(0) position: vec3<f32>,
-    @location(1) texture_coordinates: vec2<f32>,
-};
-
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texture_coordinates: vec2<f32>,
-};
-
-struct InstanceInput {
-    @location(3) model_matrix_0: vec4<f32>,
-    @location(4) model_matrix_1: vec4<f32>,
-    @location(5) model_matrix_2: vec4<f32>,
-    @location(6) model_matrix_3: vec4<f32>,
-};
-
-@group(0) @binding(0)
-var texture_diffuse: texture_2d<f32>;
-
-@group(0) @binding(1)
-var sampler_diffuse: sampler;"#
+            ), (
+                "//@CAMERA_VERTEX".to_string(),
+                (
+                    r#"out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#
+                        .to_string(),
+                    r#"out.position = model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#.to_string(),
                 ),
-                format!(
-                    // step 4 vertex stage according to data before
-                    "\n// ===== VERTEX STAGE ===== //\n{}\n{}\n{}",
-                    r#"@vertex
-fn vs_main(input: VertexInput, instance: InstanceInput,) -> VertexOutput {
-    let model_matrix = mat4x4<f32>(
-        instance.model_matrix_0,
-        instance.model_matrix_1,
-        instance.model_matrix_2,
-        instance.model_matrix_3,
-    );
+            )],
+        };
+        shader_builder.build();
 
-    var out: VertexOutput;
-    out.texture_coordinates = input.texture_coordinates;"#,
-                    if camera_effect {
-                        "out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
-                    } else {
-                        "out.position = model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"
-                    },
-                    r#"return out;
-}
+        shader_builder
+    }
 
-// ===== Fragment STAGE ===== //
-@fragment
-fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(texture_diffuse, sampler_diffuse, input.texture_coordinates) * fragment_uniforms.color;
-}"#
-                )
-            ),
+    pub fn build(&mut self) {
+        if self.camera_effect {
+            for i in &self.configs {
+                self.shader = self.shader.replace(&i.0, &i.1 .0);
+            }
+        } else {
+            for i in &self.configs {
+                self.shader = self.shader.replace(&i.0, &i.1 .1);
+            }
         }
     }
 }

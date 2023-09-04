@@ -2,3 +2,4 @@ target
 .vscode
 tools
 res
+resources/*.png

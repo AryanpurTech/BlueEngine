@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
@@ -24,7 +26,16 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/SimpleJacob.png"),
+            TextureData::Path("resources/player.png"),
+            blue_engine::TextureMode::Clamp,
+        )
+        .unwrap();
+
+    let texture3 = engine
+        .renderer
+        .build_texture(
+            "background",
+            TextureData::Path("resources/image.png"),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
@@ -55,6 +66,23 @@ fn main() {
         .get_mut("alt")
         .unwrap()
         .set_position(0.2f32, 0f32, 0.001f32);
+
+    square(
+        "alt2",
+        ObjectSettings::default(),
+        &mut engine.renderer,
+        &mut engine.objects,
+    );
+    engine
+        .objects
+        .get_mut("alt2")
+        .unwrap()
+        .set_texture(texture3);
+    engine
+        .objects
+        .get_mut("alt2")
+        .unwrap()
+        .set_position(-0.2f32, 0f32, 0.001f32);
 
     let speed = -0.05;
     engine
