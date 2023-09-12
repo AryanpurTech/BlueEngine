@@ -275,6 +275,12 @@ impl std::default::Default for WindowDescriptor {
 unsafe impl Send for WindowDescriptor {}
 unsafe impl Sync for WindowDescriptor {}
 
+#[derive(Debug)]
+pub enum Projection {
+    Perspective { fov: f32 },
+    Orthographic { zoom: f32 },
+}
+
 /// Container for the camera feature. The settings here are needed for
 /// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
 #[derive(Debug)]
@@ -285,8 +291,7 @@ pub struct Camera {
     pub target: nalgebra_glm::Vec3,
     pub up: nalgebra_glm::Vec3,
     pub resolution: (f32, f32),
-    /// The field of view of the camera
-    pub fov: f32,
+    pub projection: Projection,
     /// The closest view of camera
     pub near: f32,
     /// The furthest view of camera
