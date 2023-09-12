@@ -44,3 +44,11 @@ pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
             [0.0, 0.0, 0.0, 1.0],
         ],
     };
+
+#[rustfmt::skip]
+pub const OPENGL_TO_WGPU_MATRIX: nalgebra_glm::Mat4 = nalgebra_glm::Mat4::new(
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.5,
+    0.0, 0.0, 0.0, 1.0,
+);
