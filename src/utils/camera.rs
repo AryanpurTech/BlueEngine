@@ -4,11 +4,14 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{uniform_type::Matrix, Camera, Renderer};
+use crate::{
+    header::{uniform_type::Matrix, Camera, Renderer},
+    Projection,
+};
 use anyhow::Result;
 use winit::dpi::PhysicalSize;
 
-use super::default_resources::DEFAULT_MATRIX_4;
+use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
 
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
@@ -22,7 +25,9 @@ impl Camera {
             target: nalgebra_glm::vec3(0.0, 0.0, -1.0).into(),
             up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
             resolution: (window_size.width as f32, window_size.height as f32),
-            fov: 70f32 * (std::f32::consts::PI / 180f32),
+            projection: crate::Projection::Perspective {
+                fov: 70f32 * (std::f32::consts::PI / 180f32),
+            },
             near: 0.1,
             far: 100.0,
             view_data: DEFAULT_MATRIX_4.to_im(),
@@ -39,7 +44,7 @@ impl Camera {
     pub fn build_view_projection_matrix(&mut self) -> Result<()> {
         let view = self.build_view_matrix();
         let proj = self.build_projection_matrix();
-        self.view_data = proj * view;
+        self.view_data = OPENGL_TO_WGPU_MATRIX * proj * view;
         self.changed = true;
 
         Ok(())
@@ -91,14 +96,6 @@ impl Camera {
         Ok(())
     }
 
-    /// Sets the field of view of camera
-    pub fn set_fov(&mut self, new_fov: f32) -> Result<()> {
-        self.fov = new_fov;
-        self.build_view_projection_matrix()?;
-
-        Ok(())
-    }
-
     /// Sets how far camera can look
     pub fn set_far(&mut self, new_far: f32) -> Result<()> {
         self.far = new_far;
@@ -118,6 +115,13 @@ impl Camera {
     /// Sets the aspect ratio of the camera
     pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) -> Result<()> {
         self.resolution = (window_size.width as f32, window_size.height as f32);
+        self.build_view_projection_matrix()?;
+
+        Ok(())
+    }
+
+    pub fn set_projection(&mut self, projection: Projection) -> Result<()> {
+        self.projection = projection;
         self.build_view_projection_matrix()?;
 
         Ok(())
@@ -176,11 +180,23 @@ impl Camera {
     }
 
     pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
-        nalgebra_glm::perspective(
-            self.resolution.0 / self.resolution.1,
-            self.fov,
-            self.near,
-            self.far,
-        )
+        let aspect = self.resolution.0 / self.resolution.1;
+
+        match self.projection {
+            crate::Projection::Perspective { fov } => {
+                nalgebra_glm::perspective(aspect, fov, self.near, self.far)
+            }
+            crate::Projection::Orthographic { zoom } => {
+                let width = zoom;
+                let height = width / aspect;
+
+                let left = width * -0.5;
+                let right = width * 0.5;
+                let bottom = height * -0.5;
+                let top = height * 0.5;
+
+                nalgebra_glm::ortho(left, right, bottom, top, self.near, self.far)
+            }
+        }
     }
 }
