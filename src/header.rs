@@ -120,6 +120,8 @@ pub struct Object {
     pub uniform_buffers: Vec<wgpu::Buffer>,
     /// Should be rendered or not
     pub is_visible: bool,
+    /// Objects with higher number get rendered later and appear "on top" when occupying the same space
+    pub render_order: usize,
 }
 unsafe impl Send for Object {}
 unsafe impl Sync for Object {}

@@ -270,7 +270,11 @@ impl Renderer {
         render_pass.set_pipeline(&default_data.1);
         render_pass.set_bind_group(1, &camera.uniform_data, &[]);
 
-        for i in objects.iter() {
+        // sort the object list in descending render order
+        let mut object_list: Vec<_> = objects.iter().collect();
+        object_list.sort_by(|a, b| a.1.render_order.cmp(&b.1.render_order).reverse());
+
+        for i in object_list {
             if i.1.is_visible {
                 let i = i.1;
 
