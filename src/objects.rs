@@ -310,10 +310,10 @@ impl Object {
     }
 
     /// Changes the render order of the Object.
+    ///
     /// Objects with higher number get rendered later and appear "on top" when occupying the same space
     pub fn set_render_order(&mut self, render_order: usize) -> anyhow::Result<()> {
         self.render_order = render_order;
-        self.changed = true;
 
         Ok(())
     }
