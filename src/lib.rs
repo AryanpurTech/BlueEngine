@@ -68,4 +68,5 @@ pub mod primitive_shapes;
 pub mod render;
 pub mod utils;
 pub mod window;
+#[doc(inline)]
 pub use crate::header::*;
