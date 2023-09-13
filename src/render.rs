@@ -272,11 +272,11 @@ impl Renderer {
 
         // sort the object list in descending render order
         let mut object_list: Vec<_> = objects.iter().collect();
-        object_list.sort_by(|a, b| a.1.render_order.cmp(&b.1.render_order).reverse());
+        object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
 
-        for i in object_list {
-            if i.1.is_visible {
-                let i = i.1;
+        for (_, i) in object_list {
+            if i.is_visible {
+                let i = i;
 
                 let vertex_buffer = get_pipeline_vertex_buffer(&i.pipeline.vertex_buffer, objects);
                 let shader = get_pipeline_shader(&i.pipeline.shader, objects);
