@@ -67,6 +67,10 @@ path = "examples/utils/resource_sharing.rs"
 name = "instancing"
 path = "examples/utils/instancing.rs"
 
+[[example]]
+name = "render_order"
+path = "examples/utils/render_order.rs"
+
 # Development ONLY
 [[example]]
 name = "dev"
