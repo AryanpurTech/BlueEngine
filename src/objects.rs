@@ -13,6 +13,16 @@ use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_
 use crate::{ObjectStorage, StringBuffer};
 
 impl Renderer {
+    /// Creates a new object
+    ///
+    /// Is used to define a new object and add it to the storage. This offers full customizability
+    /// and a framework for in-engine shapes to be developed.
+    ///
+    /// # Arguments
+    /// * `name` - The name of the object.
+    /// * `verticies` - A list of vertices for the object to draw with
+    /// * `indicies` - A list of indicies that references the vertices, defining draw order
+    /// * `settings` - The settings of the object
     pub fn build_object(
         &mut self,
         name: impl StringBuffer,
@@ -129,6 +139,7 @@ impl ObjectStorage {
         Ok(())
     }
 
+    /// Adds an object to the storage
     pub fn add_object(&mut self, key: impl StringBuffer, object: Object) -> anyhow::Result<()> {
         fn add_object_inner(
             object_storage: &mut ObjectStorage,
@@ -338,6 +349,7 @@ impl Object {
         self.changed = false;
     }
 
+    /// build an inverse of the transformation matrix to be sent to the gpu for lighting and other things.
     pub fn inverse_matrices(&mut self) {
         self.inverse_transformation_matrix =
             Matrix::from_im(nalgebra_glm::transpose(&nalgebra_glm::inverse(
@@ -367,6 +379,7 @@ impl Object {
         Ok((vertex_buffer, unifrom_buffer, shader))
     }
 
+    /// Update and apply changes done to the vertex buffer
     pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
@@ -386,6 +399,7 @@ impl Object {
         Ok(updated_buffer_2)
     }
 
+    /// Update and apply changes done to the shader
     pub fn update_shader(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let updated_shader = renderer.build_shader(
             self.name.as_str(),
@@ -420,6 +434,7 @@ impl Object {
         Ok(updated_shader2)
     }
 
+    /// Update and apply changes done to the uniform buffer
     pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
@@ -459,6 +474,7 @@ impl Object {
         Ok(updated_buffer2.0)
     }
 
+    /// Updates the instance buffer
     pub fn update_instance_buffer(&mut self, renderer: &mut Renderer) -> anyhow::Result<()> {
         let instance_data = self
             .instances
@@ -470,6 +486,7 @@ impl Object {
         Ok(())
     }
 
+    /// Returns the buffer with ownership
     pub fn update_instance_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
@@ -508,20 +525,28 @@ impl Object {
     }
 
     // ============================= Instances =============================
+    /// Add an instance to the object
     pub fn add_instance(&mut self, instance: Instance) {
         self.instances.push(instance);
         self.changed = true;
     }
 }
 
+/// Helps with building and updating shader code
 #[derive(Debug)]
 pub struct ShaderBuilder {
+    /// the shader itself
     pub shader: String,
+    /// Should the camera effect be applied
     pub camera_effect: bool,
+    /// configurations to be applied to the shader
+    ///
+    /// the way it works is: `("key to look for", ("shader code with camera effects", "shader code without camera effects"))`
     pub configs: Vec<(String, (String, String))>,
 }
 
 impl ShaderBuilder {
+    /// Creates a new shader builder
     pub fn new(shader_source: String, camera_effect: bool) -> Self {
         let mut shader_builder = Self {
             shader: shader_source,
@@ -552,6 +577,7 @@ impl ShaderBuilder {
         shader_builder
     }
 
+    /// Builds the shader with the configruation defined
     pub fn build(&mut self) {
         if self.camera_effect {
             for i in &self.configs {
@@ -581,7 +607,7 @@ impl Instance {
         let rotation_matrix = nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation);
         let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale);
         InstanceRaw {
-            model: (position_matrix * rotation_matrix * scale_matrix).into(),
+            model: Matrix::from_im(position_matrix * rotation_matrix * scale_matrix),
         }
     }
 
@@ -612,6 +638,7 @@ impl Default for Instance {
 }
 
 impl InstanceRaw {
+    /// Instance's layout description
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
         wgpu::VertexBufferLayout {

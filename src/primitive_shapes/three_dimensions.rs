@@ -1,5 +1,6 @@
 use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
 
+/// Creates a 3D cube
 pub fn cube(
     name: impl StringBuffer,
     renderer: &mut Renderer,
@@ -144,14 +145,18 @@ pub fn cube(
             20, 21, 22, 22, 23, 20, // back
         ],
         ObjectSettings::default(),
-        renderer
+        renderer,
     )?;
 
     Ok(())
 }
 
+/// Create a 3D UV Sphere
+///
+/// ```
 /// details = (stacks, sectors, radius)
 /// example = (18, 36, 1f32)
+/// ```
 pub fn uv_sphere(
     name: impl StringBuffer,
     details: (usize, usize, f32),
@@ -208,7 +213,7 @@ pub fn uv_sphere(
         vertices,
         indices,
         ObjectSettings::default(),
-        renderer
+        renderer,
     )?;
 
     Ok(())

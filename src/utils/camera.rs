@@ -120,6 +120,7 @@ impl Camera {
         Ok(())
     }
 
+    /// Sets the projection of the camera
     pub fn set_projection(&mut self, projection: Projection) -> Result<()> {
         self.projection = projection;
         self.build_view_projection_matrix()?;
@@ -167,6 +168,7 @@ impl Camera {
         Ok(updated_buffer)
     }
 
+    /// Builds a view matrix for camera projection
     pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
         nalgebra_glm::look_at_rh(
             &self.position,
@@ -179,6 +181,7 @@ impl Camera {
         )
     }
 
+    /// Builds a projection matrix for camera
     pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
         let aspect = self.resolution.0 / self.resolution.1;
 

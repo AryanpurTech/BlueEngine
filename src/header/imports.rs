@@ -4,12 +4,17 @@ pub type Shaders = wgpu::RenderPipeline;
 pub type UniformBuffers = wgpu::BindGroup;
 /// Textures are image data that are sent to GPU to be set to a surface
 pub type Textures = wgpu::BindGroup;
-
+/// Primitive type the input mesh is composed of.
 pub type ShaderPrimitive = wgpu::PrimitiveTopology;
+/// Format of indices used with pipeline.
 pub type IndexFormat = wgpu::IndexFormat;
+/// Vertex winding order which classifies the "front" face of a triangle.
 pub type FrontFace = wgpu::FrontFace;
+/// Face of a vertex.
 pub type CullMode = wgpu::Face;
+/// Type of drawing mode for polygons
 pub type PolygonMode = wgpu::PolygonMode;
+/// Power Preference when choosing a physical adapter.
 pub type PowerPreference = wgpu::PowerPreference;
 
 /// Pod trait for custom uniform buffer structure
@@ -62,5 +67,3 @@ pub use winit::window::Fullscreen;
 pub use winit::window::Window;
 /// Input helper
 pub use winit_input_helper::WinitInputHelper as InputHelper;
-
-pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;

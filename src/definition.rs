@@ -246,6 +246,9 @@ impl crate::header::Renderer {
         return (texture, view, sampler);
     }
 
+    /// Creates a new uniform buffer part
+    ///
+    /// This function doesn't build the entire uniform buffers list, but rather only one of them
     pub fn build_uniform_buffer_part<T: bytemuck::Zeroable + bytemuck::Pod>(
         &self,
         name: impl StringBuffer,
@@ -330,6 +333,7 @@ impl crate::header::Renderer {
         })
     }
 
+    /// Creates a new instance buffer for the object
     pub fn build_instance(&self, instance_data: Vec<InstanceRaw>) -> wgpu::Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

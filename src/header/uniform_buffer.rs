@@ -5,6 +5,7 @@ pub mod uniform_type {
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Matrix {
+        /// data structure for the matrix
         pub data: [[f32; 4]; 4],
     }
     impl Matrix {
@@ -79,6 +80,7 @@ pub mod uniform_type {
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Array3 {
+        /// data structure for the array
         pub data: [f32; 3],
     }
     impl std::ops::Mul<Array3> for Array3 {
@@ -108,9 +110,11 @@ pub mod uniform_type {
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Array4 {
+        /// data structure for the array
         pub data: [f32; 4],
     }
     impl Array4 {
+        /// Replaces it's values by the new values provided
         pub fn update(&mut self, uniform: Array4) {
             self.data = uniform.data;
         }
@@ -148,9 +152,11 @@ pub mod uniform_type {
     #[repr(C)]
     #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
     pub struct Float {
+        /// data structure for the float
         pub data: f32,
     }
     impl Float {
+        /// Replaces it's values by the new values provided
         pub fn update(&mut self, uniform: Float) {
             self.data = uniform.data;
         }

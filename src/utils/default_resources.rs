@@ -4,8 +4,10 @@
  * The license is same as the one on the root.
 */
 
+/// The default shader file code
 pub const DEFAULT_SHADER: &str = include_str!("./default_shader.wgsl");
 
+/// The default texture thats loaded for each object
 pub const DEFAULT_TEXTURE: &[u8] = &[
     137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0,
     0, 0, 31, 21, 196, 137, 0, 0, 1, 130, 105, 67, 67, 80, 73, 67, 67, 32, 112, 114, 111, 102, 105,
@@ -33,8 +35,10 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
     174, 66, 96, 130,
 ];
 
+/// The default color used for each object
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 0.0];
 
+/// A default matrix 4x4 used in the engine
 pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
     crate::header::uniform_type::Matrix {
         data: [
@@ -45,6 +49,7 @@ pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
         ],
     };
 
+/// A transformation matrix used to convert opengl projections to wgpu
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: nalgebra_glm::Mat4 = nalgebra_glm::Mat4::new(
     1.0, 0.0, 0.0, 0.0,
