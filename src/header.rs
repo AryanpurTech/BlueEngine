@@ -488,7 +488,7 @@ pub enum TextureData {
     /// the texture as a [`image::DynamicImage`]
     Image(image::DynamicImage),
     /// path to a texture file to load
-    Path(&'static str),
+    Path(String),
 }
 unsafe impl Send for TextureData {}
 unsafe impl Sync for TextureData {}
