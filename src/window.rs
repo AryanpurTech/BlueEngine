@@ -11,7 +11,7 @@ use crate::{
 
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::EventLoop,
     window::{Window, WindowBuilder},
 };
 
@@ -54,7 +54,7 @@ impl Engine {
         // will create the main event loop of the window.
         // and will contain all the callbacks and button press
         // also will allow graphics API
-        let event_loop = EventLoop::new();
+        let event_loop = EventLoop::new()?;
 
         // bind the loop to window
         #[cfg(not(feature = "android"))]
@@ -117,7 +117,7 @@ impl Engine {
             DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
 
         // The main loop
-        event_loop.run(move |events, _, control_flow| {
+        event_loop.run(move |events, window_target| {
             // updates the data on what events happened before the frame start
             input.update(&events);
 
@@ -138,7 +138,7 @@ impl Engine {
                     window_id,
                 } if window_id == window.id() => match event {
                     WindowEvent::CloseRequested => {
-                        *control_flow = ControlFlow::Exit;
+                        window_target.exit();
                         std::process::exit(0);
                     }
                     WindowEvent::Resized(size) => {
@@ -170,7 +170,7 @@ impl Engine {
                 }
 
                 Event::DeviceEvent { event, .. } => _device_event = event,
-                Event::MainEventsCleared => {
+                Event::NewEvents(new_events) => {
                     let pre_render = renderer
                         .pre_render(&objects, &camera)
                         .expect("Couldn't get pre render data");
@@ -216,14 +216,14 @@ impl Engine {
                             Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
                             // The system is out of memory, we should probably quit
                             Err(wgpu::SurfaceError::OutOfMemory) => {
-                                *control_flow = ControlFlow::Exit
+                                window_target.exit();
                             }
                             // All other errors (Outdated, Timeout) should be resolved by the next frame
                             Err(e) => eprintln!("{:?}", e),
                         }
                     }
 
-                    _device_event = DeviceEvent::Text { codepoint: ' ' };
+                    _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
                     window.request_redraw();
                 }
                 _ => (),

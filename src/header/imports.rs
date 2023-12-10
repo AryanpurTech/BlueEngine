@@ -52,15 +52,16 @@ pub use winit::event::ElementState;
 /// Winit Events
 pub use winit::event::Event;
 /// Keyboard input identifier
-pub use winit::event::KeyboardInput;
+pub use winit::event::KeyEvent;
 /// The mouse button identifier
 pub use winit::event::MouseButton;
-/// Keyboard keys identifier
-pub use winit::event::VirtualKeyCode;
 /// WindowEvents
 pub use winit::event::WindowEvent;
 /// Event Loop
 pub use winit::event_loop::EventLoop;
+/// Keyboard keys identifier
+pub use winit::keyboard::Key;
+pub use winit::keyboard::KeyCode;
 /// Fullscreen enum
 pub use winit::window::Fullscreen;
 /// Window export from winit
