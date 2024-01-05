@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -22,11 +22,11 @@ NON_FILL_POLYGON_MODE = []
 [dependencies]
 image = { version = "0.24" }
 futures = "0.3"
-winit = { version = "0.29" }
+winit = { version = "0.29.8", features = ["rwh_05"] }
+wgpu = { version = "0.18" }
 bytemuck = { version = "1.14", features = ["derive"] }
 winit_input_helper = "0.15"
 anyhow = "1.0"
-wgpu = { version = "0.18" }
 downcast = "0.11"
 nalgebra-glm = "0.18"
 # debug logs

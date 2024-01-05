@@ -40,9 +40,8 @@ impl Renderer {
             backends,
             ..Default::default()
         });
-
         #[cfg(not(feature = "android"))]
-        let surface = Some(unsafe { instance.create_surface(&window) }?);
+        let surface = Some(unsafe { instance.create_surface(&window)? });
         #[cfg(feature = "android")]
         let surface = None;
 

@@ -118,20 +118,6 @@ impl Engine {
 
         // The main loop
         event_loop.run(move |events, window_target| {
-            // updates the data on what events happened before the frame start
-            input.update(&events);
-
-            plugins.iter_mut().for_each(|i| {
-                i.update_events(
-                    &mut renderer,
-                    &window,
-                    &mut objects,
-                    &events,
-                    &input,
-                    &mut camera,
-                );
-            });
-
             match events {
                 Event::WindowEvent {
                     ref event,
@@ -150,8 +136,62 @@ impl Engine {
                             .update_view_projection(&mut renderer)
                             .expect("Couldn't set the resize to camera in renderer");
                     }
+                    WindowEvent::RedrawRequested => {
+                        let pre_render = renderer
+                            .pre_render(&objects, &camera)
+                            .expect("Couldn't get pre render data");
+                        if pre_render.is_some() {
+                            let (mut encoder, view, frame) = pre_render.unwrap();
+
+                            update_function(
+                                &mut renderer,
+                                &mut window,
+                                &mut objects,
+                                &input,
+                                &mut camera,
+                                &mut plugins,
+                            );
+
+                            plugins.iter_mut().for_each(|i| {
+                                i.update(
+                                    &mut renderer,
+                                    &window,
+                                    &mut objects,
+                                    &mut camera,
+                                    &input,
+                                    &mut encoder,
+                                    &view,
+                                );
+                            });
+
+                            camera
+                                .update_view_projection(&mut renderer)
+                                .expect("Couldn't update camera");
+                            objects.iter_mut().for_each(|i| {
+                                if i.1.changed {
+                                    i.1.update(&mut renderer).expect("Couldn't update objects");
+                                }
+                            });
+
+                            match renderer.render(encoder, frame) {
+                                Ok(_) => {}
+                                // Recreate the swap_chain if lost
+                                Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
+                                // The system is out of memory, we should probably quit
+                                Err(wgpu::SurfaceError::OutOfMemory) => {
+                                    window_target.exit();
+                                }
+                                // All other errors (Outdated, Timeout) should be resolved by the next frame
+                                Err(e) => eprintln!("{:?}", e),
+                            }
+                        }
+
+                        _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
+                        window.request_redraw();
+                    }
                     _ => {}
                 },
+
                 #[cfg(feature = "android")]
                 Event::Resumed => {
                     let surface = unsafe { renderer.instance.create_surface(&window) };
@@ -170,65 +210,26 @@ impl Engine {
                 }
 
                 Event::DeviceEvent { event, .. } => _device_event = event,
-                Event::NewEvents(new_events) => {
-                    let pre_render = renderer
-                        .pre_render(&objects, &camera)
-                        .expect("Couldn't get pre render data");
-                    if pre_render.is_some() {
-                        let (mut encoder, view, frame) = pre_render.unwrap();
 
-                        #[cfg(not(feature = "gui"))]
-                        update_function(
+                Event::NewEvents(_new_events) => {
+                    // updates the data on what events happened before the frame start
+                    input.update(&events);
+
+                    plugins.iter_mut().for_each(|i| {
+                        i.update_events(
                             &mut renderer,
-                            &mut window,
+                            &window,
                             &mut objects,
+                            &events,
                             &input,
                             &mut camera,
-                            &mut plugins,
                         );
-
-                        plugins.iter_mut().for_each(|i| {
-                            i.update(
-                                &mut renderer,
-                                &window,
-                                &mut objects,
-                                &mut camera,
-                                &input,
-                                &mut encoder,
-                                &view,
-                            );
-                        });
-
-                        camera
-                            .update_view_projection(&mut renderer)
-                            .expect("Couldn't update camera");
-                        objects.iter_mut().for_each(|i| {
-                            if i.1.changed {
-                                i.1.update(&mut renderer).expect("Couldn't update objects");
-                            }
-                        });
-
-                        let ren = renderer.render(encoder, frame);
-
-                        match ren {
-                            Ok(_) => {}
-                            // Recreate the swap_chain if lost
-                            Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
-                            // The system is out of memory, we should probably quit
-                            Err(wgpu::SurfaceError::OutOfMemory) => {
-                                window_target.exit();
-                            }
-                            // All other errors (Outdated, Timeout) should be resolved by the next frame
-                            Err(e) => eprintln!("{:?}", e),
-                        }
-                    }
-
-                    _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
-                    window.request_redraw();
+                    });
                 }
+
                 _ => (),
             }
-        });
+        })?;
         //logic(&mut renderer, WindowCallbackEvents::After, &window);
 
         Ok(())
