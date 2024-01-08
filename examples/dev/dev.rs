@@ -18,7 +18,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/BlueLogoDiscord.png"),
+            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
@@ -26,7 +26,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/player.png"),
+            TextureData::Path("resources/player.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
@@ -35,7 +35,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/image.png"),
+            TextureData::Path("resources/image.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
@@ -89,7 +89,7 @@ fn main() {
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
             let sprite = objects.get_mut("alt").unwrap();
 
-            if input.key_held(blue_engine::VirtualKeyCode::Up) {
+            if input.key_held(blue_engine::KeyCode::ArrowUp) {
                 sprite.set_position(
                     sprite.position.x,
                     sprite.position.y - speed,
@@ -97,7 +97,7 @@ fn main() {
                 );
                 //lm.ambient_color.data = [1f32, 1f32, 1f32, 1f32];
             }
-            if input.key_held(blue_engine::VirtualKeyCode::Down) {
+            if input.key_held(blue_engine::KeyCode::ArrowDown) {
                 sprite.set_position(
                     sprite.position.x,
                     sprite.position.y + speed,
@@ -106,14 +106,14 @@ fn main() {
                 //lm.ambient_color.data = [0.1f32, 0.1f32, 0.1f32, 1f32];
             }
 
-            if input.key_held(blue_engine::VirtualKeyCode::Left) {
+            if input.key_held(blue_engine::KeyCode::ArrowLeft) {
                 sprite.set_position(
                     sprite.position.x + speed,
                     sprite.position.y,
                     sprite.position.z,
                 );
             }
-            if input.key_held(blue_engine::VirtualKeyCode::Right) {
+            if input.key_held(blue_engine::KeyCode::ArrowRight) {
                 sprite.set_position(
                     sprite.position.x - speed,
                     sprite.position.y,
@@ -121,14 +121,14 @@ fn main() {
                 );
             }
 
-            if input.key_held(blue_engine::VirtualKeyCode::E) {
+            if input.key_held(blue_engine::KeyCode::KeyE) {
                 sprite.set_position(
                     sprite.position.x,
                     sprite.position.y,
                     sprite.position.z + speed,
                 );
             }
-            if input.key_held(blue_engine::VirtualKeyCode::Q) {
+            if input.key_held(blue_engine::KeyCode::KeyQ) {
                 sprite.set_position(
                     sprite.position.x,
                     sprite.position.y,

@@ -118,6 +118,19 @@ impl Engine {
 
         // The main loop
         event_loop.run(move |events, window_target| {
+            input.update(&events);
+
+            plugins.iter_mut().for_each(|i| {
+                i.update_events(
+                    &mut renderer,
+                    &window,
+                    &mut objects,
+                    &events,
+                    &input,
+                    &mut camera,
+                );
+            });
+
             match events {
                 Event::WindowEvent {
                     ref event,
@@ -213,18 +226,6 @@ impl Engine {
 
                 Event::NewEvents(_new_events) => {
                     // updates the data on what events happened before the frame start
-                    input.update(&events);
-
-                    plugins.iter_mut().for_each(|i| {
-                        i.update_events(
-                            &mut renderer,
-                            &window,
-                            &mut objects,
-                            &events,
-                            &input,
-                            &mut camera,
-                        );
-                    });
                 }
 
                 _ => (),

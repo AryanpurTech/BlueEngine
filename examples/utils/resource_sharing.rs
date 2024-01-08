@@ -9,7 +9,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/BlueLogoDiscord.png"),
+            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
