@@ -6,9 +6,10 @@
 
 use crate::{
     header::{Camera, Engine, Renderer, WindowDescriptor},
+    render::EngineInitializationError,
     ObjectStorage,
 };
-
+use error_stack::ResultExt;
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
     event_loop::EventLoop,
@@ -17,18 +18,18 @@ use winit::{
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new() -> eyre::Result<Self> {
         Self::new_inner(WindowDescriptor::default())
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> anyhow::Result<Self> {
+    pub fn new_config(settings: WindowDescriptor) -> eyre::Result<Self> {
         Self::new_inner(settings)
     }
 
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
-    pub(crate) fn new_inner(settings: WindowDescriptor) -> anyhow::Result<Self> {
+    pub(crate) fn new_inner(settings: WindowDescriptor) -> eyre::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimentions of the window, as width and height
@@ -101,7 +102,7 @@ impl Engine {
     >(
         self,
         mut update_function: F,
-    ) -> anyhow::Result<()> {
+    ) -> eyre::Result<()> {
         let Self {
             event_loop,
             mut renderer,

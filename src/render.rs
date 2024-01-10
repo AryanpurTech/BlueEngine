@@ -9,7 +9,7 @@ use crate::{
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     ObjectStorage, PipelineData,
 };
-use anyhow::Result;
+use error_stack::{Context, Result, ResultExt};
 use wgpu::Features;
 use winit::window::Window;
 
@@ -32,7 +32,7 @@ impl Renderer {
         window: &Window,
         power_preference: crate::PowerPreference,
         backends: crate::Backends,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self, EngineInitializationError> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -41,7 +41,7 @@ impl Renderer {
             ..Default::default()
         });
         #[cfg(not(feature = "android"))]
-        let surface = Some(unsafe { instance.create_surface(&window)? });
+        let surface = Some(unsafe { instance.create_surface(&window).unwrap() });
         #[cfg(feature = "android")]
         let surface = None;
 
@@ -158,12 +158,14 @@ impl Renderer {
             camera: None,
         };
 
-        let default_texture = renderer.build_texture(
-            "Default Texture",
-            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::header::TextureMode::Clamp,
-            //crate::header::TextureFormat::PNG
-        )?;
+        let default_texture = renderer
+            .build_texture(
+                "Default Texture",
+                TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
+                crate::header::TextureMode::Clamp,
+                //crate::header::TextureFormat::PNG
+            )
+            .unwrap();
 
         let default_uniform = renderer.build_uniform_buffer(&vec![
             renderer.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
@@ -173,14 +175,14 @@ impl Renderer {
                     data: DEFAULT_COLOR,
                 },
             ),
-        ])?;
+        ]);
 
         let default_shader = renderer.build_shader(
             "Default Shader",
             DEFAULT_SHADER.to_string(),
             Some(&default_uniform.1),
             ShaderSettings::default(),
-        )?;
+        );
 
         renderer.default_data = Some((default_texture, default_shader, default_uniform.0));
 
@@ -408,5 +410,25 @@ fn get_pipeline_uniform_buffer<'a>(
             }
         }
         PipelineData::Data(data) => Some(data),
+    }
+}
+
+// =========================== Errors ===========================
+#[derive(Debug, thiserror::Error)]
+pub enum EngineInitializationError {
+    SurfaceCreationError(wgpu::SurfaceError),
+    ResrouceCreationError(wgpu::RequestDeviceError),
+}
+
+impl std::fmt::Display for EngineInitializationError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EngineInitializationError::SurfaceCreationError(_) => {
+                fmt.write_str("Surface Creation Error: Issues fetching surface data.")
+            }
+            EngineInitializationError::ResrouceCreationError(_) => {
+                fmt.write_str("Resource Creation Error: Issues fetching resource data.")
+            }
+        }
     }
 }

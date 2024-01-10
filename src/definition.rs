@@ -4,6 +4,10 @@
  * The license is same as the one on the root.
 */
 
+use std::{error, fmt::format};
+
+use error_stack::{Report, ResultExt};
+use eyre::Context;
 use image::GenericImageView;
 use wgpu::{util::DeviceExt, BindGroupLayout, Sampler, Texture, TextureView};
 
@@ -23,13 +27,13 @@ impl crate::header::Renderer {
         vertex_buffer: VertexBuffers,
         texture: Textures,
         uniform: Option<UniformBuffers>,
-    ) -> Result<Pipeline, anyhow::Error> {
-        Ok(Pipeline {
+    ) -> Pipeline {
+        Pipeline {
             shader: PipelineData::Data(shader),
             vertex_buffer: PipelineData::Data(vertex_buffer),
             texture: PipelineData::Data(texture),
             uniform: PipelineData::Data(uniform),
-        })
+        }
     }
 
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
@@ -39,7 +43,7 @@ impl crate::header::Renderer {
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
-    ) -> Result<Shaders, anyhow::Error> {
+    ) -> Shaders {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -107,7 +111,7 @@ impl crate::header::Renderer {
                 multiview: None,
             });
 
-        Ok(render_pipeline)
+        render_pipeline
     }
 
     /// Creates a new texture data
@@ -117,7 +121,7 @@ impl crate::header::Renderer {
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
-    ) -> anyhow::Result<Textures> {
+    ) -> error_stack::Result<Textures, ResourceError> {
         let mode: wgpu::AddressMode;
         match texture_mode {
             TextureMode::Clamp => mode = wgpu::AddressMode::Repeat,
@@ -134,11 +138,18 @@ impl crate::header::Renderer {
 
         let img = match texture_data {
             TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
-                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
-            TextureData::Image(data) => data,
-            TextureData::Path(path) => image::open(path)
-                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
-        };
+                .attach_printable_lazy(|| {
+                    format!("Couldn't Load Image For Texture Of {}", name.as_str())
+                }),
+
+            TextureData::Image(data) => Ok(data),
+            TextureData::Path(path) => image::open(path).attach_printable_lazy(|| {
+                format!("Couldn't Load Image For Texture Of {}", name.as_str())
+            }),
+        }
+        .change_context_lazy(|| {
+            ResourceError::TextureError(format!("Couldn't Load Image: {}", name.as_string()))
+        })?;
 
         let rgba = img.to_rgba8();
         let dimensions = img.dimensions();
@@ -266,7 +277,7 @@ impl crate::header::Renderer {
     pub fn build_uniform_buffer(
         &mut self,
         uniforms: &Vec<wgpu::Buffer>,
-    ) -> Result<(UniformBuffers, BindGroupLayout), anyhow::Error> {
+    ) -> (UniformBuffers, BindGroupLayout) {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
 
@@ -301,7 +312,7 @@ impl crate::header::Renderer {
             entries: &buffer_entry.as_slice(),
         });
 
-        Ok((uniform_bind_group, uniform_bind_group_layout))
+        return (uniform_bind_group, uniform_bind_group_layout);
     }
 
     /// Creates a new vertex buffer and indecies
@@ -309,7 +320,7 @@ impl crate::header::Renderer {
         &mut self,
         verticies: &Vec<Vertex>,
         indicies: &Vec<u16>,
-    ) -> Result<VertexBuffers, anyhow::Error> {
+    ) -> VertexBuffers {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -326,11 +337,11 @@ impl crate::header::Renderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        Ok(VertexBuffers {
+        VertexBuffers {
             vertex_buffer,
             index_buffer,
             length: indicies.len() as u32,
-        })
+        }
     }
 
     /// Creates a new instance buffer for the object
@@ -341,5 +352,25 @@ impl crate::header::Renderer {
                 contents: bytemuck::cast_slice(&instance_data),
                 usage: wgpu::BufferUsages::VERTEX,
             })
+    }
+}
+
+// ============================= ERROR HANDLING ============================== //
+#[derive(Debug, thiserror::Error)]
+pub enum ResourceError {
+    TextureError(String),
+    Other,
+}
+
+impl std::fmt::Display for ResourceError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResourceError::TextureError(_) => {
+                fmt.write_str("Texture Error: Issues fetching texture data.")
+            }
+            ResourceError::Other => fmt.write_str("Other Error: Issues fetching texture data."),
+
+            _ => fmt.write_str("Unknown Error: Issues fetching texture data."),
+        }
     }
 }

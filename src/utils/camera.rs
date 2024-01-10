@@ -8,7 +8,7 @@ use crate::{
     header::{uniform_type::Matrix, Camera, Renderer},
     Projection,
 };
-use anyhow::Result;
+use eyre::Result;
 use winit::dpi::PhysicalSize;
 
 use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
@@ -18,7 +18,7 @@ impl Camera {
     pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Result<Self> {
         let camera_uniform = renderer.build_uniform_buffer(&vec![
             renderer.build_uniform_buffer_part("Camera Uniform", DEFAULT_MATRIX_4)
-        ])?;
+        ]);
 
         let mut camera = Self {
             position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
@@ -142,7 +142,6 @@ impl Camera {
                     self.camera_uniform_buffer()
                         .expect("Couldn't build camera projection"),
                 )])
-                .expect("Couldn't update the camera uniform buffer")
                 .0;
             self.uniform_data = updated_buffer;
             self.changed = false;
@@ -162,7 +161,6 @@ impl Camera {
                 self.camera_uniform_buffer()
                     .expect("Couldn't build camera projection"),
             )])
-            .expect("Couldn't update the camera uniform buffer")
             .0;
 
         Ok(updated_buffer)
