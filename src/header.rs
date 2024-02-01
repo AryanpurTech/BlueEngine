@@ -236,7 +236,7 @@ unsafe impl Sync for VertexBuffers {}
 #[derive(Debug)]
 pub struct Renderer {
     /// A [`wgpu::Surface`] represents a platform-specific surface (e.g. a window) onto which rendered images may be presented.
-    pub surface: Option<wgpu::Surface>,
+    pub surface: Option<wgpu::Surface<'static>>,
     /// Context for all of the gpu objects
     #[cfg(feature = "android")]
     pub instance: wgpu::Instance,

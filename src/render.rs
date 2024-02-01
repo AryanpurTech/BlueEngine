@@ -41,7 +41,9 @@ impl Renderer {
             ..Default::default()
         });
         #[cfg(not(feature = "android"))]
-        let surface = Some(unsafe { instance.create_surface(&window)? });
+        let surface = Some(unsafe {
+            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window)?)?
+        });
         #[cfg(feature = "android")]
         let surface = None;
 
@@ -61,8 +63,8 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    features: get_render_features(),
-                    limits: wgpu::Limits::default(),
+                    required_features: get_render_features(),
+                    required_limits: wgpu::Limits::default(),
                 },
                 None, // Trace path
             )
@@ -92,6 +94,7 @@ impl Renderer {
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![tex_format],
+            desired_maximum_frame_latency: 2,
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);
