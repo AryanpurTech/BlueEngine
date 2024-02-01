@@ -261,6 +261,11 @@ pub struct Renderer {
     pub default_data: Option<(crate::Textures, crate::Shaders, crate::UniformBuffers)>,
     /// The camera used in the engine
     pub camera: Option<crate::UniformBuffers>,
+    /// Background clear color
+    pub clear_color: wgpu::Color,
+    /// Scissor cut section of the screen to render to
+    /// (x, y, width, height)
+    pub scissor_rect: Option<(u32, u32, u32, u32)>,
 }
 unsafe impl Sync for Renderer {}
 unsafe impl Send for Renderer {}
@@ -282,10 +287,13 @@ pub struct WindowDescriptor {
     pub power_preference: crate::PowerPreference,
     /// The backend to use for the draw
     pub backends: crate::Backends,
+    /// The features to be enabled on a backend
+    pub features: crate::wgpu::Features,
 }
 impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
     fn default() -> Self {
+        let backends = crate::Backends::all();
         Self {
             width: 800,
             height: 600,
@@ -293,7 +301,16 @@ impl std::default::Default for WindowDescriptor {
             decorations: true,
             resizable: true,
             power_preference: crate::PowerPreference::LowPower,
-            backends: crate::Backends::all(),
+            backends,
+            features: if backends.contains(wgpu::Backends::VULKAN) {
+                wgpu::Features::POLYGON_MODE_LINE | wgpu::Features::POLYGON_MODE_POINT
+            } else if backends
+                .contains(wgpu::Backends::VULKAN | wgpu::Backends::METAL | wgpu::Backends::DX12)
+            {
+                wgpu::Features::POLYGON_MODE_LINE
+            } else {
+                wgpu::Features::empty()
+            },
         }
     }
 }

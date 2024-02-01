@@ -8,7 +8,7 @@ use crate::{
     header::{uniform_type::Matrix, Camera, Renderer},
     Projection,
 };
-use anyhow::Result;
+use color_eyre::Result;
 use winit::dpi::PhysicalSize;
 
 use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
