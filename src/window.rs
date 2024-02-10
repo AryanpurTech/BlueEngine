@@ -152,7 +152,7 @@ impl Engine {
                     }
                     WindowEvent::RedrawRequested => {
                         let pre_render = renderer
-                            .pre_render(&objects, &camera)
+                            .pre_render(&objects, window.inner_size(), &camera)
                             .expect("Couldn't get pre render data");
                         if pre_render.is_some() {
                             let (mut encoder, view, frame) = pre_render.unwrap();

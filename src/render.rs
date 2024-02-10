@@ -210,6 +210,7 @@ impl Renderer {
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
+        window_size: winit::dpi::PhysicalSize<u32>,
         camera: &Camera,
     ) -> Result<
         Option<(
@@ -225,7 +226,12 @@ impl Renderer {
             return Ok(None);
         };
 
-        let frame = surface.get_current_texture()?;
+        let frame = if let Ok(frame) = surface.get_current_texture() {
+            frame
+        } else {
+            return Ok(None);
+        };
+
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -260,12 +266,17 @@ impl Renderer {
 
         if self.scissor_rect.is_some() {
             let scissor_rect = self.scissor_rect.unwrap();
-            render_pass.set_scissor_rect(
-                scissor_rect.0,
-                scissor_rect.1,
-                scissor_rect.2,
-                scissor_rect.3,
-            );
+            // check if scissor bounds are smaller than the window
+            if scissor_rect.0 + scissor_rect.2 < window_size.width as u32
+                && scissor_rect.1 + scissor_rect.3 < window_size.height as u32
+            {
+                render_pass.set_scissor_rect(
+                    scissor_rect.0,
+                    scissor_rect.1,
+                    scissor_rect.2,
+                    scissor_rect.3,
+                );
+            }
         }
 
         let default_data = self.default_data.as_ref().unwrap();

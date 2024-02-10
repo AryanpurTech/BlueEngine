@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -83,6 +83,14 @@ path = "examples/utils/instancing.rs"
 [[example]]
 name = "render_order"
 path = "examples/utils/render_order.rs"
+
+[[example]]
+name = "wireframe"
+path = "examples/utils/wireframe.rs"
+
+[[example]]
+name = "scissor"
+path = "examples/utils/scissor.rs"
 
 # Development ONLY
 [[example]]
