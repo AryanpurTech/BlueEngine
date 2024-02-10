@@ -17,18 +17,18 @@ use winit::{
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new() -> color_eyre::Result<Self> {
         Self::new_inner(WindowDescriptor::default())
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> anyhow::Result<Self> {
+    pub fn new_config(settings: WindowDescriptor) -> color_eyre::Result<Self> {
         Self::new_inner(settings)
     }
 
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
-    pub(crate) fn new_inner(settings: WindowDescriptor) -> anyhow::Result<Self> {
+    pub(crate) fn new_inner(settings: WindowDescriptor) -> color_eyre::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimentions of the window, as width and height
@@ -67,6 +67,7 @@ impl Engine {
             &window,
             settings.power_preference,
             settings.backends,
+            settings.features,
         ))?;
 
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
@@ -101,7 +102,7 @@ impl Engine {
     >(
         self,
         mut update_function: F,
-    ) -> anyhow::Result<()> {
+    ) -> color_eyre::Result<()> {
         let Self {
             event_loop,
             mut renderer,
@@ -207,7 +208,15 @@ impl Engine {
 
                 #[cfg(feature = "android")]
                 Event::Resumed => {
-                    let surface = unsafe { renderer.instance.create_surface(&window) };
+                    let surface = unsafe {
+                        renderer
+                            .instance
+                            .create_surface_unsafe(
+                                wgpu::SurfaceTargetUnsafe::from_window(&window)
+                                    .expect("Couldn't create surface target"),
+                            )
+                            .expect("Couldn't create surface")
+                    };
                     surface.configure(&renderer.device, &renderer.config);
                     dbg!(window.inner_size());
                     renderer.depth_buffer = Renderer::build_depth_buffer(

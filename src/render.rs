@@ -9,18 +9,8 @@ use crate::{
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     ObjectStorage, PipelineData,
 };
-use anyhow::Result;
 use wgpu::Features;
 use winit::window::Window;
-
-#[cfg(not(target_feature = "NON_FILL_POLYGON_MODE"))]
-fn get_render_features() -> Features {
-    Features::empty()
-}
-#[cfg(target_feature = "NON_FILL_POLYGON_MODE")]
-fn get_render_features() -> Features {
-    Features::NON_FILL_POLYGON_MODE
-}
 
 impl Renderer {
     /// Creates a new renderer.
@@ -32,7 +22,8 @@ impl Renderer {
         window: &Window,
         power_preference: crate::PowerPreference,
         backends: crate::Backends,
-    ) -> anyhow::Result<Self> {
+        features: Features,
+    ) -> color_eyre::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -41,7 +32,9 @@ impl Renderer {
             ..Default::default()
         });
         #[cfg(not(feature = "android"))]
-        let surface = Some(unsafe { instance.create_surface(&window)? });
+        let surface = Some(unsafe {
+            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window)?)?
+        });
         #[cfg(feature = "android")]
         let surface = None;
 
@@ -61,8 +54,8 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    features: get_render_features(),
-                    limits: wgpu::Limits::default(),
+                    required_features: features,
+                    required_limits: wgpu::Limits::default(),
                 },
                 None, // Trace path
             )
@@ -92,6 +85,7 @@ impl Renderer {
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![tex_format],
+            desired_maximum_frame_latency: 2,
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);
@@ -156,6 +150,8 @@ impl Renderer {
 
             default_data: None,
             camera: None,
+            clear_color: wgpu::Color::BLACK,
+            scissor_rect: None,
         };
 
         let default_texture = renderer.build_texture(
@@ -246,7 +242,7 @@ impl Renderer {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                    load: wgpu::LoadOp::Clear(self.clear_color),
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -262,8 +258,15 @@ impl Renderer {
             occlusion_query_set: None,
         });
 
-        //? Scissor
-        //render_pass.set_scissor_rect(50, 50, 500, 500);
+        if self.scissor_rect.is_some() {
+            let scissor_rect = self.scissor_rect.unwrap();
+            render_pass.set_scissor_rect(
+                scissor_rect.0,
+                scissor_rect.1,
+                scissor_rect.2,
+                scissor_rect.3,
+            );
+        }
 
         let default_data = self.default_data.as_ref().unwrap();
 

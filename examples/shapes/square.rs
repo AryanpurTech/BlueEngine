@@ -11,7 +11,7 @@ use blue_engine::{
     StringBuffer,
 };
 
-pub fn square(name: impl StringBuffer, engine: &mut Engine) -> anyhow::Result<()> {
+pub fn square(name: impl StringBuffer, engine: &mut Engine) -> color_eyre::Result<()> {
     engine.objects.new_object(
         name,
         vec![
