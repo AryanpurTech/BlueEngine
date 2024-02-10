@@ -92,6 +92,10 @@ path = "examples/utils/wireframe.rs"
 name = "scissor"
 path = "examples/utils/scissor.rs"
 
+[[example]]
+name = "clear_color"
+path = "examples/utils/clear_color.rs"
+
 # Development ONLY
 [[example]]
 name = "dev"

@@ -1,7 +1,7 @@
 /*
  * Blue Engine by Elham Aryanpur
  *
- * Triangle example using pre-defined shapes
+ * Wireframe example using pre-defined shapes
  *
  * The license is same as the one on the root.
 */

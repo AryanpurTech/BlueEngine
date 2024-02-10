@@ -1,3 +1,10 @@
+/*
+ * Blue Engine by Elham Aryanpur
+ *
+ * Resource Sharing example using same resource in multiple objects
+ *
+ * The license is same as the one on the root.
+*/
 use blue_engine::{primitive_shapes::square, Engine, ObjectSettings, TextureData};
 
 fn main() {

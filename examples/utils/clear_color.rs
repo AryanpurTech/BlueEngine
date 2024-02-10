@@ -1,7 +1,7 @@
 /*
  * Blue Engine by Elham Aryanpur
  *
- * Scissor example using pre-defined shapes
+ * Clear color example using pre-defined shapes
  *
  * The license is same as the one on the root.
 */
@@ -19,8 +19,12 @@ pub fn main() {
     )
     .unwrap();
 
-    // set scissor rect
-    engine.renderer.scissor_rect = Some((0, 0, 450, 350));
+    engine.renderer.clear_color = wgpu::Color {
+        r: 0.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
 
     engine
         .update_loop(move |_, _, _, _, _, _| {})
