@@ -187,18 +187,21 @@ impl Renderer {
     /// # Arguments
     /// * `new_size` - The new window size.
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        self.size = new_size;
-        self.config.width = new_size.width;
-        self.config.height = new_size.height;
-        #[cfg(not(feature = "android"))]
-        self.surface
-            .as_ref()
-            .unwrap()
-            .configure(&self.device, &self.config);
-        #[cfg(not(feature = "android"))]
-        {
-            self.depth_buffer =
-                Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+        // check if new_size is non zero
+        if new_size.width != 0 && new_size.height != 0 {
+            self.size = new_size;
+            self.config.width = new_size.width;
+            self.config.height = new_size.height;
+            #[cfg(not(feature = "android"))]
+            self.surface
+                .as_ref()
+                .unwrap()
+                .configure(&self.device, &self.config);
+            #[cfg(not(feature = "android"))]
+            {
+                self.depth_buffer =
+                    Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+            }
         }
     }
 
