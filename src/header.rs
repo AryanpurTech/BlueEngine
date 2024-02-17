@@ -190,7 +190,7 @@ pub struct Engine {
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
     /// Handles all engine plugins
-    pub plugins: Vec<Box<dyn crate::EnginePlugin>>,
+    pub live_events: Vec<Box<dyn crate::EngineLiveEvent>>,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}
@@ -470,9 +470,9 @@ pub struct Instance {
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
-pub trait EnginePlugin: Any {
+pub trait EngineLiveEvent: Any {
     /// This is ran before any of the render events, it's generally used to capture raw input.
-    fn update_events(
+    fn events(
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
@@ -482,8 +482,8 @@ pub trait EnginePlugin: Any {
         _camera: &mut crate::Camera,
     );
 
-    /// ran after an update loop code is done on each frame
-    fn update(
+    /// ran before the frame is rendered
+    fn frame(
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
@@ -494,7 +494,7 @@ pub trait EnginePlugin: Any {
         _view: &crate::TextureView,
     );
 }
-downcast!(dyn EnginePlugin);
+downcast!(dyn EngineLiveEvent);
 
 /// Defines how the rotation axis is
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -599,3 +599,9 @@ impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
 
 /// Depth format
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+
+/// Handles the order in which a functionality in the engine should be executed
+pub enum ExecuteOrder {
+    /// The main function that is the update_loop
+    UpdateLoopFunction,
+}
