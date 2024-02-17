@@ -289,6 +289,14 @@ pub struct WindowDescriptor {
     pub backends: crate::Backends,
     /// The features to be enabled on a backend
     pub features: crate::wgpu::Features,
+    /// Controls how the events are processed
+    pub control_flow: crate::winit::event_loop::ControlFlow,
+    /// The presentation mode of renderer for things like VSync
+    pub present_mode: crate::wgpu::PresentMode,
+    /// The alpha mode which specifies how the alpha channel of the textures should be handled during compositing.
+    pub alpha_mode: crate::wgpu::CompositeAlphaMode,
+    /// The desired frame latency, check [wgpu::SurfaceConfiguration::desired_maximum_frame_latency]
+    pub desired_maximum_frame_latency: u32,
 }
 impl std::default::Default for WindowDescriptor {
     /// Will quickly create a window with default settings
@@ -311,6 +319,10 @@ impl std::default::Default for WindowDescriptor {
             } else {
                 wgpu::Features::empty()
             },
+            control_flow: crate::winit::event_loop::ControlFlow::Poll,
+            present_mode: crate::wgpu::PresentMode::AutoNoVsync,
+            alpha_mode: crate::wgpu::CompositeAlphaMode::Auto,
+            desired_maximum_frame_latency: 2,
         }
     }
 }

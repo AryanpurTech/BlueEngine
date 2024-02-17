@@ -9,7 +9,6 @@ use crate::{
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     ObjectStorage, PipelineData,
 };
-use wgpu::Features;
 use winit::window::Window;
 
 impl Renderer {
@@ -20,15 +19,13 @@ impl Renderer {
     /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
         window: &Window,
-        power_preference: crate::PowerPreference,
-        backends: crate::Backends,
-        features: Features,
+        settings: crate::WindowDescriptor,
     ) -> color_eyre::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends,
+            backends: settings.backends,
             ..Default::default()
         });
         #[cfg(not(feature = "android"))]
@@ -40,7 +37,7 @@ impl Renderer {
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: power_preference,
+                power_preference: settings.power_preference,
                 #[cfg(not(feature = "android"))]
                 compatible_surface: Some(&surface.as_ref().unwrap()),
                 #[cfg(feature = "android")]
@@ -54,7 +51,7 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
-                    required_features: features,
+                    required_features: settings.features,
                     required_limits: wgpu::Limits::default(),
                 },
                 None, // Trace path
@@ -82,10 +79,10 @@ impl Renderer {
             #[cfg(feature = "android")]
             present_mode: wgpu::PresentMode::Mailbox,
             #[cfg(not(feature = "android"))]
-            present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            present_mode: settings.present_mode,
+            alpha_mode: settings.alpha_mode,
             view_formats: vec![tex_format],
-            desired_maximum_frame_latency: 2,
+            desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
         };
         #[cfg(not(feature = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);

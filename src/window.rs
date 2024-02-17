@@ -55,6 +55,7 @@ impl Engine {
         // and will contain all the callbacks and button press
         // also will allow graphics API
         let event_loop = EventLoop::new()?;
+        event_loop.set_control_flow(settings.control_flow);
 
         // bind the loop to window
         #[cfg(not(feature = "android"))]
@@ -63,12 +64,7 @@ impl Engine {
         let window = Window::new(&event_loop).unwrap();
 
         // The renderer init on current window
-        let mut renderer = futures::executor::block_on(Renderer::new(
-            &window,
-            settings.power_preference,
-            settings.backends,
-            settings.features,
-        ))?;
+        let mut renderer = futures::executor::block_on(Renderer::new(&window, settings))?;
 
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
 

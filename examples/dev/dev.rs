@@ -85,8 +85,20 @@ fn main() {
         .set_position(-0.2f32, 0f32, 0.001f32);
 
     let speed = -0.05;
+
+    let mut last_time = std::time::Instant::now();
+    let mut frames = 0;
     engine
         .update_loop(move |renderer, _window, objects, input, camera, plugins| {
+            // calculate FPS
+            let current_time = std::time::Instant::now();
+            frames += 1;
+            if current_time - last_time >= std::time::Duration::from_secs(1) {
+                println!("{}ms/frame", 1000f32 / frames as f32);
+                frames = 0;
+                last_time = current_time;
+            }
+
             let sprite = objects.get_mut("alt").unwrap();
 
             if input.key_held(blue_engine::KeyCode::ArrowUp) {
