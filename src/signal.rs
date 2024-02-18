@@ -8,40 +8,43 @@ use std::any::Any;
 /// `Args` can be a tuple, struct, or list.
 /// 
 /// Whenever you see the word This or this, it's being used as a replacement to mean self.
-pub struct Signal<'a, This: Any, Args: Sized> {
-    delegates: Vec<Delegate<'a, This, Args>>
+pub struct Signal<This: Any, Args: Sized> {
+    delegates: Vec<Delegate<This, Args>>
 }
 
 /// Internal type used for storing delegates.
-struct Delegate<'a, This: Any, Args: Sized> {
-    object: &'a mut This,
+struct Delegate<This: Any, Args: Sized> {
+    object: *mut This,
     callback: fn(&mut This, &mut Args) -> (),
 }
 
-impl<'a, This: Any, Args: Sized> Signal<'a, This, Args> {
+impl<This: Any, Args: Sized> Signal<This, Args> {
     /// Use new to initialize Signal
-    pub fn new() -> Signal<'a, This, Args> {
+    pub fn new() -> Signal<This, Args> {
         Signal { delegates: Vec::new() }
     }
 
     /// Uses this function to register new delegates to the Signal.
-    pub fn add(&mut self, object: &'a mut This, callback: fn(&mut This, &mut Args) -> ()) -> () {
+    pub fn add(&mut self, object: *mut This, callback: fn(&mut This, &mut Args)) {
         self.delegates.push( Delegate { object, callback } );
     }
 
+    /// Enables you to removed registered delegates from a signal.
+    pub fn remove(&mut self, object: *const This, callback: fn(&mut This, &mut Args)) {
+        for x in 0..self.delegates.len() {
+            if (self.delegates[x].object as *const This) == (object as *const This)
+            && (self.delegates[x].callback as *const fn(&mut This, &mut Args)) == (callback as *const fn(&mut This, &mut Args)) {
+                self.delegates.remove(x);
+                return;
+            }
+        }
+    }
+
     /// Use the function to execute all the registered delegates in the signal.
-    pub fn broadcast(&mut self, parameters: &mut Args) -> () {
+    pub fn broadcast(&mut self, parameters: &mut Args) {
         for obj in self.delegates.iter_mut() {
-            (obj.callback)((*obj).object, parameters);
-            
-            // unsafe code from before I added lifetimes:
-            /*
-            let this = unsafe { 
-                // This is copy-pasted logic from Any::downcast_mut_unchecked because it's locked as unstable feature...
-                &mut *(obj.object.as_mut().unwrap() as *mut dyn Any as *mut This)
-            };
+            let this = unsafe { &mut *(obj.object) };
             (obj.callback)(this, parameters);
-            */
         }
     }
 }

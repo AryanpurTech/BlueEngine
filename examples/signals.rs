@@ -20,24 +20,25 @@ impl Thing {
 
 fn main() {
     let mut a: Signal<Thing, (Vec<u64>, u8)> = Signal::new();
+    
     // You can store objects on the heap or the stack.
     // Both heap & stack pointers can be registered into a delegate.
     let mut heap = Box::new(Thing { total: 300_000 });
-    {
-        let mut stack = Thing { total: 400_000 };
-        // We have lifetime code, if you uncomment the code below it won't compile.
-        // This is because the compiler understands the signal outlives the delegate we're trying to bind.
-        //a.add(&mut stack, Thing::get_total);
-    }
-    a.add(&mut heap, Thing::get_total);
+    let mut stack = Thing { total: 400_000 };
+    a.add(&mut stack, Thing::get_total);
+    a.add( &mut *heap, Thing::get_total);
+    heap.total = 6;
+    a.remove(&*heap, Thing::get_total);
+
+    // Inputs data and broadcasts (executes registered delegates).
     let mut data = (vec![10, 10, 100, 2000], 2);
     a.broadcast(&mut data);
     println!("{}", heap.total);
-
+    println!("{}", stack.total);
 
     // Example code of using single list/struct paramter instead of a tuple.
     let mut b: Signal<Thing, Vec<u64>> = Signal::new();
-    b.add(&mut heap, Thing::mul_tot);
+    b.add(&mut *heap, Thing::mul_tot);
     let mut data = vec![10, 10, 10, 10];
     b.broadcast(&mut data);
     println!("{}", heap.total);
