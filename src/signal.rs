@@ -32,8 +32,8 @@ impl<This: Any, Args: Sized> Signal<This, Args> {
     /// Enables you to removed registered delegates from a signal.
     pub fn remove(&mut self, object: *const This, callback: fn(&mut This, &mut Args)) {
         for x in 0..self.delegates.len() {
-            if (self.delegates[x].object as *const This) == (object as *const This)
-            && (self.delegates[x].callback as *const fn(&mut This, &mut Args)) == (callback as *const fn(&mut This, &mut Args)) {
+            if (self.delegates[x].object as *const This) == object
+            && self.delegates[x].callback == callback {
                 self.delegates.remove(x);
                 return;
             }
