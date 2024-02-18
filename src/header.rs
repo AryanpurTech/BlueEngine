@@ -480,7 +480,8 @@ pub trait Signal: Any {
         _events: &crate::Event<()>,
         _input: &crate::InputHelper,
         _camera: &mut crate::Camera,
-    );
+    ) {
+    }
 
     /// ran before the frame is rendered
     fn frame(
@@ -492,8 +493,10 @@ pub trait Signal: Any {
         _input: &crate::InputHelper,
         _encoder: &mut crate::CommandEncoder,
         _view: &crate::TextureView,
-    );
+    ) {
+    }
 }
+// The engine needs to know the functions of Signal to do things internally, so we use downcast and not the std::any::Any
 downcast!(dyn Signal);
 
 /// Defines how the rotation axis is
