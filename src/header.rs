@@ -190,7 +190,7 @@ pub struct Engine {
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
     pub camera: Camera,
     /// Handles all engine plugins
-    pub live_events: Vec<Box<dyn crate::EngineLiveEvent>>,
+    pub signals: SignalStorage,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}
@@ -470,7 +470,7 @@ pub struct Instance {
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
-pub trait EngineLiveEvent: Any {
+pub trait Signal: Any {
     /// This is ran before any of the render events, it's generally used to capture raw input.
     fn events(
         &mut self,
@@ -494,7 +494,7 @@ pub trait EngineLiveEvent: Any {
         _view: &crate::TextureView,
     );
 }
-downcast!(dyn EngineLiveEvent);
+downcast!(dyn Signal);
 
 /// Defines how the rotation axis is
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -599,6 +599,12 @@ impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
 
 /// Depth format
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+
+/// Handles the live events in the engine
+pub struct SignalStorage {
+    /// list of events with key and the event
+    pub events: Vec<(String, Box<dyn Signal>)>,
+}
 
 /// Handles the order in which a functionality in the engine should be executed
 pub enum ExecuteOrder {

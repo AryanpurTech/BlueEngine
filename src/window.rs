@@ -74,7 +74,7 @@ impl Engine {
             renderer,
             objects: ObjectStorage::new(),
             camera,
-            live_events: vec![],
+            signals: crate::SignalStorage::new(),
         })
     }
 
@@ -93,7 +93,7 @@ impl Engine {
                 &mut ObjectStorage,
                 &winit_input_helper::WinitInputHelper,
                 &mut Camera,
-                &mut Vec<Box<dyn crate::EngineLiveEvent>>,
+                &mut crate::SignalStorage,
             ),
     >(
         self,
@@ -105,7 +105,7 @@ impl Engine {
             mut window,
             mut objects,
             mut camera,
-            mut live_events,
+            mut signals,
         } = self;
 
         // and get input events to handle them later
@@ -117,8 +117,8 @@ impl Engine {
         event_loop.run(move |events, window_target| {
             input.update(&events);
 
-            live_events.iter_mut().for_each(|i| {
-                i.events(
+            signals.events.iter_mut().for_each(|i| {
+                i.1.events(
                     &mut renderer,
                     &window,
                     &mut objects,
@@ -159,11 +159,11 @@ impl Engine {
                                 &mut objects,
                                 &input,
                                 &mut camera,
-                                &mut live_events,
+                                &mut signals,
                             );
 
-                            live_events.iter_mut().for_each(|i| {
-                                i.frame(
+                            signals.events.iter_mut().for_each(|i| {
+                                i.1.frame(
                                     &mut renderer,
                                     &window,
                                     &mut objects,

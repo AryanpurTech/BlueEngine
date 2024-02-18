@@ -343,3 +343,42 @@ impl crate::header::Renderer {
             })
     }
 }
+
+impl crate::SignalStorage {
+    /// Creates a new live event storage
+    pub fn new() -> Self {
+        Self { events: vec![] }
+    }
+
+    /// Adds an event
+    pub fn add_signal(&mut self, key: impl StringBuffer, event: Box<dyn crate::Signal>) {
+        self.events.push((key.as_string(), event));
+    }
+
+    /// Removes an event
+    pub fn remove_signal(&mut self, key: impl StringBuffer) {
+        self.events.retain(|k| k.0 != key.as_string());
+    }
+
+    /// Gets an event
+    pub fn get_signal<T: 'static>(
+        &mut self,
+        key: impl StringBuffer,
+    ) -> Option<Result<&mut T, downcast::TypeMismatch>> {
+        // fetch the event
+        let event = self
+            .events
+            .iter_mut()
+            .find(|k| k.0 == key.as_string())
+            .map(|k| &mut k.1);
+
+        if event.is_some() {
+            // downcast the event
+            let event = event.unwrap();
+            let event_type = event.downcast_mut::<T>();
+            Some(event_type)
+        } else {
+            None
+        }
+    }
+}
