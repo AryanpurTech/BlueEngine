@@ -68,3 +68,5 @@ pub mod utils;
 pub mod window;
 #[doc(inline)]
 pub use crate::header::*;
+
+pub mod signal;

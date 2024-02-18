@@ -100,3 +100,7 @@ path = "examples/utils/clear_color.rs"
 [[example]]
 name = "dev"
 path = "examples/dev/dev.rs"
+
+[[example]]
+name = "signals"
+path = "examples/signals.rs"
