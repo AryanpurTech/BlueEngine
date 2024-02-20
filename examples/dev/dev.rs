@@ -9,7 +9,12 @@ use blue_engine::{
 };
 
 fn main() {
-    let mut engine = Engine::new().expect("win");
+    let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
+        power_preference: blue_engine::PowerPreference::LowPower,
+        present_mode: blue_engine::wgpu::PresentMode::Immediate,
+        ..Default::default()
+    })
+    .expect("win");
 
     //let test_instance = Instance::default();
     //println!("{:?}", test_instance.to_raw());
