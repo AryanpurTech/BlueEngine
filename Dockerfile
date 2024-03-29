@@ -1,6 +1,9 @@
+# fork of Dockerfile at https://github.com/not-fl3/cargo-quad-apk
+
 FROM archlinux
 
 RUN pacman -Syu --noconfirm
+RUN pacman -S --noconfirm gcc
 RUN pacman -S --noconfirm jdk8-openjdk unzip wget cmake rustup openssl pkgconf
 
 # github override HOME, so here we are
@@ -8,8 +11,8 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH 
 
-RUN rustup toolchain install 1.71.0
-RUN rustup default 1.71
+RUN rustup toolchain install 1.77.0
+RUN rustup default 1.77
 RUN rustc --version
 
 RUN rustup target add armv7-linux-androideabi
@@ -39,21 +42,16 @@ RUN cd /usr/local && \
     rm android-ndk-r25-linux.zip
 ENV NDK_HOME /usr/local/android-ndk-r25
 
+# Make directory for user code
+RUN mkdir /root/src
+
 # Copy contents to container. Should only use this on a clean directory
-COPY . /root/cargo-apk
+COPY . /root/src/
 
-# This should be on top, but I am saving some time rebuilding the container. Sorry!
-RUN pacman -S --noconfirm gcc
-
-# Install binary
-RUN cargo install --path /root/cargo-apk
-
-# Remove source and build files
-RUN rm -rf /root/cargo-apk
+# Install mobile build
+RUN cargo install --git https://github.com/tauri-apps/cargo-mobile2
 
 # Add build-tools to PATH, for apksigner
 ENV PATH="/opt/android-sdk-linux/build-tools/31.0.0/:${PATH}"
 
-# Make directory for user code
-RUN mkdir /root/src
 WORKDIR /root/src
