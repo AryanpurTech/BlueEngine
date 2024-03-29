@@ -100,13 +100,13 @@ pub struct Object {
     pub rotation: glm::Vec3,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
-    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub position_matrix: nalgebra_glm::Mat4,
-    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub scale_matrix: nalgebra_glm::Mat4,
-    /// Transformation matricies helps to apply changes to your object, including position, orientation, ...
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub rotation_matrix: nalgebra_glm::Mat4,
     /// Transformation matrix, but inversed
@@ -168,7 +168,7 @@ unsafe impl Sync for ObjectSettings {}
 /// the engine, you might be able to even run the engine in headless mode meaning there would not be a need for a window and the
 /// renders would come as image files.
 ///
-/// If you so wish to have a window, you would need to start a window update loop. The update loop of window runs a frame every few milisecond,
+/// If you so wish to have a window, you would need to start a window update loop. The update loop of window runs a frame every few millisecond,
 /// and gives you details of what is happening during this time, like input events. You can also modify existing parts of the engine during
 /// this update loop, such as changing camera to look differently, or creating a new object on the scene, or even changing window details!
 ///
@@ -422,7 +422,7 @@ pub struct ShaderSettings {
     /// value `!0`
     pub mask: u64,
     /// When enabled, produces another sample mask per pixel
-    /// based on the alpha output value, that is ANDed with the
+    /// based on the alpha output value, that is ANDead with the
     /// sample_mask and the primitive coverage to restrict the
     /// set of samples affected by a primitive.
 

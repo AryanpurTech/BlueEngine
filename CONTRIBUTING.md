@@ -1,4 +1,4 @@
-# Contibuting guidelines
+# Contributing guidelines
 
 As an open source project, the community is the backbone of the engine. As such, any contribution is welcome. Here are some ways you can contribute:
 
@@ -8,6 +8,6 @@ As an open source project, the community is the backbone of the engine. As such,
 * `Writing tutorials`: Knowledgebase is important, but tutorials and usage guides are important as well. This is an area the engine lacks a lot and would appreciate help the most!
 * `Writing documentation`: The codebase move fast, often times documentation is forgotten to be added until a few versions.
 
-## Contibution license
+## Contribution license
 By contributing to this repository through issues, addition, modification, or deletion of any kind to the codebase,
 you agree to your work being licensed under the same license as the engine, which you can obtain a copy of in the repository.

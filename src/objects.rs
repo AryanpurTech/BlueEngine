@@ -20,17 +20,17 @@ impl Renderer {
     ///
     /// # Arguments
     /// * `name` - The name of the object.
-    /// * `verticies` - A list of vertices for the object to draw with
-    /// * `indicies` - A list of indicies that references the vertices, defining draw order
+    /// * `vertices` - A list of vertices for the object to draw with
+    /// * `indices` - A list of indices that references the vertices, defining draw order
     /// * `settings` - The settings of the object
     pub fn build_object(
         &mut self,
         name: impl StringBuffer,
-        verticies: Vec<Vertex>,
-        indicies: Vec<u16>,
+        vertices: Vec<Vertex>,
+        indices: Vec<u16>,
         settings: ObjectSettings,
     ) -> color_eyre::Result<Object> {
-        let vertex_buffer = self.build_vertex_buffer(&verticies, &indicies)?;
+        let vertex_buffer = self.build_vertex_buffer(&vertices, &indices)?;
 
         let uniform = self.build_uniform_buffer(&vec![
             self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
@@ -68,8 +68,8 @@ impl Renderer {
 
         Ok(Object {
             name: name.as_string(),
-            vertices: verticies,
-            indices: indicies,
+            vertices: vertices,
+            indices: indices,
             pipeline: Pipeline {
                 vertex_buffer: PipelineData::Data(vertex_buffer),
                 shader: PipelineData::Data(shader),
@@ -119,14 +119,14 @@ impl ObjectStorage {
     pub fn new_object(
         &mut self,
         name: impl StringBuffer,
-        verticies: Vec<Vertex>,
-        indicies: Vec<u16>,
+        vertices: Vec<Vertex>,
+        indices: Vec<u16>,
         settings: ObjectSettings,
         renderer: &mut Renderer,
     ) -> color_eyre::Result<()> {
         self.add_object(
             name.clone(),
-            renderer.build_object(name.clone(), verticies, indicies, settings)?,
+            renderer.build_object(name.clone(), vertices, indices, settings)?,
         )?;
 
         /*self.update_object(name, |object| {
@@ -379,10 +379,10 @@ impl Object {
         renderer: &mut Renderer,
     ) -> color_eyre::Result<(crate::VertexBuffers, crate::UniformBuffers, crate::Shaders)> {
         let vertex_buffer = self.update_vertex_buffer_and_return(renderer)?;
-        let unifrom_buffer = self.update_uniform_buffer_and_return(renderer)?;
+        let uniform_buffer = self.update_uniform_buffer_and_return(renderer)?;
         let shader = self.update_shader_and_return(renderer)?;
         self.changed = false;
-        Ok((vertex_buffer, unifrom_buffer, shader))
+        Ok((vertex_buffer, uniform_buffer, shader))
     }
 
     /// Update and apply changes done to the vertex buffer
@@ -583,7 +583,7 @@ impl ShaderBuilder {
         shader_builder
     }
 
-    /// Builds the shader with the configruation defined
+    /// Builds the shader with the configuration defined
     pub fn build(&mut self) {
         if self.camera_effect {
             for i in &self.configs {

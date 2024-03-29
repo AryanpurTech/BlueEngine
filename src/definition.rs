@@ -304,17 +304,17 @@ impl crate::header::Renderer {
         Ok((uniform_bind_group, uniform_bind_group_layout))
     }
 
-    /// Creates a new vertex buffer and indecies
+    /// Creates a new vertex buffer and indices
     pub fn build_vertex_buffer(
         &mut self,
-        verticies: &Vec<Vertex>,
-        indicies: &Vec<u16>,
+        vertices: &Vec<Vertex>,
+        indices: &Vec<u16>,
     ) -> color_eyre::Result<VertexBuffers> {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(verticies.as_slice()),
+                contents: bytemuck::cast_slice(vertices.as_slice()),
                 usage: wgpu::BufferUsages::VERTEX,
             });
 
@@ -322,14 +322,14 @@ impl crate::header::Renderer {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(indicies.as_slice()),
+                contents: bytemuck::cast_slice(indices.as_slice()),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
         Ok(VertexBuffers {
             vertex_buffer,
             index_buffer,
-            length: indicies.len() as u32,
+            length: indices.len() as u32,
         })
     }
 

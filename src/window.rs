@@ -31,17 +31,17 @@ impl Engine {
     pub(crate) fn new_inner(settings: WindowDescriptor) -> color_eyre::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
-        // Dimentions of the window, as width and height
+        // Dimensions of the window, as width and height
         // and then are set as a logical size that the window can accept
         #[cfg(not(feature = "android"))]
-        let dimention = winit::dpi::PhysicalSize {
+        let dimension = winit::dpi::PhysicalSize {
             width: settings.width,   // Which sets the width of the window
             height: settings.height, // And sets the height of the window
         };
 
-        // Here the size is finally made according to the dimentions we set earlier
+        // Here the size is finally made according to the dimensions we set earlier
         #[cfg(not(feature = "android"))]
-        let size = winit::dpi::Size::Physical(dimention);
+        let size = winit::dpi::Size::Physical(dimension);
 
         // And we will create a new window and set all the options we stored
         #[cfg(not(feature = "android"))]

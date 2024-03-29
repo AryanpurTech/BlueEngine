@@ -34,7 +34,7 @@ fn main() {
         .objects
         .get_mut("layer1")
         .expect("failed to gete object");
-    // set a color to differenciate it
+    // set a color to differentiate it
     layer1
         .set_uniform_color(1f32, 0.5, 0f32, 1f32)
         .expect("failed to set color");
@@ -48,7 +48,7 @@ fn main() {
         .objects
         .get_mut("layer2")
         .expect("failed to gete object");
-    // set a color to differenciate it
+    // set a color to differentiate it
     layer2
         .set_uniform_color(0f32, 0f32, 1f32, 1f32)
         .expect("failed to set color");
