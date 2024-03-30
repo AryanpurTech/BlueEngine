@@ -1,10 +1,9 @@
-# fork of Dockerfile at https://github.com/not-fl3/cargo-quad-apk
+# fork of Dockerfile at https://github.com/not-fl3/cargo-quad-apk, testing for aarch64-linux-android
 
 FROM archlinux
 
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm gcc
-RUN pacman -S --noconfirm jdk8-openjdk unzip wget cmake rustup openssl pkgconf
+RUN pacman -S --noconfirm jdk17-openjdk unzip wget cmake rustup openssl pkgconf gradle kotlin clang llvm lld gcc
 
 # github override HOME, so here we are
 ENV RUSTUP_HOME=/usr/local/rustup \
@@ -55,3 +54,10 @@ RUN cargo install --git https://github.com/tauri-apps/cargo-mobile2
 ENV PATH="/opt/android-sdk-linux/build-tools/31.0.0/:${PATH}"
 
 WORKDIR /root/src
+
+# need to somehow agree to android licenses maybe below
+# RUN yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+#
+# Then run
+# RUN cargo mobile init
+# RUN cargo mobile android apk build aarch64

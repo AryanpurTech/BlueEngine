@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.5.8"
+version = "0.5.9"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -17,6 +17,8 @@ name = "blue_engine"
 default = ["debug"]
 debug = ["dep:env_logger"]
 android = ["dep:log", "dep:android_logger"]
+android_native_activity = ["winit/android-native-activity"]
+android_game_activity = ["winit/android-game-activity"]
 
 [dependencies]
 image = { version = "0.24" }

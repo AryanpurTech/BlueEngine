@@ -18,33 +18,55 @@ use winit::{
 impl Engine {
     /// Creates a new window in current thread using default settings.
     pub fn new() -> color_eyre::Result<Self> {
-        Self::new_inner(WindowDescriptor::default())
+        Self::new_inner(
+            WindowDescriptor::default(),
+            #[cfg(target_os = "android")]
+            None,
+        )
     }
 
     /// Creates a new window in current thread using provided settings.
     pub fn new_config(settings: WindowDescriptor) -> color_eyre::Result<Self> {
-        Self::new_inner(settings)
+        Self::new_inner(
+            settings,
+            #[cfg(target_os = "android")]
+            None,
+        )
+    }
+
+    /// Creates a new window for android
+    #[cfg(target_os = "android")]
+    pub fn new_android(
+        settings: WindowDescriptor,
+        app: winit::platform::android::activity::AndroidApp,
+    ) -> color_eyre::Result<Self> {
+        Self::new_inner(settings, Some(app))
     }
 
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
-    pub(crate) fn new_inner(settings: WindowDescriptor) -> color_eyre::Result<Self> {
+    pub(crate) fn new_inner(
+        settings: WindowDescriptor,
+        #[cfg(target_os = "android")] android_app: Option<
+            winit::platform::android::activity::AndroidApp,
+        >,
+    ) -> color_eyre::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimensions of the window, as width and height
         // and then are set as a logical size that the window can accept
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         let dimension = winit::dpi::PhysicalSize {
             width: settings.width,   // Which sets the width of the window
             height: settings.height, // And sets the height of the window
         };
 
         // Here the size is finally made according to the dimensions we set earlier
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         let size = winit::dpi::Size::Physical(dimension);
 
         // And we will create a new window and set all the options we stored
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         let new_window = WindowBuilder::new()
             .with_inner_size(size) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
@@ -54,14 +76,43 @@ impl Engine {
         // will create the main event loop of the window.
         // and will contain all the callbacks and button press
         // also will allow graphics API
+        #[cfg(target_os = "android")]
+        let event_loop = if android_app.is_some() {
+            use winit::platform::android::EventLoopBuilderExtAndroid;
+
+            android_logger::init_once(
+                android_logger::Config::default()
+                    .with_max_level(log::LevelFilter::Trace) // Default comes from `log::max_level`, i.e. Off
+                    .with_filter(
+                        android_logger::FilterBuilder::new()
+                            .filter_level(log::LevelFilter::Debug)
+                            .filter_module("android_activity", log::LevelFilter::Trace)
+                            .filter_module("winit", log::LevelFilter::Trace)
+                            .build(),
+                    ),
+            );
+
+            winit::event_loop::EventLoopBuilder::new()
+                .with_android_app(if android_app.is_some() {
+                    android_app.unwrap()
+                } else {
+                    panic!("No android app")
+                })
+                .build()?
+        } else {
+            EventLoop::new()?
+        };
+
+        #[cfg(not(target_os = "android"))]
         let event_loop = EventLoop::new()?;
+
         event_loop.set_control_flow(settings.control_flow);
 
         // bind the loop to window
         #[cfg(not(feature = "android"))]
         let window = new_window.build(&event_loop)?;
         #[cfg(feature = "android")]
-        let window = Window::new(&event_loop).unwrap();
+        let window = Window::new(&event_loop)?;
 
         // The renderer init on current window
         let mut renderer = futures::executor::block_on(Renderer::new(&window, settings))?;
@@ -137,6 +188,7 @@ impl Engine {
                         window_target.exit();
                         std::process::exit(0);
                     }
+
                     WindowEvent::Resized(size) => {
                         renderer.resize(*size);
                         camera
@@ -146,12 +198,14 @@ impl Engine {
                             .update_view_projection(&mut renderer)
                             .expect("Couldn't set the resize to camera in renderer");
                     }
+
                     WindowEvent::RedrawRequested => {
                         let pre_render = renderer
                             .pre_render(&objects, window.inner_size(), &camera)
                             .expect("Couldn't get pre render data");
                         if pre_render.is_some() {
-                            let (mut encoder, view, frame) = pre_render.unwrap();
+                            let (mut encoder, view, frame) =
+                                pre_render.expect("Couldn't get pre render data");
 
                             update_function(
                                 &mut renderer,
@@ -202,7 +256,6 @@ impl Engine {
                     _ => {}
                 },
 
-                #[cfg(feature = "android")]
                 Event::Resumed => {
                     let surface = unsafe {
                         renderer
@@ -222,16 +275,11 @@ impl Engine {
                     );
                     renderer.surface = Some(surface);
                 }
-                #[cfg(feature = "android")]
+
                 Event::Suspended => {
                     renderer.surface = None;
                 }
-
                 Event::DeviceEvent { event, .. } => _device_event = event,
-
-                Event::NewEvents(_new_events) => {
-                    // updates the data on what events happened before the frame start
-                }
 
                 _ => (),
             }

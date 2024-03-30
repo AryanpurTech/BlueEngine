@@ -238,7 +238,6 @@ pub struct Renderer {
     /// A [`wgpu::Surface`] represents a platform-specific surface (e.g. a window) onto which rendered images may be presented.
     pub surface: Option<wgpu::Surface<'static>>,
     /// Context for all of the gpu objects
-    #[cfg(feature = "android")]
     pub instance: wgpu::Instance,
     /// Handle to a physical graphics and/or compute device.
     #[allow(unused)]

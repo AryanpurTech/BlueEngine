@@ -30,24 +30,24 @@ impl Renderer {
             backends: settings.backends,
             ..Default::default()
         });
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         let surface = Some(unsafe {
             instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window)?)?
         });
-        #[cfg(feature = "android")]
+        #[cfg(target_os = "android")]
         let surface = None;
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: settings.power_preference,
-                #[cfg(not(feature = "android"))]
+                #[cfg(not(target_os = "android"))]
                 compatible_surface: Some(&surface.as_ref().unwrap()),
-                #[cfg(feature = "android")]
+                #[cfg(target_os = "android")]
                 compatible_surface: surface,
                 force_fallback_adapter: false,
             })
             .await
-            .unwrap();
+            .expect("Failed to find an appropriate adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -59,34 +59,34 @@ impl Renderer {
                 None, // Trace path
             )
             .await
-            .unwrap();
+            .expect("Failed to create device");
 
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         let tex_format = surface.as_ref().unwrap().get_capabilities(&adapter).formats[0];
 
-        #[cfg(feature = "android")]
+        #[cfg(target_os = "android")]
         let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
-            #[cfg(feature = "android")]
+            #[cfg(target_os = "android")]
             width: 1080,
             #[cfg(not(feature = "android"))]
             width: size.width,
-            #[cfg(feature = "android")]
+            #[cfg(target_os = "android")]
             height: 2300,
-            #[cfg(not(feature = "android"))]
+            #[cfg(not(target_os = "android"))]
             height: size.height,
-            #[cfg(feature = "android")]
+            #[cfg(target_os = "android")]
             present_mode: wgpu::PresentMode::Mailbox,
-            #[cfg(not(feature = "android"))]
+            #[cfg(not(target_os = "android"))]
             present_mode: settings.present_mode,
             alpha_mode: settings.alpha_mode,
             view_formats: vec![tex_format],
             desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
         };
-        #[cfg(not(feature = "android"))]
+        #[cfg(not(target_os = "android"))]
         surface.as_ref().unwrap().configure(&device, &config);
 
         let texture_bind_group_layout =
@@ -131,12 +131,11 @@ impl Renderer {
         let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
         let mut renderer = Self {
-            #[cfg(feature = "android")]
             instance,
             adapter,
-            #[cfg(not(feature = "android"))]
+            #[cfg(not(target_os = "android"))]
             surface,
-            #[cfg(feature = "android")]
+            #[cfg(target_os = "android")]
             surface: None,
             device,
             queue,
@@ -191,15 +190,17 @@ impl Renderer {
             self.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
-            #[cfg(not(feature = "android"))]
-            self.surface
-                .as_ref()
-                .unwrap()
-                .configure(&self.device, &self.config);
-            #[cfg(not(feature = "android"))]
-            {
-                self.depth_buffer =
-                    Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+            #[cfg(not(target_os = "android"))]
+            if self.surface.is_some() {
+                self.surface
+                    .as_ref()
+                    .expect("Couldn't get the surface for resizing")
+                    .configure(&self.device, &self.config);
+
+                {
+                    self.depth_buffer =
+                        Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+                }
             }
         }
     }
