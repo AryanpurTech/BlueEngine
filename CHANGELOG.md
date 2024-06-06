@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.10] - 2024-06-06
+
+### Bug Fixes
+
+- #60 ([8da08c6](https://github.com/AryanpurTech/BlueEngine/commit/8da08c6de944f512f4c80dbcb7f5ae2dee3136da))
+- #49 ([67c47cd](https://github.com/AryanpurTech/BlueEngine/commit/67c47cd28393c41a2264a66fd33075421ddaf266))
+
+### Miscellaneous Tasks
+
+- New version ([77d2054](https://github.com/AryanpurTech/BlueEngine/commit/77d2054908a0b12afd6030961937c678c779009c))
+
 ## [0.5.7] - 2024-02-17
 
 ### Bug Fixes
