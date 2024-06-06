@@ -161,7 +161,7 @@ unsafe impl Sync for ObjectSettings {}
 /// use blue_engine::header::{Engine, WindowDescriptor};
 ///
 /// fn main() {
-///     let engine = Engine::new(WindowDescriptor::default()).expect("Couldn't create the engine");
+///     let engine = Engine::new().expect("Couldn't create the engine");
 /// }
 /// ```
 /// The WindowDescriptor simply holds what features you would like for your window. If you are reading this on later version of
@@ -270,7 +270,7 @@ unsafe impl Sync for Renderer {}
 unsafe impl Send for Renderer {}
 
 /// Descriptor and settings for a window.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct WindowDescriptor {
     /// The width of the window
     pub width: u32,
@@ -292,6 +292,8 @@ pub struct WindowDescriptor {
     pub control_flow: crate::winit::event_loop::ControlFlow,
     /// The presentation mode of renderer for things like VSync
     pub present_mode: crate::wgpu::PresentMode,
+    /// Limits to be required based on the generation of the GPU and the API
+    pub limits: crate::wgpu::Limits,
     /// The alpha mode which specifies how the alpha channel of the textures should be handled during compositing.
     pub alpha_mode: crate::wgpu::CompositeAlphaMode,
     /// The desired frame latency, check [wgpu::SurfaceConfiguration::desired_maximum_frame_latency]
@@ -320,6 +322,7 @@ impl std::default::Default for WindowDescriptor {
             },
             control_flow: crate::winit::event_loop::ControlFlow::Poll,
             present_mode: crate::wgpu::PresentMode::AutoNoVsync,
+            limits: crate::wgpu::Limits::default(),
             alpha_mode: crate::wgpu::CompositeAlphaMode::Auto,
             desired_maximum_frame_latency: 2,
         }

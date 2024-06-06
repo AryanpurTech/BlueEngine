@@ -54,7 +54,7 @@ impl Renderer {
                 &wgpu::DeviceDescriptor {
                     label: Some("Device"),
                     required_features: settings.features,
-                    required_limits: wgpu::Limits::default(),
+                    required_limits: settings.limits,
                 },
                 None, // Trace path
             )
@@ -185,7 +185,7 @@ impl Renderer {
     /// # Arguments
     /// * `new_size` - The new window size.
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        // check if new_size is non zero
+        // check if new_size is non-zero
         if new_size.width != 0 && new_size.height != 0 {
             self.size = new_size;
             self.config.width = new_size.width;
@@ -270,8 +270,8 @@ impl Renderer {
         if self.scissor_rect.is_some() {
             let scissor_rect = self.scissor_rect.unwrap();
             // check if scissor bounds are smaller than the window
-            if scissor_rect.0 + scissor_rect.2 < window_size.width as u32
-                && scissor_rect.1 + scissor_rect.3 < window_size.height as u32
+            if scissor_rect.0 + scissor_rect.2 < window_size.width
+                && scissor_rect.1 + scissor_rect.3 < window_size.height
             {
                 render_pass.set_scissor_rect(
                     scissor_rect.0,
