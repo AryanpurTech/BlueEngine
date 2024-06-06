@@ -64,7 +64,5 @@ pub use winit::keyboard::Key;
 pub use winit::keyboard::KeyCode;
 /// Fullscreen enum
 pub use winit::window::Fullscreen;
-/// Window export from winit
-pub use winit::window::Window;
 /// Input helper
 pub use winit_input_helper::WinitInputHelper as InputHelper;

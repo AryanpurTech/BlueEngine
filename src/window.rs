@@ -6,13 +6,13 @@
 
 use crate::{
     header::{Camera, Engine, Renderer, WindowDescriptor},
-    ObjectStorage,
+    ObjectStorage, Window,
 };
 
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
     event_loop::EventLoop,
-    window::{Window, WindowBuilder},
+    window::WindowBuilder,
 };
 
 impl Engine {
@@ -120,7 +120,7 @@ impl Engine {
         let camera = Camera::new(window.inner_size(), &mut renderer)?;
 
         Ok(Self {
-            window,
+            window: Window::new(window),
             event_loop,
             renderer,
             objects: ObjectStorage::new(),
@@ -200,6 +200,10 @@ impl Engine {
                     }
 
                     WindowEvent::RedrawRequested => {
+                        if window.should_close {
+                            window_target.exit();
+                        }
+
                         let pre_render = renderer
                             .pre_render(&objects, window.inner_size(), &camera)
                             .expect("Couldn't get pre render data");
@@ -261,7 +265,7 @@ impl Engine {
                         renderer
                             .instance
                             .create_surface_unsafe(
-                                wgpu::SurfaceTargetUnsafe::from_window(&window)
+                                wgpu::SurfaceTargetUnsafe::from_window(&window.window)
                                     .expect("Couldn't create surface target"),
                             )
                             .expect("Couldn't create surface")
@@ -286,5 +290,22 @@ impl Engine {
         //logic(&mut renderer, WindowCallbackEvents::After, &window);
 
         Ok(())
+    }
+}
+
+impl Window {
+    /// create a new window
+    pub fn new(window: crate::winit::window::Window) -> Self {
+        Self {
+            window,
+            should_close: false,
+        }
+    }
+
+    /// close the engine window
+    #[allow(unused)]
+    #[allow(dead_code)]
+    pub fn close_engine(&mut self) {
+        self.should_close = true;
     }
 }

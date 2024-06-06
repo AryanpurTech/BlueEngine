@@ -30,6 +30,23 @@ macro_rules! impl_deref {
     };
 }
 
+macro_rules! impl_deref_field {
+    ($struct:ty,$type:ty,$field:ident) => {
+        impl std::ops::Deref for $struct {
+            type Target = $type;
+
+            fn deref(&self) -> &Self::Target {
+                &self.$field
+            }
+        }
+        impl std::ops::DerefMut for $struct {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.$field
+            }
+        }
+    };
+}
+
 /// Will contain all details about a vertex and will be sent to GPU
 // Will be turned to C code and sent to GPU
 #[repr(C)]
@@ -182,7 +199,7 @@ pub struct Engine {
     /// The event_loop handles the events of the window and inputs, so it's used internally
     pub event_loop: winit::event_loop::EventLoop<()>,
     /// The window handles everything about window and inputs. This includes ability to modify window and listen to input devices for changes.
-    pub window: winit::window::Window,
+    pub window: Window,
     /// The object system is a way to make it easier to work with the engine. Obviously you can work without it, but it's for those who
     /// do not have the know-how, or wish to handle all the work of rendering data manually.
     pub objects: ObjectStorage,
@@ -614,3 +631,13 @@ pub enum ExecuteOrder {
     /// The main function that is the update_loop
     UpdateLoopFunction,
 }
+
+/// A wrapper for winit window to make it easier to use and more ergonomic.
+#[derive(Debug)]
+pub struct Window {
+    /// The winit window itself.
+    pub window: crate::winit::window::Window,
+    /// Whether the engine should close.
+    pub should_close: bool,
+}
+impl_deref_field!(Window, crate::winit::window::Window, window);

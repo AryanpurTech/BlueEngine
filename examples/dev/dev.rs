@@ -11,7 +11,7 @@ use blue_engine::{
 fn main() {
     let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
         power_preference: blue_engine::PowerPreference::LowPower,
-        present_mode: blue_engine::wgpu::PresentMode::Immediate,
+        present_mode: blue_engine::wgpu::PresentMode::Mailbox,
         ..Default::default()
     })
     .expect("win");
@@ -106,6 +106,9 @@ fn main() {
 
             let sprite = objects.get_mut("alt").unwrap();
 
+            if input.key_held(blue_engine::KeyCode::Escape) {
+                _window.close_engine();
+            }
             if input.key_held(blue_engine::KeyCode::ArrowUp) {
                 sprite.set_position(
                     sprite.position.x,
@@ -154,4 +157,6 @@ fn main() {
             }
         })
         .expect("Error during update loop");
+
+    println!("Engine have been closed")
 }
