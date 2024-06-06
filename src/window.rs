@@ -267,7 +267,6 @@ impl Engine {
                             .expect("Couldn't create surface")
                     };
                     surface.configure(&renderer.device, &renderer.config);
-                    dbg!(window.inner_size());
                     renderer.depth_buffer = Renderer::build_depth_buffer(
                         "Depth Buffer",
                         &renderer.device,

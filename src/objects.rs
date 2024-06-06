@@ -539,7 +539,6 @@ impl Object {
 }
 
 /// Helps with building and updating shader code
-#[derive(Debug)]
 pub struct ShaderBuilder {
     /// the shader itself
     pub shader: String,
@@ -548,7 +547,7 @@ pub struct ShaderBuilder {
     /// configurations to be applied to the shader
     ///
     /// the way it works is: `("key to look for", ("shader code with camera effects", "shader code without camera effects"))`
-    pub configs: Vec<(String, (String, String))>,
+    pub configs: Vec<(String, Box<dyn Fn(bool) -> String>)>,
 }
 
 impl ShaderBuilder {
@@ -557,26 +556,35 @@ impl ShaderBuilder {
         let mut shader_builder = Self {
             shader: shader_source,
             camera_effect,
-            configs: vec![(
-                "//@CAMERA_STRUCT".to_string(),
+            configs: vec![
                 (
-                    r#"
-            struct CameraUniforms {
-                camera_matrix: mat4x4<f32>,
-            };
-            @group(1) @binding(0)
-            var<uniform> camera_uniform: CameraUniforms;"#
-                        .to_string(),
-                    r#""#.to_string(),
+                    "//@CAMERA_STRUCT".to_string(),
+                    Box::new(|camera_effect| {
+                        if camera_effect {
+                            r#"
+                        struct CameraUniforms {
+                            camera_matrix: mat4x4<f32>,
+                        };
+                        @group(1) @binding(0)
+                        var<uniform> camera_uniform: CameraUniforms;"#
+                                .to_string()
+                        } else {
+                            "".to_string()
+                        }
+                    }),
                 ),
-            ), (
-                "//@CAMERA_VERTEX".to_string(),
                 (
-                    r#"out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#
-                        .to_string(),
-                    r#"out.position = model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#.to_string(),
+                    "//@CAMERA_VERTEX".to_string(),
+                    Box::new(|camera_effect| {
+                        if camera_effect {
+                            r#"out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#
+                        .to_string()
+                        } else {
+                            r#"out.position = model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#.to_string()
+                        }
+                    }),
                 ),
-            )],
+            ],
         };
         shader_builder.build();
 
@@ -585,14 +593,8 @@ impl ShaderBuilder {
 
     /// Builds the shader with the configuration defined
     pub fn build(&mut self) {
-        if self.camera_effect {
-            for i in &self.configs {
-                self.shader = self.shader.replace(&i.0, &i.1 .0);
-            }
-        } else {
-            for i in &self.configs {
-                self.shader = self.shader.replace(&i.0, &i.1 .1);
-            }
+        for i in &self.configs {
+            self.shader = self.shader.replace(&i.0, &i.1(self.camera_effect));
         }
     }
 }

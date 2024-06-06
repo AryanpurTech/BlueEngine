@@ -74,7 +74,6 @@ unsafe impl Sync for Vertex {}
 /// creating 3D objects and showing them on screen. A range of default objects are available
 /// as well as ability to customize each of them and even create your own! You can also
 /// customize almost everything there is about them!
-#[derive(Debug)]
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
     pub name: String,
@@ -589,7 +588,6 @@ impl StringBuffer for &str {}
 ///
 /// This is a container for objects that is used to apply different operations on the objects at the same time.
 /// It can deref to the object hashmap itself when needed.
-#[derive(Debug)]
 pub struct ObjectStorage(std::collections::HashMap<String, Object>);
 impl ObjectStorage {
     /// Creates a new object storage
