@@ -10,8 +10,9 @@ use blue_engine::{
 
 fn main() {
     let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
-        power_preference: blue_engine::PowerPreference::LowPower,
+        power_preference: blue_engine::PowerPreference::None,
         present_mode: blue_engine::wgpu::PresentMode::Mailbox,
+        limits: blue_engine::wgpu::Limits::downlevel_defaults(),
         ..Default::default()
     })
     .expect("win");
@@ -31,7 +32,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/player.png".to_string()),
+            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();
@@ -40,7 +41,7 @@ fn main() {
         .renderer
         .build_texture(
             "background",
-            TextureData::Path("resources/image.png".to_string()),
+            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
             blue_engine::TextureMode::Clamp,
         )
         .unwrap();

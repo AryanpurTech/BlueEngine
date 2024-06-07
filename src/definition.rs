@@ -125,13 +125,6 @@ impl crate::header::Renderer {
             TextureMode::MirrorRepeat => mode = wgpu::AddressMode::ClampToEdge,
         }
 
-        /*let img_format = match texture_format {
-            TextureFormat::PNG => image::ImageFormat::Png,
-            TextureFormat::BMP => image::ImageFormat::Bmp,
-            TextureFormat::JPEG => image::ImageFormat::Jpeg,
-            TextureFormat::PNM => image::ImageFormat::Pnm,
-        };*/
-
         let img = match texture_data {
             TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
                 .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
@@ -159,7 +152,7 @@ impl crate::header::Renderer {
                 | wgpu::TextureUsages::COPY_DST
                 | wgpu::TextureUsages::COPY_SRC
                 | wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[wgpu::TextureFormat::Rgba8Unorm],
+            view_formats: &[],
         });
 
         self.queue.write_texture(
