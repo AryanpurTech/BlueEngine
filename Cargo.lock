@@ -297,7 +297,7 @@ dependencies = [
 
 [[package]]
 name = "blue_engine"
-version = "0.5.10"
+version = "0.5.12"
 dependencies = [
  "android_logger",
  "bytemuck",

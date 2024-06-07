@@ -50,6 +50,18 @@
 //! The code of the engine is organized in a rather different manner than traditional in the
 //! language. There are inspirations from other languages to make it easier to navigate the
 //! project.
+//!
+//! ## Older hardware
+//!
+//! The engine uses WGPU under the hood for rendering. WGPU by nature is designed for modern hardware, so if you have or want to
+//! target older hardware, you might need to add a couple more things to WindowDescriptor during Engine::new_config:
+//!
+//! 1) set a backend that targets your older hardware, such as GL using the backends field: `backend: blue_engine::wgpu::Backends::GL`
+//! 2) experiement with the limits field, which describes what features you need. `limits: blue_engine::wgpu::Limits::default()`. there
+//! are three options for limits: `default` for normal hardware, `downlevel_defaults` which are compatible with GLES-3 and D3D-11, or
+//! `downlevel_webgl2_defaults` which is also compatible with WebGL2, and the lowest level for limits and can support very old hardware.
+//!
+//! with these two changes, hopefully you can get Blue Engine to run on older hardware. If not, please let me know so I can help you further.
 
 pub(crate) mod definition;
 /// contains all the declarations such as structs, exports, enums, ...
