@@ -5,6 +5,7 @@
 */
 
 #![warn(missing_docs)]
+#![allow(clippy::needless_doctest_main)]
 
 //! <img src="https://raw.githubusercontent.com/AryanpurTech/BlueEngineDocs/master/resources/logo_3d.gif" loop=infinite width="100%" />
 //!

@@ -68,8 +68,8 @@ impl Renderer {
 
         Ok(Object {
             name: name.as_string(),
-            vertices: vertices,
-            indices: indices,
+            vertices,
+            indices,
             pipeline: Pipeline {
                 vertex_buffer: PipelineData::Data(vertex_buffer),
                 shader: PipelineData::Data(shader),
@@ -161,8 +161,8 @@ impl ObjectStorage {
             callback: T,
         ) {
             let object = object_storage.get_mut(&key);
-            if object.is_some() {
-                callback(object.unwrap());
+            if let Some(object) = object {
+                callback(object);
             }
         }
         update_object_inner(self, key.as_string(), callback);
@@ -538,6 +538,9 @@ impl Object {
     }
 }
 
+/// Configuration type for ShaderBuilder
+pub type ShaderConfigs = Vec<(String, Box<dyn Fn(bool) -> String>)>;
+
 /// Helps with building and updating shader code
 pub struct ShaderBuilder {
     /// the shader itself
@@ -547,7 +550,7 @@ pub struct ShaderBuilder {
     /// configurations to be applied to the shader
     ///
     /// the way it works is: `("key to look for", ("shader code with camera effects", "shader code without camera effects"))`
-    pub configs: Vec<(String, Box<dyn Fn(bool) -> String>)>,
+    pub configs: ShaderConfigs,
 }
 
 impl ShaderBuilder {

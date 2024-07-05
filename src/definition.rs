@@ -51,15 +51,15 @@ impl crate::header::Renderer {
             &self.texture_bind_group_layout,
             &self.default_uniform_bind_group_layout,
         ];
-        if uniform_layout.is_some() {
-            bind_group_layouts.push(uniform_layout.unwrap())
+        if let Some(uniform_layout) = uniform_layout {
+            bind_group_layouts.push(uniform_layout);
         }
 
         let render_pipeline_layout =
             self.device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &bind_group_layouts.as_slice(),
+                    bind_group_layouts: bind_group_layouts.as_slice(),
                     push_constant_ranges: &[],
                 });
 
@@ -118,19 +118,18 @@ impl crate::header::Renderer {
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
     ) -> color_eyre::Result<Textures> {
-        let mode: wgpu::AddressMode;
-        match texture_mode {
-            TextureMode::Clamp => mode = wgpu::AddressMode::Repeat,
-            TextureMode::Repeat => mode = wgpu::AddressMode::MirrorRepeat,
-            TextureMode::MirrorRepeat => mode = wgpu::AddressMode::ClampToEdge,
-        }
+        let mode: wgpu::AddressMode = match texture_mode {
+            TextureMode::Clamp => wgpu::AddressMode::Repeat,
+            TextureMode::Repeat => wgpu::AddressMode::MirrorRepeat,
+            TextureMode::MirrorRepeat => wgpu::AddressMode::ClampToEdge,
+        };
 
         let img = match texture_data {
             TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
-                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
+                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
             TextureData::Image(data) => data,
             TextureData::Path(path) => image::open(path)
-                .expect(format!("Couldn't Load Image For Texture Of {}", name.as_str()).as_str()),
+                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
         };
 
         let rgba = img.to_rgba8();
@@ -236,7 +235,7 @@ impl crate::header::Renderer {
             ..Default::default()
         });
 
-        return (texture, view, sampler);
+        (texture, view, sampler)
     }
 
     /// Creates a new uniform buffer part
@@ -258,7 +257,7 @@ impl crate::header::Renderer {
     /// Creates a new uniform buffer group, according to a list of types
     pub fn build_uniform_buffer(
         &mut self,
-        uniforms: &Vec<wgpu::Buffer>,
+        uniforms: &[wgpu::Buffer],
     ) -> color_eyre::Result<(UniformBuffers, BindGroupLayout)> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
@@ -285,13 +284,13 @@ impl crate::header::Renderer {
             self.device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                     label: Some("uniform dynamic bind group layout"),
-                    entries: &buffer_layout.as_slice(),
+                    entries: buffer_layout.as_slice(),
                 });
 
         let uniform_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Uniform Bind Groups"),
             layout: &uniform_bind_group_layout,
-            entries: &buffer_entry.as_slice(),
+            entries: buffer_entry.as_slice(),
         });
 
         Ok((uniform_bind_group, uniform_bind_group_layout))
@@ -373,5 +372,11 @@ impl crate::SignalStorage {
         } else {
             None
         }
+    }
+}
+
+impl Default for crate::SignalStorage {
+    fn default() -> Self {
+        Self::new()
     }
 }

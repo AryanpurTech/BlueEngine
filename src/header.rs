@@ -327,7 +327,7 @@ impl std::default::Default for WindowDescriptor {
             resizable: true,
             power_preference: crate::PowerPreference::LowPower,
             backends,
-            features: if backends.contains(wgpu::Backends::VULKAN) {
+            features: if backends == wgpu::Backends::VULKAN {
                 wgpu::Features::POLYGON_MODE_LINE | wgpu::Features::POLYGON_MODE_POINT
             } else if backends
                 .contains(wgpu::Backends::VULKAN | wgpu::Backends::METAL | wgpu::Backends::DX12)
@@ -490,6 +490,7 @@ pub struct Instance {
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait Signal: Any {
     /// This is ran before any of the render events, it's generally used to capture raw input.
+    #[allow(clippy::too_many_arguments)]
     fn events(
         &mut self,
         _renderer: &mut crate::Renderer,
@@ -502,6 +503,7 @@ pub trait Signal: Any {
     }
 
     /// ran before the frame is rendered
+    #[allow(clippy::too_many_arguments)]
     fn frame(
         &mut self,
         _renderer: &mut crate::Renderer,
@@ -566,9 +568,9 @@ pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
     }
 
     if result > -1.0 {
-        return result as f32;
+        result
     } else {
-        return -1.0;
+        -1.0
     }
 }
 
@@ -612,6 +614,11 @@ impl ObjectStorage {
         ObjectStorage(std::collections::HashMap::new())
     }
 }
+impl Default for ObjectStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 unsafe impl Send for ObjectStorage {}
 unsafe impl Sync for ObjectStorage {}
 
@@ -636,8 +643,8 @@ pub enum ExecuteOrder {
 #[derive(Debug)]
 pub struct Window {
     /// The winit window itself.
-    pub window: crate::winit::window::Window,
+    pub window: std::sync::Arc<crate::winit::window::Window>,
     /// Whether the engine should close.
     pub should_close: bool,
 }
-impl_deref_field!(Window, crate::winit::window::Window, window);
+impl_deref_field!(Window, std::sync::Arc<crate::winit::window::Window>, window);

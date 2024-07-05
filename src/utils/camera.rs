@@ -16,13 +16,13 @@ use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Result<Self> {
-        let camera_uniform = renderer.build_uniform_buffer(&vec![
+        let camera_uniform = renderer.build_uniform_buffer(&[
             renderer.build_uniform_buffer_part("Camera Uniform", DEFAULT_MATRIX_4)
         ])?;
 
         let mut camera = Self {
             position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
-            target: nalgebra_glm::vec3(0.0, 0.0, -1.0).into(),
+            target: nalgebra_glm::vec3(0.0, 0.0, -1.0),
             up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
             resolution: (window_size.width as f32, window_size.height as f32),
             projection: crate::Projection::Perspective {
@@ -137,7 +137,7 @@ impl Camera {
     pub fn update_view_projection(&mut self, renderer: &mut Renderer) -> Result<()> {
         if self.changed {
             let updated_buffer = renderer
-                .build_uniform_buffer(&vec![renderer.build_uniform_buffer_part(
+                .build_uniform_buffer(&[renderer.build_uniform_buffer_part(
                     "Camera Uniform",
                     self.camera_uniform_buffer()
                         .expect("Couldn't build camera projection"),
@@ -157,7 +157,7 @@ impl Camera {
         renderer: &mut Renderer,
     ) -> Result<crate::UniformBuffers> {
         let updated_buffer = renderer
-            .build_uniform_buffer(&vec![renderer.build_uniform_buffer_part(
+            .build_uniform_buffer(&[renderer.build_uniform_buffer_part(
                 "Camera Uniform",
                 self.camera_uniform_buffer()
                     .expect("Couldn't build camera projection"),

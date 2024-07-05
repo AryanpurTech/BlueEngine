@@ -112,12 +112,16 @@ impl Engine {
         #[cfg(not(feature = "android"))]
         let window = new_window.build(&event_loop)?;
         #[cfg(feature = "android")]
-        let window = Window::new(&event_loop)?;
+        let window = winit::window::Window::new(&event_loop)?;
+
+        let window = std::sync::Arc::new(window);
+
+        let window_inner_size = window.inner_size();
 
         // The renderer init on current window
-        let mut renderer = futures::executor::block_on(Renderer::new(&window, settings))?;
+        let mut renderer = futures::executor::block_on(Renderer::new(window.clone(), settings))?;
 
-        let camera = Camera::new(window.inner_size(), &mut renderer)?;
+        let camera = Camera::new(window_inner_size, &mut renderer)?;
 
         Ok(Self {
             window: Window::new(window),
@@ -261,16 +265,22 @@ impl Engine {
                 },
 
                 Event::Resumed => {
-                    let surface = unsafe {
-                        renderer
-                            .instance
-                            .create_surface_unsafe(
-                                wgpu::SurfaceTargetUnsafe::from_window(&window.window)
-                                    .expect("Couldn't create surface target"),
-                            )
-                            .expect("Couldn't create surface")
-                    };
+                    // let surface = unsafe {
+                    //     renderer
+                    //         .instance
+                    //         .create_surface_unsafe(
+                    //             wgpu::SurfaceTargetUnsafe::from_window(&window.window)
+                    //                 .expect("Couldn't create surface target"),
+                    //         )
+                    //         .expect("Couldn't create surface")
+                    // };
+
+                    let surface = renderer
+                        .instance
+                        .create_surface(window.window.clone())
+                        .unwrap();
                     surface.configure(&renderer.device, &renderer.config);
+
                     renderer.depth_buffer = Renderer::build_depth_buffer(
                         "Depth Buffer",
                         &renderer.device,
@@ -295,7 +305,7 @@ impl Engine {
 
 impl Window {
     /// create a new window
-    pub fn new(window: crate::winit::window::Window) -> Self {
+    pub fn new(window: std::sync::Arc<crate::winit::window::Window>) -> Self {
         Self {
             window,
             should_close: false,

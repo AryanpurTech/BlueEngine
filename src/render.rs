@@ -6,6 +6,8 @@
 
 // ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
 
+use std::sync::Arc;
+
 use crate::{
     header::{uniform_type, Camera, Renderer, ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
@@ -20,7 +22,7 @@ impl Renderer {
     /// * `window` - The window to create the renderer for.
     /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
-        window: &Window,
+        window: Arc<Window>,
         settings: crate::WindowDescriptor,
     ) -> color_eyre::Result<Self> {
         let size = window.inner_size();
@@ -31,9 +33,7 @@ impl Renderer {
             ..Default::default()
         });
         #[cfg(not(target_os = "android"))]
-        let surface = Some(unsafe {
-            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window)?)?
-        });
+        let surface = Some(instance.create_surface(window)?);
         #[cfg(target_os = "android")]
         let surface = None;
 
@@ -41,7 +41,7 @@ impl Renderer {
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: settings.power_preference,
                 #[cfg(not(target_os = "android"))]
-                compatible_surface: Some(&surface.as_ref().unwrap()),
+                compatible_surface: Some(surface.as_ref().unwrap()),
                 #[cfg(target_os = "android")]
                 compatible_surface: surface,
                 force_fallback_adapter: false,
@@ -294,8 +294,6 @@ impl Renderer {
 
         for (_, i) in object_list {
             if i.is_visible {
-                let i = i;
-
                 let vertex_buffer = get_pipeline_vertex_buffer(&i.pipeline.vertex_buffer, objects);
                 let shader = get_pipeline_shader(&i.pipeline.shader, objects);
                 let texture = get_pipeline_texture(&i.pipeline.texture, objects);
@@ -312,19 +310,16 @@ impl Renderer {
                     );
 
                     // shader
-                    if shader.is_some() {
-                        render_pass.set_pipeline(&shader.unwrap());
+                    if let Some(shader) = shader {
+                        render_pass.set_pipeline(shader);
                     }
                     // texture
-                    if texture.is_some() {
-                        render_pass.set_bind_group(0, &texture.unwrap(), &[]);
+                    if let Some(texture) = texture {
+                        render_pass.set_bind_group(0, texture, &[]);
                     }
                     // uniform
-                    if uniform.is_some() {
-                        let uniform = uniform.unwrap();
-                        if uniform.is_some() {
-                            render_pass.set_bind_group(2, uniform.as_ref().unwrap(), &[]);
-                        }
+                    if let Some(Some(uniform)) = uniform {
+                        render_pass.set_bind_group(2, uniform, &[]);
                     }
                     render_pass.draw_indexed(0..vertex_buffer.length, 0, 0..i.instances.len() as _);
                 }
@@ -364,8 +359,8 @@ fn get_pipeline_vertex_buffer<'a>(
     match data {
         PipelineData::Copy(object_id) => {
             let data = objects.get(object_id.as_str());
-            if data.is_some() {
-                get_pipeline_vertex_buffer(&data.unwrap().pipeline.vertex_buffer, objects)
+            if let Some(data) = data {
+                get_pipeline_vertex_buffer(&data.pipeline.vertex_buffer, objects)
             } else {
                 None
             }
@@ -382,8 +377,8 @@ fn get_pipeline_shader<'a>(
     match data {
         PipelineData::Copy(object_id) => {
             let data = objects.get(object_id.as_str());
-            if data.is_some() {
-                get_pipeline_shader(&data.unwrap().pipeline.shader, objects)
+            if let Some(data) = data {
+                get_pipeline_shader(&data.pipeline.shader, objects)
             } else {
                 None
             }
@@ -400,8 +395,8 @@ fn get_pipeline_texture<'a>(
     match data {
         PipelineData::Copy(object_id) => {
             let data = objects.get(object_id.as_str());
-            if data.is_some() {
-                get_pipeline_texture(&data.unwrap().pipeline.texture, objects)
+            if let Some(data) = data {
+                get_pipeline_texture(&data.pipeline.texture, objects)
             } else {
                 None
             }
@@ -418,8 +413,8 @@ fn get_pipeline_uniform_buffer<'a>(
     match data {
         PipelineData::Copy(object_id) => {
             let data = objects.get(object_id.as_str());
-            if data.is_some() {
-                get_pipeline_uniform_buffer(&data.unwrap().pipeline.uniform, objects)
+            if let Some(data) = data {
+                get_pipeline_uniform_buffer(&data.pipeline.uniform, objects)
             } else {
                 None
             }
