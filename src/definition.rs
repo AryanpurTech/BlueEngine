@@ -72,6 +72,7 @@ impl crate::header::Renderer {
                     module: &shader,
                     entry_point: "vs_main",
                     buffers: &[Vertex::desc(), InstanceRaw::desc()],
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
@@ -81,6 +82,7 @@ impl crate::header::Renderer {
                         write_mask: wgpu::ColorWrites::ALL,
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     })],
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: settings.topology,

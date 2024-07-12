@@ -264,6 +264,7 @@ impl Engine {
                     _ => {}
                 },
 
+                #[cfg(feature = "android")]
                 Event::Resumed => {
                     // let surface = unsafe {
                     //     renderer
@@ -288,10 +289,11 @@ impl Engine {
                     );
                     renderer.surface = Some(surface);
                 }
-
+                #[cfg(feature = "android")]
                 Event::Suspended => {
                     renderer.surface = None;
                 }
+
                 Event::DeviceEvent { event, .. } => _device_event = event,
 
                 _ => (),

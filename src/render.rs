@@ -62,7 +62,14 @@ impl Renderer {
             .expect("Failed to create device");
 
         #[cfg(not(target_os = "android"))]
-        let tex_format = surface.as_ref().unwrap().get_capabilities(&adapter).formats[0];
+        let surface_capabilities = surface.as_ref().unwrap().get_capabilities(&adapter);
+        #[cfg(not(target_os = "android"))]
+        let tex_format = surface_capabilities
+            .formats
+            .iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(surface_capabilities.formats[0]);
 
         #[cfg(target_os = "android")]
         let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;

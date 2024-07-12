@@ -21,23 +21,23 @@ android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
 
 [dependencies]
-image = { version = "0.24" }
+image = { version = "0.25.1" }
 futures = "0.3"
 winit = { version = "0.29.8", features = ["rwh_05"] }
-winit_input_helper = "0.15"
-wgpu = { version = "0.19" }
-bytemuck = { version = "1.14", features = ["derive"] }
+winit_input_helper = "0.16"
+wgpu = { version = "0.20.1" }
+bytemuck = { version = "1.16", features = ["derive"] }
 color-eyre = "0.6"
 downcast = "0.11"
-nalgebra-glm = "0.18"
+nalgebra-glm = "0.19"
 # debug logs
 env_logger = { version = "0.11", optional = true }
 # android
 log = { version = "0.4", optional = true }
-android_logger = { version = "0.13", optional = true }
+android_logger = { version = "0.14", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "0.19", features = ["webgl"] }
+wgpu = { version = "0.20.1", features = ["webgl"] }
 
 # Smallest possible release build
 #
