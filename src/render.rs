@@ -293,13 +293,26 @@ impl Renderer {
 
         render_pass.set_bind_group(0, &default_data.0, &[]);
         render_pass.set_pipeline(&default_data.1);
-        render_pass.set_bind_group(1, &camera.get("main").unwrap().uniform_data, &[]);
 
         // sort the object list in descending render order
         let mut object_list: Vec<_> = objects.iter().collect();
         object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
 
         for (_, i) in object_list {
+            if let Some(camera_data) = i.camera_effect.as_ref() {
+                render_pass.set_bind_group(
+                    1,
+                    &camera.get(camera_data.as_ref()).unwrap().uniform_data,
+                    &[],
+                );
+            } else {
+                render_pass.set_bind_group(
+                    1,
+                    &camera.get("main".into()).unwrap().uniform_data,
+                    &[],
+                );
+            }
+
             if i.is_visible {
                 let vertex_buffer = get_pipeline_vertex_buffer(&i.pipeline.vertex_buffer, objects);
                 let shader = get_pipeline_shader(&i.pipeline.shader, objects);

@@ -42,7 +42,8 @@ impl Renderer {
             ),
         ])?;
 
-        let shader_source = ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect);
+        let shader_source =
+            ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect.clone());
 
         let shader = self.build_shader(
             name.as_str(),
@@ -67,7 +68,7 @@ impl Renderer {
         let instance_buffer = self.build_instance(vec![instance.to_raw()]);
 
         Ok(Object {
-            name: name.as_string(),
+            name: name.as_arc(),
             vertices,
             indices,
             pipeline: Pipeline {
@@ -79,8 +80,7 @@ impl Renderer {
             instances: vec![instance],
             instance_buffer,
             uniform_layout: uniform.1,
-            size: glm::vec3(100f32, 100f32, 100f32),
-            scale: glm::vec3(1f32, 1f32, 1f32),
+            size: glm::vec3(1f32, 1f32, 1f32),
             position: glm::vec3(0f32, 0f32, 0f32),
             rotation: glm::vec3(0f32, 0f32, 0f32),
             changed: false,
@@ -90,9 +90,6 @@ impl Renderer {
             inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
                 &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
             )),
-            uniform_color: crate::uniform_type::Array4 {
-                data: crate::utils::default_resources::DEFAULT_COLOR,
-            },
             color: crate::uniform_type::Array4 {
                 data: crate::utils::default_resources::DEFAULT_COLOR,
             },
@@ -128,13 +125,6 @@ impl ObjectStorage {
             name.clone(),
             renderer.build_object(name.clone(), vertices, indices, settings)?,
         )?;
-
-        /*self.update_object(name, |object| {
-            object.scale(1f32, 1f32, 1f32);
-            object.position(
-                0f32, 0f32, 0f32
-            );
-        }); */
 
         Ok(())
     }
@@ -172,7 +162,7 @@ impl ObjectStorage {
 impl Object {
     /// Sets the name of the object
     pub fn set_name(&mut self, name: impl StringBuffer) {
-        self.name = name.as_string();
+        self.name = name.as_arc();
     }
 
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
@@ -304,22 +294,6 @@ impl Object {
         Ok(())
     }
 
-    /// Changes the main color of the object hat is sent to GPU. If textures exist, the color of textures will change
-    pub fn set_uniform_color(
-        &mut self,
-        red: f32,
-        green: f32,
-        blue: f32,
-        alpha: f32,
-    ) -> eyre::Result<()> {
-        self.uniform_color = Array4 {
-            data: [red, green, blue, alpha],
-        };
-        self.changed = true;
-
-        Ok(())
-    }
-
     /// Changes the render order of the Object.
     ///
     /// Objects with higher number get rendered later and appear "on top" when occupying the same space
@@ -402,7 +376,7 @@ impl Object {
     /// Update and apply changes done to the shader
     pub fn update_shader(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         let updated_shader = renderer.build_shader(
-            self.name.as_str(),
+            self.name.as_ref(),
             self.shader_builder.shader.clone(),
             Some(&self.uniform_layout),
             self.shader_settings,
@@ -418,13 +392,13 @@ impl Object {
         renderer: &mut Renderer,
     ) -> eyre::Result<crate::Shaders> {
         let updated_shader = renderer.build_shader(
-            self.name.as_str(),
+            self.name.as_ref(),
             self.shader_builder.shader.clone(),
             Some(&self.uniform_layout),
             self.shader_settings,
         )?;
         let updated_shader2 = renderer.build_shader(
-            self.name.as_str(),
+            self.name.as_ref(),
             self.shader_builder.shader.clone(),
             Some(&self.uniform_layout),
             self.shader_settings,
@@ -442,7 +416,7 @@ impl Object {
                 self.position_matrix * self.rotation_matrix * self.scale_matrix,
             ),
         );
-        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
+        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
 
         let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
 
@@ -463,7 +437,7 @@ impl Object {
                 self.position_matrix * self.rotation_matrix * self.scale_matrix,
             ),
         );
-        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.uniform_color);
+        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
 
         let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers)?;
         let updated_buffer2 = renderer.build_uniform_buffer(&self.uniform_buffers)?;
@@ -533,23 +507,21 @@ impl Object {
 }
 
 /// Configuration type for ShaderBuilder
-pub type ShaderConfigs = Vec<(String, Box<dyn Fn(bool) -> String>)>;
+pub type ShaderConfigs = Vec<(String, Box<dyn Fn(Option<std::sync::Arc<str>>) -> String>)>;
 
 /// Helps with building and updating shader code
 pub struct ShaderBuilder {
     /// the shader itself
     pub shader: String,
     /// Should the camera effect be applied
-    pub camera_effect: bool,
+    pub camera_effect: Option<std::sync::Arc<str>>,
     /// configurations to be applied to the shader
-    ///
-    /// the way it works is: `("key to look for", ("shader code with camera effects", "shader code without camera effects"))`
     pub configs: ShaderConfigs,
 }
 
 impl ShaderBuilder {
     /// Creates a new shader builder
-    pub fn new(shader_source: String, camera_effect: bool) -> Self {
+    pub fn new(shader_source: String, camera_effect: Option<std::sync::Arc<str>>) -> Self {
         let mut shader_builder = Self {
             shader: shader_source,
             camera_effect,
@@ -557,9 +529,8 @@ impl ShaderBuilder {
                 (
                     "//@CAMERA_STRUCT".to_string(),
                     Box::new(|camera_effect| {
-                        if camera_effect {
-                            r#"
-                        struct CameraUniforms {
+                        if camera_effect.is_some() {
+                            r#"struct CameraUniforms {
                             camera_matrix: mat4x4<f32>,
                         };
                         @group(1) @binding(0)
@@ -573,7 +544,7 @@ impl ShaderBuilder {
                 (
                     "//@CAMERA_VERTEX".to_string(),
                     Box::new(|camera_effect| {
-                        if camera_effect {
+                        if camera_effect.is_some() {
                             r#"out.position = camera_uniform.camera_matrix * model_matrix * (transform_uniform.transform_matrix * vec4<f32>(input.position, 1.0));"#
                         .to_string()
                         } else {
@@ -591,7 +562,7 @@ impl ShaderBuilder {
     /// Builds the shader with the configuration defined
     pub fn build(&mut self) {
         for i in &self.configs {
-            self.shader = self.shader.replace(&i.0, &i.1(self.camera_effect));
+            self.shader = self.shader.replace(&i.0, &i.1(self.camera_effect.clone()));
         }
     }
 }

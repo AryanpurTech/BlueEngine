@@ -93,7 +93,7 @@ unsafe impl Sync for Vertex {}
 /// customize almost everything there is about them!
 pub struct Object {
     /// Give your object a name, which can help later on for debugging.
-    pub name: String,
+    pub name: std::sync::Arc<str>,
     /// A list of Vertex
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
@@ -106,10 +106,8 @@ pub struct Object {
     pub instances: Vec<Instance>,
     /// instance buffer
     pub instance_buffer: wgpu::Buffer,
-    /// Dictates the size of your object in pixels
+    /// Dictates the size of your object in relation to the world
     pub size: glm::Vec3,
-    /// Dictates the scale of your object. Which by default it's 1,1,1 where the screen is size of 2
-    pub scale: glm::Vec3,
     /// Dictates the position of your object in pixels
     pub position: glm::Vec3,
     /// Dictates the rotation of your object
@@ -128,16 +126,14 @@ pub struct Object {
     /// Transformation matrix, but inversed
     pub inverse_transformation_matrix: crate::uniform_type::Matrix,
     /// The main color of your object
-    pub uniform_color: crate::uniform_type::Array4,
-    /// The color of your object that is sent to gpu
     pub color: crate::uniform_type::Array4,
     /// A struct making it easier to manipulate specific parts of shader
     pub shader_builder: crate::objects::ShaderBuilder,
     /// Shader settings
     pub shader_settings: ShaderSettings,
     /// Camera have any effect on the object?
-    pub camera_effect: bool,
-    /// Uniform Buffers to be sent to GPU
+    pub camera_effect: Option<std::sync::Arc<str>>,
+    /// Uniform Buffers to be sent to GPU. These are raw and not compiled for GPU yet
     pub uniform_buffers: Vec<wgpu::Buffer>,
     /// Should be rendered or not
     pub is_visible: bool,
@@ -148,17 +144,17 @@ unsafe impl Send for Object {}
 unsafe impl Sync for Object {}
 
 /// Extra settings to customize objects on time of creation
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ObjectSettings {
     /// Should it be affected by camera?
-    pub camera_effect: bool,
+    pub camera_effect: Option<std::sync::Arc<str>>,
     /// Shader Settings
     pub shader_settings: ShaderSettings,
 }
 impl Default for ObjectSettings {
     fn default() -> Self {
         Self {
-            camera_effect: true,
+            camera_effect: Some("main".into()),
             shader_settings: ShaderSettings::default(),
         }
     }
@@ -597,6 +593,8 @@ pub trait StringBufferTrait {
     fn as_str(&self) -> &str;
     /// Returns the string as [`String`]
     fn as_string(&self) -> String;
+    /// Returns Arc<str> for ease of computation
+    fn as_arc(&self) -> std::sync::Arc<str>;
 }
 
 impl StringBufferTrait for String {
@@ -606,6 +604,9 @@ impl StringBufferTrait for String {
     fn as_string(&self) -> String {
         self.clone()
     }
+    fn as_arc(&self) -> std::sync::Arc<str> {
+        self.as_str().into()
+    }
 }
 impl StringBuffer for String {}
 impl StringBufferTrait for &str {
@@ -614,6 +615,9 @@ impl StringBufferTrait for &str {
     }
     fn as_string(&self) -> String {
         self.to_string()
+    }
+    fn as_arc(&self) -> std::sync::Arc<str> {
+        self.as_str().into()
     }
 }
 impl StringBuffer for &str {}

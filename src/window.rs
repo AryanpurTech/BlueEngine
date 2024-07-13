@@ -234,9 +234,11 @@ impl Engine {
                                 );
                             });
 
-                            camera
-                                .update_view_projection(&mut renderer)
-                                .expect("Couldn't update camera");
+                            for camera_value in camera.values_mut() {
+                                camera_value
+                                    .update_view_projection(&mut renderer)
+                                    .expect("Couldn't update camera");
+                            }
                             objects.iter_mut().for_each(|i| {
                                 if i.1.changed {
                                     i.1.update(&mut renderer).expect("Couldn't update objects");

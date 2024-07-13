@@ -38,7 +38,7 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> eyre::Result<()> 
         ],
         vec![2, 1, 0, 2, 0, 3],
         ObjectSettings {
-            camera_effect: false,
+            camera_effect: None,
             ..Default::default()
         },
         &mut engine.renderer,
