@@ -29,7 +29,7 @@ impl Renderer {
         vertices: Vec<Vertex>,
         indices: Vec<u16>,
         settings: ObjectSettings,
-    ) -> color_eyre::Result<Object> {
+    ) -> eyre::Result<Object> {
         let vertex_buffer = self.build_vertex_buffer(&vertices, &indices)?;
 
         let uniform = self.build_uniform_buffer(&vec![
@@ -123,7 +123,7 @@ impl ObjectStorage {
         indices: Vec<u16>,
         settings: ObjectSettings,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<()> {
+    ) -> eyre::Result<()> {
         self.add_object(
             name.clone(),
             renderer.build_object(name.clone(), vertices, indices, settings)?,
@@ -140,12 +140,12 @@ impl ObjectStorage {
     }
 
     /// Adds an object to the storage
-    pub fn add_object(&mut self, key: impl StringBuffer, object: Object) -> color_eyre::Result<()> {
+    pub fn add_object(&mut self, key: impl StringBuffer, object: Object) -> eyre::Result<()> {
         fn add_object_inner(
             object_storage: &mut ObjectStorage,
             key: String,
             object: Object,
-        ) -> color_eyre::Result<()> {
+        ) -> eyre::Result<()> {
             object_storage.insert(key, object);
 
             Ok(())
@@ -296,13 +296,7 @@ impl Object {
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
-    pub fn set_color(
-        &mut self,
-        red: f32,
-        green: f32,
-        blue: f32,
-        alpha: f32,
-    ) -> color_eyre::Result<()> {
+    pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> eyre::Result<()> {
         self.color = Array4 {
             data: [red, green, blue, alpha],
         };
@@ -317,7 +311,7 @@ impl Object {
         green: f32,
         blue: f32,
         alpha: f32,
-    ) -> color_eyre::Result<()> {
+    ) -> eyre::Result<()> {
         self.uniform_color = Array4 {
             data: [red, green, blue, alpha],
         };
@@ -329,14 +323,14 @@ impl Object {
     /// Changes the render order of the Object.
     ///
     /// Objects with higher number get rendered later and appear "on top" when occupying the same space
-    pub fn set_render_order(&mut self, render_order: usize) -> color_eyre::Result<()> {
+    pub fn set_render_order(&mut self, render_order: usize) -> eyre::Result<()> {
         self.render_order = render_order;
 
         Ok(())
     }
 
     /// Replaces the object's texture with provided one
-    pub fn set_texture(&mut self, texture: Textures) -> color_eyre::Result<()> {
+    pub fn set_texture(&mut self, texture: Textures) -> eyre::Result<()> {
         self.pipeline.texture = PipelineData::Data(texture);
         self.changed = true;
 
@@ -364,7 +358,7 @@ impl Object {
     }
 
     /// Update and apply changes done to an object
-    pub fn update(&mut self, renderer: &mut Renderer) -> color_eyre::Result<()> {
+    pub fn update(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         self.update_vertex_buffer(renderer)?;
         self.update_uniform_buffer(renderer)?;
         self.update_shader(renderer)?;
@@ -377,7 +371,7 @@ impl Object {
     pub fn update_and_return(
         &mut self,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<(crate::VertexBuffers, crate::UniformBuffers, crate::Shaders)> {
+    ) -> eyre::Result<(crate::VertexBuffers, crate::UniformBuffers, crate::Shaders)> {
         let vertex_buffer = self.update_vertex_buffer_and_return(renderer)?;
         let uniform_buffer = self.update_uniform_buffer_and_return(renderer)?;
         let shader = self.update_shader_and_return(renderer)?;
@@ -386,7 +380,7 @@ impl Object {
     }
 
     /// Update and apply changes done to the vertex buffer
-    pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> color_eyre::Result<()> {
+    pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
 
@@ -397,7 +391,7 @@ impl Object {
     pub fn update_vertex_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<crate::VertexBuffers> {
+    ) -> eyre::Result<crate::VertexBuffers> {
         let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         let updated_buffer_2 = renderer.build_vertex_buffer(&self.vertices, &self.indices)?;
         self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
@@ -406,7 +400,7 @@ impl Object {
     }
 
     /// Update and apply changes done to the shader
-    pub fn update_shader(&mut self, renderer: &mut Renderer) -> color_eyre::Result<()> {
+    pub fn update_shader(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         let updated_shader = renderer.build_shader(
             self.name.as_str(),
             self.shader_builder.shader.clone(),
@@ -422,7 +416,7 @@ impl Object {
     pub fn update_shader_and_return(
         &mut self,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<crate::Shaders> {
+    ) -> eyre::Result<crate::Shaders> {
         let updated_shader = renderer.build_shader(
             self.name.as_str(),
             self.shader_builder.shader.clone(),
@@ -441,7 +435,7 @@ impl Object {
     }
 
     /// Update and apply changes done to the uniform buffer
-    pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> color_eyre::Result<()> {
+    pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
             uniform_type::Matrix::from_im(
@@ -462,7 +456,7 @@ impl Object {
     pub fn update_uniform_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<crate::UniformBuffers> {
+    ) -> eyre::Result<crate::UniformBuffers> {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
             uniform_type::Matrix::from_im(
@@ -481,7 +475,7 @@ impl Object {
     }
 
     /// Updates the instance buffer
-    pub fn update_instance_buffer(&mut self, renderer: &mut Renderer) -> color_eyre::Result<()> {
+    pub fn update_instance_buffer(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
         let instance_data = self
             .instances
             .iter()
@@ -496,7 +490,7 @@ impl Object {
     pub fn update_instance_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
-    ) -> color_eyre::Result<wgpu::Buffer> {
+    ) -> eyre::Result<wgpu::Buffer> {
         let instance_data = self
             .instances
             .iter()

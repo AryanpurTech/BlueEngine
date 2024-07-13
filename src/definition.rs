@@ -23,7 +23,7 @@ impl crate::header::Renderer {
         vertex_buffer: VertexBuffers,
         texture: Textures,
         uniform: Option<UniformBuffers>,
-    ) -> color_eyre::Result<Pipeline> {
+    ) -> eyre::Result<Pipeline> {
         Ok(Pipeline {
             shader: PipelineData::Data(shader),
             vertex_buffer: PipelineData::Data(vertex_buffer),
@@ -39,7 +39,7 @@ impl crate::header::Renderer {
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
-    ) -> color_eyre::Result<Shaders> {
+    ) -> eyre::Result<Shaders> {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -119,7 +119,7 @@ impl crate::header::Renderer {
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
-    ) -> color_eyre::Result<Textures> {
+    ) -> eyre::Result<Textures> {
         let mode: wgpu::AddressMode = match texture_mode {
             TextureMode::Clamp => wgpu::AddressMode::Repeat,
             TextureMode::Repeat => wgpu::AddressMode::MirrorRepeat,
@@ -260,7 +260,7 @@ impl crate::header::Renderer {
     pub fn build_uniform_buffer(
         &mut self,
         uniforms: &[wgpu::Buffer],
-    ) -> color_eyre::Result<(UniformBuffers, BindGroupLayout)> {
+    ) -> eyre::Result<(UniformBuffers, BindGroupLayout)> {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
 
@@ -303,7 +303,7 @@ impl crate::header::Renderer {
         &mut self,
         vertices: &Vec<Vertex>,
         indices: &Vec<u16>,
-    ) -> color_eyre::Result<VertexBuffers> {
+    ) -> eyre::Result<VertexBuffers> {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {

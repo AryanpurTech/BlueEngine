@@ -5,7 +5,7 @@ pub fn cube(
     name: impl StringBuffer,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> color_eyre::Result<()> {
+) -> eyre::Result<()> {
     objects.new_object(
         name.clone(),
         vec![
@@ -162,7 +162,7 @@ pub fn uv_sphere(
     details: (usize, usize, f32),
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> color_eyre::Result<()> {
+) -> eyre::Result<()> {
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
     let length_inv = 1. / details.2;

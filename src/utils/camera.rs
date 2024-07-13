@@ -6,9 +6,9 @@
 
 use crate::{
     header::{uniform_type::Matrix, Camera, Renderer},
-    Projection,
+    CameraContainer, Projection,
 };
-use color_eyre::Result;
+use eyre::Result;
 use winit::dpi::PhysicalSize;
 
 use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
@@ -201,5 +201,115 @@ impl Camera {
                 nalgebra_glm::ortho(left, right, bottom, top, self.near, self.far)
             }
         }
+    }
+}
+
+impl CameraContainer {
+    /// Creates new CameraContainer with one main camera
+    pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> eyre::Result<Self> {
+        let mut cameras = std::collections::HashMap::new();
+        let main_camera = Camera::new(window_size, renderer)?;
+        cameras.insert("main".into(), main_camera);
+
+        Ok(CameraContainer { cameras })
+    }
+
+    /// Updates the view uniform matrix that decides how camera works
+    pub fn build_view_projection_matrix(&mut self) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .build_view_projection_matrix()?;
+        Ok(())
+    }
+    /// Updates the view uniform matrix that decides how camera works
+    pub fn build_view_orthographic_matrix(&mut self) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .build_view_orthographic_matrix()?;
+        Ok(())
+    }
+    /// Returns a matrix uniform buffer from camera data that can be sent to GPU
+    pub fn camera_uniform_buffer(&self) -> eyre::Result<Matrix> {
+        Ok(Matrix::from_im(self.cameras.get("main").unwrap().view_data))
+    }
+    /// Sets the position of camera
+    pub fn set_position(&mut self, x: f32, y: f32, z: f32) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .set_position(x, y, z)?;
+        Ok(())
+    }
+    /// Sets the target of camera
+    pub fn set_target(&mut self, x: f32, y: f32, z: f32) -> eyre::Result<()> {
+        self.cameras.get_mut("main").unwrap().set_target(x, y, z)?;
+        Ok(())
+    }
+    /// Sets the up of camera
+    pub fn set_up(&mut self, x: f32, y: f32, z: f32) -> eyre::Result<()> {
+        self.cameras.get_mut("main").unwrap().set_up(x, y, z)?;
+        Ok(())
+    }
+    /// Sets how far camera can look
+    pub fn set_far(&mut self, new_far: f32) -> eyre::Result<()> {
+        self.cameras.get_mut("main").unwrap().set_far(new_far)?;
+        Ok(())
+    }
+    /// Sets how near the camera can look
+    pub fn set_near(&mut self, new_near: f32) -> eyre::Result<()> {
+        self.cameras.get_mut("main").unwrap().set_near(new_near)?;
+        Ok(())
+    }
+    /// Sets the aspect ratio of the camera
+    pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .set_resolution(window_size)?;
+        Ok(())
+    }
+    /// Sets the projection of the camera
+    pub fn set_projection(&mut self, projection: Projection) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .set_projection(projection)?;
+        Ok(())
+    }
+    /// Enables adding position and target for the view target
+    pub fn add_position_and_target(&mut self, enable: bool) {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .add_position_and_target(enable);
+    }
+    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame
+    pub fn update_view_projection(&mut self, renderer: &mut Renderer) -> eyre::Result<()> {
+        self.cameras
+            .get_mut("main")
+            .unwrap()
+            .update_view_projection(renderer)?;
+        Ok(())
+    }
+    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame, and returns the bindgroup
+    pub fn update_view_projection_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> eyre::Result<crate::UniformBuffers> {
+        Ok(self
+            .cameras
+            .get_mut("main")
+            .unwrap()
+            .update_view_projection_and_return(renderer)?)
+    }
+    /// Builds a view matrix for camera projection
+    pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
+        self.cameras.get("main").unwrap().build_view_matrix()
+    }
+    /// Builds a projection matrix for camera
+    pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
+        self.cameras.get("main").unwrap().build_projection_matrix()
     }
 }

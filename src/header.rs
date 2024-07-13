@@ -204,7 +204,7 @@ pub struct Engine {
     /// do not have the know-how, or wish to handle all the work of rendering data manually.
     pub objects: ObjectStorage,
     /// The camera handles the way the scene looks when rendered. You can modify everything there is to camera through this.
-    pub camera: Camera,
+    pub camera: CameraContainer,
     /// Handles all engine plugins
     pub signals: SignalStorage,
 }
@@ -348,7 +348,7 @@ unsafe impl Send for WindowDescriptor {}
 unsafe impl Sync for WindowDescriptor {}
 
 /// Container for the projection used by the camera
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Projection {
     /// Perspective projection
     ///
@@ -389,12 +389,27 @@ pub struct Camera {
     // For checking and rebuilding it's uniform buffer
     pub(crate) changed: bool,
     /// The uniform data of the camera to be sent to the gpu
-    pub uniform_data: crate::UniformBuffers,
+    pub uniform_data: UniformBuffers,
     /// The position and target of the camera
     pub(crate) add_position_and_target: bool,
 }
 unsafe impl Send for Camera {}
 unsafe impl Sync for Camera {}
+
+/// Container for Cameras
+///
+/// This allows for different objects have a different camera perspective.
+#[derive(Debug)]
+pub struct CameraContainer {
+    /// The list of cameras
+    // Arc<str> is used instead of String for performance
+    pub cameras: std::collections::HashMap<std::sync::Arc<str>, Camera>,
+}
+impl_deref_field!(
+    CameraContainer,
+    std::collections::HashMap<std::sync::Arc<str>, Camera>,
+    cameras
+);
 
 /// These definitions are taken from wgpu API docs
 #[derive(Debug, Clone, Copy)]
@@ -498,7 +513,7 @@ pub trait Signal: Any {
         _objects: &mut ObjectStorage,
         _events: &crate::Event<()>,
         _input: &crate::InputHelper,
-        _camera: &mut crate::Camera,
+        _camera: &mut crate::CameraContainer,
     ) {
     }
 
@@ -509,7 +524,7 @@ pub trait Signal: Any {
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
         _objects: &mut ObjectStorage,
-        _camera: &mut crate::Camera,
+        _camera: &mut crate::CameraContainer,
         _input: &crate::InputHelper,
         _encoder: &mut crate::CommandEncoder,
         _view: &crate::TextureView,

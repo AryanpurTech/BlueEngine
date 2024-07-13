@@ -9,9 +9,9 @@
 use std::sync::Arc;
 
 use crate::{
-    header::{uniform_type, Camera, Renderer, ShaderSettings, TextureData},
+    header::{uniform_type, Renderer, ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
-    ObjectStorage, PipelineData,
+    CameraContainer, ObjectStorage, PipelineData,
 };
 use winit::window::Window;
 
@@ -24,7 +24,7 @@ impl Renderer {
     pub(crate) async fn new(
         window: Arc<Window>,
         settings: crate::WindowDescriptor,
-    ) -> color_eyre::Result<Self> {
+    ) -> eyre::Result<Self> {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -221,7 +221,7 @@ impl Renderer {
         &mut self,
         objects: &ObjectStorage,
         window_size: winit::dpi::PhysicalSize<u32>,
-        camera: &Camera,
+        camera: &CameraContainer,
     ) -> Result<
         Option<(
             wgpu::CommandEncoder,
@@ -293,7 +293,7 @@ impl Renderer {
 
         render_pass.set_bind_group(0, &default_data.0, &[]);
         render_pass.set_pipeline(&default_data.1);
-        render_pass.set_bind_group(1, &camera.uniform_data, &[]);
+        render_pass.set_bind_group(1, &camera.get("main").unwrap().uniform_data, &[]);
 
         // sort the object list in descending render order
         let mut object_list: Vec<_> = objects.iter().collect();

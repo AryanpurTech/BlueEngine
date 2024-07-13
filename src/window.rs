@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    header::{Camera, Engine, Renderer, WindowDescriptor},
-    ObjectStorage, Window,
+    header::{Engine, Renderer, WindowDescriptor},
+    CameraContainer, ObjectStorage, Window,
 };
 
 use winit::{
@@ -17,7 +17,7 @@ use winit::{
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
-    pub fn new() -> color_eyre::Result<Self> {
+    pub fn new() -> eyre::Result<Self> {
         Self::new_inner(
             WindowDescriptor::default(),
             #[cfg(target_os = "android")]
@@ -26,7 +26,7 @@ impl Engine {
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> color_eyre::Result<Self> {
+    pub fn new_config(settings: WindowDescriptor) -> eyre::Result<Self> {
         Self::new_inner(
             settings,
             #[cfg(target_os = "android")]
@@ -39,7 +39,7 @@ impl Engine {
     pub fn new_android(
         settings: WindowDescriptor,
         app: winit::platform::android::activity::AndroidApp,
-    ) -> color_eyre::Result<Self> {
+    ) -> eyre::Result<Self> {
         Self::new_inner(settings, Some(app))
     }
 
@@ -50,7 +50,7 @@ impl Engine {
         #[cfg(target_os = "android")] android_app: Option<
             winit::platform::android::activity::AndroidApp,
         >,
-    ) -> color_eyre::Result<Self> {
+    ) -> eyre::Result<Self> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimensions of the window, as width and height
@@ -121,7 +121,7 @@ impl Engine {
         // The renderer init on current window
         let mut renderer = futures::executor::block_on(Renderer::new(window.clone(), settings))?;
 
-        let camera = Camera::new(window_inner_size, &mut renderer)?;
+        let camera = CameraContainer::new(window_inner_size, &mut renderer)?;
 
         Ok(Self {
             window: Window::new(window),
@@ -139,21 +139,19 @@ impl Engine {
     ///
     /// Renderer, window, vec of objects, events, and camera are passed to the update code.
     #[allow(unreachable_code)]
-    pub fn update_loop<
-        F: 'static
+    pub fn update_loop(
+        self,
+        mut update_function: impl 'static
             + FnMut(
                 // Core
                 &mut Renderer,
                 &mut Window,
                 &mut ObjectStorage,
                 &winit_input_helper::WinitInputHelper,
-                &mut Camera,
+                &mut CameraContainer,
                 &mut crate::SignalStorage,
             ),
-    >(
-        self,
-        mut update_function: F,
-    ) -> color_eyre::Result<()> {
+    ) -> eyre::Result<()> {
         let Self {
             event_loop,
             mut renderer,
@@ -264,34 +262,37 @@ impl Engine {
                     _ => {}
                 },
 
-                #[cfg(feature = "android")]
                 Event::Resumed => {
-                    // let surface = unsafe {
-                    //     renderer
-                    //         .instance
-                    //         .create_surface_unsafe(
-                    //             wgpu::SurfaceTargetUnsafe::from_window(&window.window)
-                    //                 .expect("Couldn't create surface target"),
-                    //         )
-                    //         .expect("Couldn't create surface")
-                    // };
+                    if renderer.surface.is_none() {
+                        // let surface = unsafe {
+                        //     renderer
+                        //         .instance
+                        //         .create_surface_unsafe(
+                        //             wgpu::SurfaceTargetUnsafe::from_window(&window.window)
+                        //                 .expect("Couldn't create surface target"),
+                        //         )
+                        //         .expect("Couldn't create surface")
+                        // };
 
-                    let surface = renderer
-                        .instance
-                        .create_surface(window.window.clone())
-                        .unwrap();
-                    surface.configure(&renderer.device, &renderer.config);
+                        let surface = renderer
+                            .instance
+                            .create_surface(window.window.clone())
+                            .unwrap();
+                        surface.configure(&renderer.device, &renderer.config);
 
-                    renderer.depth_buffer = Renderer::build_depth_buffer(
-                        "Depth Buffer",
-                        &renderer.device,
-                        &renderer.config,
-                    );
-                    renderer.surface = Some(surface);
+                        renderer.depth_buffer = Renderer::build_depth_buffer(
+                            "Depth Buffer",
+                            &renderer.device,
+                            &renderer.config,
+                        );
+                        renderer.surface = Some(surface);
+                    }
                 }
-                #[cfg(feature = "android")]
+
                 Event::Suspended => {
-                    renderer.surface = None;
+                    if renderer.surface.is_none() {
+                        renderer.surface = None;
+                    }
                 }
 
                 Event::DeviceEvent { event, .. } => _device_event = event,

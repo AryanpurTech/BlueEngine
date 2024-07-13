@@ -15,7 +15,7 @@ pub fn triangle(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> color_eyre::Result<()> {
+) -> eyre::Result<()> {
     objects.new_object(
         name.clone(),
         vec![
@@ -49,7 +49,7 @@ pub fn square(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> color_eyre::Result<()> {
+) -> eyre::Result<()> {
     objects.new_object(
         name.clone(),
         vec![
@@ -90,7 +90,7 @@ pub fn rectangle(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> color_eyre::Result<()> {
+) -> eyre::Result<()> {
     objects.new_object(
         name.clone(),
         vec![
