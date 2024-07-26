@@ -298,11 +298,10 @@ impl CameraContainer {
         &mut self,
         renderer: &mut Renderer,
     ) -> eyre::Result<crate::UniformBuffers> {
-        Ok(self
-            .cameras
+        self.cameras
             .get_mut("main")
             .unwrap()
-            .update_view_projection_and_return(renderer)?)
+            .update_view_projection_and_return(renderer)
     }
     /// Builds a view matrix for camera projection
     pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {

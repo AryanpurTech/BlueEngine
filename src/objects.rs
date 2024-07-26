@@ -161,12 +161,14 @@ impl ObjectStorage {
 
 impl Object {
     /// Sets the name of the object
-    pub fn set_name(&mut self, name: impl StringBuffer) {
+    pub fn set_name(&mut self, name: impl StringBuffer) -> &mut Self {
         self.name = name.as_arc();
+
+        self
     }
 
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
-    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
         self.size.x *= x;
         self.size.y *= y;
         self.size.z *= z;
@@ -177,6 +179,7 @@ impl Object {
         self.inverse_matrices();
 
         self.changed = true;
+        self
     }
 
     /// Resizes an object in pixels which are relative to the window
@@ -186,7 +189,7 @@ impl Object {
         height: f32,
         depth: f32,
         window_size: winit::dpi::PhysicalSize<u32>,
-    ) {
+    ) -> &mut Self {
         let difference_in_width = if self.size.x != 0.0 && width != 0.0 {
             let a = pixel_to_cartesian(width, window_size.width);
             let b = pixel_to_cartesian(self.size.x, window_size.width);
@@ -227,10 +230,11 @@ impl Object {
             difference_in_height,
             difference_in_depth,
         );
+        self
     }
 
     /// Rotates the object in the axis you specify
-    pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) {
+    pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) -> &mut Self {
         // The reason for using different transformation matrix is because
         // of alteration of translation that happens due to rotation. The
         // solution suggested by https://github.com/tksuoran fixed this through
@@ -256,10 +260,11 @@ impl Object {
         self.inverse_matrices();
 
         self.changed = true;
+        self
     }
 
     /// Moves the object by the amount you specify in the axis you specify
-    pub fn set_translation(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_translation(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
         self.position.x -= x;
         self.position.y -= y;
         self.position.z -= z;
@@ -270,10 +275,11 @@ impl Object {
 
         self.inverse_matrices();
         self.changed = true;
+        self
     }
 
     /// Sets the position of the object in 3D space relative to the window
-    pub fn set_position(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_position(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
         self.set_translation(
             (self.position.x - x) * -1f32,
             (self.position.y - y) * -1f32,
@@ -283,32 +289,33 @@ impl Object {
         self.position.x = x;
         self.position.y = y;
         self.position.z = z;
+        self
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
-    pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> eyre::Result<()> {
+    pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> &mut Self {
         self.color = Array4 {
             data: [red, green, blue, alpha],
         };
         self.changed = true;
-        Ok(())
+        self
     }
 
     /// Changes the render order of the Object.
     ///
     /// Objects with higher number get rendered later and appear "on top" when occupying the same space
-    pub fn set_render_order(&mut self, render_order: usize) -> eyre::Result<()> {
+    pub fn set_render_order(&mut self, render_order: usize) -> &mut Self {
         self.render_order = render_order;
 
-        Ok(())
+        self
     }
 
     /// Replaces the object's texture with provided one
-    pub fn set_texture(&mut self, texture: Textures) -> eyre::Result<()> {
+    pub fn set_texture(&mut self, texture: Textures) -> &mut Self {
         self.pipeline.texture = PipelineData::Data(texture);
         self.changed = true;
 
-        Ok(())
+        self
     }
 
     /// This will flag object as changed and altered, leading to rebuilding parts, or entirety on next frame.
@@ -479,30 +486,35 @@ impl Object {
 
     // ============================= FOR COPY OF PIPELINES =============================
     /// References another object's vertices
-    pub fn reference_vertices(&mut self, object_id: impl StringBuffer) {
+    pub fn reference_vertices(&mut self, object_id: impl StringBuffer) -> &mut Self {
         self.pipeline.vertex_buffer = PipelineData::Copy(object_id.as_string());
+        self
     }
 
     /// References another object's shader
-    pub fn reference_shader(&mut self, object_id: impl StringBuffer) {
+    pub fn reference_shader(&mut self, object_id: impl StringBuffer) -> &mut Self {
         self.pipeline.shader = PipelineData::Copy(object_id.as_string());
+        self
     }
 
     /// References another object's texture
-    pub fn reference_texture(&mut self, object_id: impl StringBuffer) {
+    pub fn reference_texture(&mut self, object_id: impl StringBuffer) -> &mut Self {
         self.pipeline.texture = PipelineData::Copy(object_id.as_string());
+        self
     }
 
     /// References another object's uniform buffer
-    pub fn reference_uniform_buffer(&mut self, object_id: impl StringBuffer) {
+    pub fn reference_uniform_buffer(&mut self, object_id: impl StringBuffer) -> &mut Self {
         self.pipeline.uniform = PipelineData::Copy(object_id.as_string());
+        self
     }
 
     // ============================= Instances =============================
     /// Add an instance to the object
-    pub fn add_instance(&mut self, instance: Instance) {
+    pub fn add_instance(&mut self, instance: Instance) -> &mut Self {
         self.instances.push(instance);
         self.changed = true;
+        self
     }
 }
 

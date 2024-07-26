@@ -14,8 +14,7 @@ fn main() {
         .objects
         .get_mut("Cube")
         .unwrap()
-        .set_color(0f32, 0f32, 1f32, 1f32)
-        .unwrap();
+        .set_color(0f32, 0f32, 1f32, 1f32);
 
     let radius = 5f32;
     let start = std::time::SystemTime::now();
