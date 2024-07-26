@@ -306,11 +306,7 @@ impl Renderer {
                     &[],
                 );
             } else {
-                render_pass.set_bind_group(
-                    1,
-                    &camera.get("main".into()).unwrap().uniform_data,
-                    &[],
-                );
+                render_pass.set_bind_group(1, &camera.get("main").unwrap().uniform_data, &[]);
             }
 
             if i.is_visible {

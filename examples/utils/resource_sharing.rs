@@ -36,13 +36,7 @@ fn main() {
         .get_mut("main")
         .unwrap()
         .set_texture(texture)
-        .expect("Error during inserting texture to the main square");
-    // set position to make it visible
-    engine
-        .objects
-        .get_mut("main")
-        .expect("Error during setting the position of the main square")
-        .set_position(-1.5f32, 0f32, 0f32);
+        .set_position(-1.5f32, 0f32, 0f32); // set position to make it visible
 
     // create another object where you want to get resources shared with
     square(

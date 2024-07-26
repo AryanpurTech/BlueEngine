@@ -50,7 +50,7 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> eyre::Result<()> 
 fn main() {
     let mut engine = Engine::new().expect("win");
 
-    let _ = square("Square", &mut engine).unwrap();
+    square("Square", &mut engine).unwrap();
 
     engine
         .update_loop(move |_, _, _, _, _, _| {})
