@@ -62,53 +62,17 @@ impl Engine {
             height: settings.height, // And sets the height of the window
         };
 
-        // Here the size is finally made according to the dimensions we set earlier
-        #[cfg(not(target_os = "android"))]
-        let size = winit::dpi::Size::Physical(dimension);
-
         // And we will create a new window and set all the options we stored
         #[cfg(not(target_os = "android"))]
         let default_attributes = WindowAttributes::default()
-            .with_inner_size(size) // sets the width and height of window
+            .with_inner_size(dimension) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
             .with_decorations(settings.decorations) // sets if the window should have borders
             .with_resizable(settings.resizable); // sets the window to be resizable
 
-        // will create the main event loop of the window.
-        // and will contain all the callbacks and button press
-        // also will allow graphics API
-        #[cfg(target_os = "android")]
-        let event_loop = if android_app.is_some() {
-            use winit::platform::android::EventLoopBuilderExtAndroid;
-
-            android_logger::init_once(
-                android_logger::Config::default()
-                    .with_max_level(log::LevelFilter::Trace) // Default comes from `log::max_level`, i.e. Off
-                    .with_filter(
-                        android_logger::FilterBuilder::new()
-                            .filter_level(log::LevelFilter::Debug)
-                            .filter_module("android_activity", log::LevelFilter::Trace)
-                            .filter_module("winit", log::LevelFilter::Trace)
-                            .build(),
-                    ),
-            );
-
-            winit::event_loop::EventLoopBuilder::new()
-                .with_android_app(if android_app.is_some() {
-                    android_app.unwrap()
-                } else {
-                    panic!("No android app")
-                })
-                .build()?
-        } else {
-            EventLoop::new()?
-        };
-
-        let window_size = winit::dpi::PhysicalSize::new(settings.width, settings.height);
-
         // The renderer init on current window
-        let mut renderer = pollster::block_on(Renderer::new(window_size, settings.clone()))?;
-        let camera = CameraContainer::new(window_size, &mut renderer)?;
+        let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()))?;
+        let camera = CameraContainer::new(dimension, &mut renderer)?;
 
         Ok(Self {
             window: Window::new(default_attributes),
@@ -143,6 +107,37 @@ impl Engine {
     ) -> eyre::Result<()> {
         self.update_loop = Some(Box::new(update_function));
 
+        // will create the main event loop of the window.
+        // and will contain all the callbacks and button press
+        // also will allow graphics API
+        #[cfg(target_os = "android")]
+        let event_loop = if android_app.is_some() {
+            use winit::platform::android::EventLoopBuilderExtAndroid;
+
+            android_logger::init_once(
+                android_logger::Config::default()
+                    .with_max_level(log::LevelFilter::Trace) // Default comes from `log::max_level`, i.e. Off
+                    .with_filter(
+                        android_logger::FilterBuilder::new()
+                            .filter_level(log::LevelFilter::Debug)
+                            .filter_module("android_activity", log::LevelFilter::Trace)
+                            .filter_module("winit", log::LevelFilter::Trace)
+                            .build(),
+                    ),
+            );
+
+            winit::event_loop::EventLoopBuilder::new()
+                .with_android_app(if android_app.is_some() {
+                    android_app.unwrap()
+                } else {
+                    panic!("No android app")
+                })
+                .build()?
+        } else {
+            EventLoop::new()?
+        };
+
+        #[cfg(not(target_os = "android"))]
         let event_loop = EventLoop::new()?;
         event_loop.set_control_flow(self.event_loop_control_flow);
         event_loop.run_app(self)?;
@@ -174,6 +169,28 @@ impl ApplicationHandler for Engine {
                     &self.renderer.config,
                 );
                 self.renderer.surface = Some(surface);
+            }
+
+            if let Some(window) = self.window.window.as_mut() {
+                window.set_min_inner_size(self.window.default_attributes.min_inner_size);
+                window.set_max_inner_size(self.window.default_attributes.max_inner_size);
+                if let Some(position) = self.window.default_attributes.position {
+                    window.set_outer_position(position);
+                }
+                window.set_resizable(self.window.default_attributes.resizable);
+                window.set_enabled_buttons(self.window.default_attributes.enabled_buttons);
+                window.set_title(self.window.default_attributes.title.as_str());
+                window.set_maximized(self.window.default_attributes.maximized);
+                window.set_visible(self.window.default_attributes.visible);
+                window.set_transparent(self.window.default_attributes.transparent);
+                window.set_blur(self.window.default_attributes.blur);
+                window.set_decorations(self.window.default_attributes.decorations);
+                window.set_window_icon(self.window.default_attributes.window_icon.clone());
+                window.set_theme(self.window.default_attributes.preferred_theme);
+                window.set_resize_increments(self.window.default_attributes.resize_increments);
+                window.set_window_level(self.window.default_attributes.window_level);
+                window.set_cursor(self.window.default_attributes.cursor.clone());
+                window.set_fullscreen(self.window.default_attributes.fullscreen.clone());
             }
         }
     }
@@ -301,9 +318,203 @@ impl Window {
     }
 
     /// close the engine window
-    #[allow(unused)]
-    #[allow(dead_code)]
     pub fn close_engine(&mut self) {
         self.should_close = true;
+    }
+
+    // ====================================================== WINDOW SETTERS ====================================================== //
+    //MARK: WINDOW SETTERS
+
+    /// see [winit::window::Window::set_min_inner_size]
+    pub fn set_min_inner_size(&mut self, value: Option<winit::dpi::Size>) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_min_inner_size(value);
+        } else {
+            self.default_attributes.min_inner_size = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_max_inner_size]
+    pub fn set_max_inner_size(&mut self, value: Option<winit::dpi::Size>) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_max_inner_size(value);
+        } else {
+            self.default_attributes.max_inner_size = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_outer_position]
+    pub fn set_outer_position(&mut self, value: winit::dpi::Position) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_outer_position(value);
+        } else {
+            self.default_attributes.position = Some(value);
+        }
+    }
+
+    /// see [winit::window::Window::set_resizable]
+    pub fn set_resizable(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_resizable(value);
+        } else {
+            self.default_attributes.resizable = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_enabled_buttons]
+    pub fn set_enabled_buttons(&mut self, value: winit::window::WindowButtons) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_enabled_buttons(value);
+        } else {
+            self.default_attributes.enabled_buttons = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_title]
+    pub fn set_title(&mut self, value: String) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_title(value.as_str());
+        } else {
+            self.default_attributes.title = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_maximized]
+    pub fn set_maximized(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_maximized(value);
+        } else {
+            self.default_attributes.maximized = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_visible]
+    pub fn set_visible(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_visible(value);
+        } else {
+            self.default_attributes.visible = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_transparent]
+    pub fn set_transparent(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_transparent(value);
+        } else {
+            self.default_attributes.transparent = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_blur]
+    pub fn set_blur(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_blur(value);
+        } else {
+            self.default_attributes.blur = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_decorations]
+    pub fn set_decorations(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_decorations(value);
+        } else {
+            self.default_attributes.decorations = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_window_icon]
+    pub fn set_window_icon(&mut self, value: Option<winit::window::Icon>) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_window_icon(value);
+        } else {
+            self.default_attributes.window_icon = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_preferred_theme]
+    pub fn set_preferred_theme(&mut self, value: Option<winit::window::Theme>) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_theme(value);
+        } else {
+            self.default_attributes.preferred_theme = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_resize_increments]
+    pub fn set_resize_increments(&mut self, value: Option<winit::dpi::Size>) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_resize_increments(value);
+        } else {
+            self.default_attributes.resize_increments = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_content_protected]
+    pub fn set_content_protected(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_content_protected(value);
+        } else {
+            self.default_attributes.content_protected = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_window_level]
+    pub fn set_window_level(&mut self, value: winit::window::WindowLevel) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_window_level(value);
+        } else {
+            self.default_attributes.window_level = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_cursor]
+    pub fn set_cursor(&mut self, value: winit::window::Cursor) {
+        if let Some(window) = self.window.as_mut() {
+            window.set_cursor(value);
+        } else {
+            self.default_attributes.cursor = value;
+        }
+    }
+
+    /// see [winit::window::Window::set_fullscreen]
+    pub fn set_fullscreen_borderless(&mut self, value: bool) {
+        let full_screen_result = if value {
+            Some(winit::window::Fullscreen::Borderless(None))
+        } else {
+            None
+        };
+
+        if let Some(window) = self.window.as_mut() {
+            window.set_fullscreen(full_screen_result);
+        } else {
+            self.default_attributes.fullscreen = full_screen_result;
+        }
+    }
+
+    /// see [winit::window::Window::set_fullscreen]
+    ///
+    /// **Does not work unless during update_loop**
+    pub fn set_fullscreen_exclusive(&mut self, value: bool) {
+        if let Some(window) = self.window.as_mut() {
+            let full_screen_result = if value {
+                Some(winit::window::Fullscreen::Exclusive(
+                    window
+                        .available_monitors()
+                        .next()
+                        .expect("Couldn't get monitor handle for exclusive fullscreen")
+                        .video_modes()
+                        .next()
+                        .expect("Couldn't get monitor handle for exclusive fullscreen"),
+                ))
+            } else {
+                None
+            };
+
+            window.set_fullscreen(full_screen_result);
+        } else {
+            self.default_attributes.fullscreen = None;
+        }
     }
 }
