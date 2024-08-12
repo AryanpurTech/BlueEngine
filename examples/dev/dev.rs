@@ -12,7 +12,7 @@ fn main() {
     let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
         power_preference: blue_engine::PowerPreference::None,
         present_mode: blue_engine::wgpu::PresentMode::Fifo,
-        limits: blue_engine::wgpu::Limits::downlevel_defaults(),
+        limits: blue_engine::wgpu::Limits::downlevel_webgl2_defaults(),
         features: blue_engine::wgpu::Features::empty(),
         backends: blue_engine::Backends::GL,
         ..Default::default()
@@ -92,18 +92,19 @@ fn main() {
         .unwrap()
         .set_position(-0.2f32, 0f32, 0.001f32);
 
-    let video_mode = engine
-        .event_loop
-        .available_monitors()
-        .next()
-        .unwrap()
-        .video_modes()
-        .next()
-        .unwrap();
+    // ! REMEMBER
+    // let video_mode = engine
+    //     .event_loop
+    //     .available_monitors()
+    //     .next()
+    //     .unwrap()
+    //     .video_modes()
+    //     .next()
+    //     .unwrap();
 
-    engine
-        .window
-        .set_fullscreen(Some(blue_engine::Fullscreen::Exclusive(video_mode)));
+    // engine
+    //     .window
+    //     .set_fullscreen(Some(blue_engine::Fullscreen::Exclusive(video_mode)));
 
     let speed = -0.05;
 

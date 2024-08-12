@@ -107,6 +107,7 @@ impl crate::header::Renderer {
                     alpha_to_coverage_enabled: settings.alpha_to_coverage_enabled,
                 },
                 multiview: None,
+                cache: None,
             });
 
         Ok(render_pipeline)
