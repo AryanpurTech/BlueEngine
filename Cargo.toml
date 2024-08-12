@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.5.14"
+version = "0.5.16"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -21,11 +21,10 @@ android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
 
 [dependencies]
-image = { version = "0.25.1" }
-futures = "0.3"
-winit = { version = "0.29.8", features = ["rwh_05"] }
-winit_input_helper = "0.16"
-wgpu = { version = "0.20.1" }
+image = { version = "0.25.2" }
+pollster = "0.3"
+winit = { version = "0.30", features = ["rwh_06"] }
+wgpu = { version = "22.1.0" }
 bytemuck = { version = "1.16", features = ["derive"] }
 eyre = "0.6"
 downcast = "0.11"
@@ -37,7 +36,7 @@ log = { version = "0.4", optional = true }
 android_logger = { version = "0.14", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "0.20.1", features = ["webgl"] }
+wgpu = { version = "22.1.0", features = ["webgl"] }
 
 # Smallest possible release build
 #

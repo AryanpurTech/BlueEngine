@@ -6,14 +6,11 @@
 
 // ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
 
-use std::sync::Arc;
-
 use crate::{
     header::{uniform_type, Renderer, ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     CameraContainer, ObjectStorage, PipelineData,
 };
-use winit::window::Window;
 
 impl Renderer {
     /// Creates a new renderer.
@@ -22,28 +19,19 @@ impl Renderer {
     /// * `window` - The window to create the renderer for.
     /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
-        window: Arc<Window>,
+        size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
     ) -> eyre::Result<Self> {
-        let size = window.inner_size();
-
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
-        #[cfg(not(target_os = "android"))]
-        let surface = Some(instance.create_surface(window)?);
-        #[cfg(target_os = "android")]
-        let surface = None;
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: settings.power_preference,
-                #[cfg(not(target_os = "android"))]
-                compatible_surface: Some(surface.as_ref().unwrap()),
-                #[cfg(target_os = "android")]
-                compatible_surface: surface,
+                compatible_surface: None,
                 force_fallback_adapter: false,
             })
             .await
@@ -55,25 +43,14 @@ impl Renderer {
                     label: Some("Device"),
                     required_features: settings.features,
                     required_limits: settings.limits,
+                    memory_hints: wgpu::MemoryHints::Performance,
                 },
                 None, // Trace path
             )
             .await
             .expect("Failed to create device");
 
-        #[cfg(not(target_os = "android"))]
-        let surface_capabilities = surface.as_ref().unwrap().get_capabilities(&adapter);
-        #[cfg(not(target_os = "android"))]
-        let tex_format = surface_capabilities
-            .formats
-            .iter()
-            .copied()
-            .find(|f| f.is_srgb())
-            .unwrap_or(surface_capabilities.formats[0]);
-
-        #[cfg(target_os = "android")]
         let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
-
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
@@ -93,8 +70,6 @@ impl Renderer {
             view_formats: vec![tex_format],
             desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
         };
-        #[cfg(not(target_os = "android"))]
-        surface.as_ref().unwrap().configure(&device, &config);
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -140,9 +115,6 @@ impl Renderer {
         let mut renderer = Self {
             instance,
             adapter,
-            #[cfg(not(target_os = "android"))]
-            surface,
-            #[cfg(target_os = "android")]
             surface: None,
             device,
             queue,

@@ -27,12 +27,16 @@ pub use wgpu::Backends;
 /// Encoder from wgpu
 pub use wgpu::CommandEncoder;
 pub use wgpu::LoadOp;
+/// Memory hints
+pub use wgpu::MemoryHints;
 pub use wgpu::Operations;
 pub use wgpu::RenderPassColorAttachment;
 pub use wgpu::RenderPassDescriptor;
 /// Surface Texture
 pub use wgpu::TextureView;
 
+/// Input helper
+pub use crate::utils::winit_input_helper::WinitInputHelper as InputHelper;
 /// all of downcast
 pub use downcast;
 /// all of image
@@ -64,5 +68,3 @@ pub use winit::keyboard::Key;
 pub use winit::keyboard::KeyCode;
 /// Fullscreen enum
 pub use winit::window::Fullscreen;
-/// Input helper
-pub use winit_input_helper::WinitInputHelper as InputHelper;

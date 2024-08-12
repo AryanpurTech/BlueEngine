@@ -10,9 +10,10 @@ use crate::{
 };
 
 use winit::{
-    event::{DeviceEvent, Event, WindowEvent},
+    application::ApplicationHandler,
+    event::{DeviceEvent, WindowEvent},
     event_loop::EventLoop,
-    window::WindowBuilder,
+    window::WindowAttributes,
 };
 
 impl Engine {
@@ -67,7 +68,7 @@ impl Engine {
 
         // And we will create a new window and set all the options we stored
         #[cfg(not(target_os = "android"))]
-        let new_window = WindowBuilder::new()
+        let default_attributes = WindowAttributes::default()
             .with_inner_size(size) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
             .with_decorations(settings.decorations) // sets if the window should have borders
@@ -103,33 +104,21 @@ impl Engine {
             EventLoop::new()?
         };
 
-        #[cfg(not(target_os = "android"))]
-        let event_loop = EventLoop::new()?;
-
-        event_loop.set_control_flow(settings.control_flow);
-
-        // bind the loop to window
-        #[cfg(not(feature = "android"))]
-        let window = new_window.build(&event_loop)?;
-        #[cfg(feature = "android")]
-        let window = winit::window::Window::new(&event_loop)?;
-
-        let window = std::sync::Arc::new(window);
-
-        let window_inner_size = window.inner_size();
+        let window_size = winit::dpi::PhysicalSize::new(settings.width, settings.height);
 
         // The renderer init on current window
-        let mut renderer = futures::executor::block_on(Renderer::new(window.clone(), settings))?;
-
-        let camera = CameraContainer::new(window_inner_size, &mut renderer)?;
+        let mut renderer = pollster::block_on(Renderer::new(window_size, settings.clone()))?;
+        let camera = CameraContainer::new(window_size, &mut renderer)?;
 
         Ok(Self {
-            window: Window::new(window),
-            event_loop,
+            window: Window::new(default_attributes),
+            event_loop_control_flow: settings.control_flow,
             renderer,
             objects: ObjectStorage::new(),
             camera,
             signals: crate::SignalStorage::new(),
+            update_loop: None,
+            input_events: crate::utils::winit_input_helper::WinitInputHelper::new(),
         })
     }
 
@@ -140,179 +129,173 @@ impl Engine {
     /// Renderer, window, vec of objects, events, and camera are passed to the update code.
     #[allow(unreachable_code)]
     pub fn update_loop(
-        self,
-        mut update_function: impl 'static
+        &mut self,
+        update_function: impl 'static
             + FnMut(
                 // Core
                 &mut Renderer,
                 &mut Window,
                 &mut ObjectStorage,
-                &winit_input_helper::WinitInputHelper,
+                &crate::utils::winit_input_helper::WinitInputHelper,
                 &mut CameraContainer,
                 &mut crate::SignalStorage,
             ),
     ) -> eyre::Result<()> {
-        let Self {
-            event_loop,
-            mut renderer,
-            mut window,
-            mut objects,
-            mut camera,
-            mut signals,
-        } = self;
+        self.update_loop = Some(Box::new(update_function));
 
-        // and get input events to handle them later
-        let mut input = winit_input_helper::WinitInputHelper::new();
-        let mut _device_event: winit::event::DeviceEvent =
-            DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
-
-        // The main loop
-        event_loop.run(move |events, window_target| {
-            input.update(&events);
-
-            signals.events.iter_mut().for_each(|i| {
-                i.1.events(
-                    &mut renderer,
-                    &window,
-                    &mut objects,
-                    &events,
-                    &input,
-                    &mut camera,
-                );
-            });
-
-            match events {
-                Event::WindowEvent {
-                    ref event,
-                    window_id,
-                } if window_id == window.id() => match event {
-                    WindowEvent::CloseRequested => {
-                        window_target.exit();
-                        std::process::exit(0);
-                    }
-
-                    WindowEvent::Resized(size) => {
-                        renderer.resize(*size);
-                        camera
-                            .set_resolution(*size)
-                            .expect("Couldn't set the resize to camera");
-                        camera
-                            .update_view_projection(&mut renderer)
-                            .expect("Couldn't set the resize to camera in renderer");
-                    }
-
-                    WindowEvent::RedrawRequested => {
-                        if window.should_close {
-                            window_target.exit();
-                        }
-
-                        let pre_render = renderer
-                            .pre_render(&objects, window.inner_size(), &camera)
-                            .expect("Couldn't get pre render data");
-                        if pre_render.is_some() {
-                            let (mut encoder, view, frame) =
-                                pre_render.expect("Couldn't get pre render data");
-
-                            update_function(
-                                &mut renderer,
-                                &mut window,
-                                &mut objects,
-                                &input,
-                                &mut camera,
-                                &mut signals,
-                            );
-
-                            signals.events.iter_mut().for_each(|i| {
-                                i.1.frame(
-                                    &mut renderer,
-                                    &window,
-                                    &mut objects,
-                                    &mut camera,
-                                    &input,
-                                    &mut encoder,
-                                    &view,
-                                );
-                            });
-
-                            for camera_value in camera.values_mut() {
-                                camera_value
-                                    .update_view_projection(&mut renderer)
-                                    .expect("Couldn't update camera");
-                            }
-                            objects.iter_mut().for_each(|i| {
-                                if i.1.changed {
-                                    i.1.update(&mut renderer).expect("Couldn't update objects");
-                                }
-                            });
-
-                            match renderer.render(encoder, frame) {
-                                Ok(_) => {}
-                                // Recreate the swap_chain if lost
-                                Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
-                                // The system is out of memory, we should probably quit
-                                Err(wgpu::SurfaceError::OutOfMemory) => {
-                                    window_target.exit();
-                                }
-                                // All other errors (Outdated, Timeout) should be resolved by the next frame
-                                Err(e) => eprintln!("{:?}", e),
-                            }
-                        }
-
-                        _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
-                        window.request_redraw();
-                    }
-                    _ => {}
-                },
-
-                Event::Resumed => {
-                    if renderer.surface.is_none() {
-                        // let surface = unsafe {
-                        //     renderer
-                        //         .instance
-                        //         .create_surface_unsafe(
-                        //             wgpu::SurfaceTargetUnsafe::from_window(&window.window)
-                        //                 .expect("Couldn't create surface target"),
-                        //         )
-                        //         .expect("Couldn't create surface")
-                        // };
-
-                        let surface = renderer
-                            .instance
-                            .create_surface(window.window.clone())
-                            .unwrap();
-                        surface.configure(&renderer.device, &renderer.config);
-
-                        renderer.depth_buffer = Renderer::build_depth_buffer(
-                            "Depth Buffer",
-                            &renderer.device,
-                            &renderer.config,
-                        );
-                        renderer.surface = Some(surface);
-                    }
-                }
-
-                Event::Suspended => {
-                    if renderer.surface.is_none() {
-                        renderer.surface = None;
-                    }
-                }
-
-                Event::DeviceEvent { event, .. } => _device_event = event,
-
-                _ => (),
-            }
-        })?;
-        //logic(&mut renderer, WindowCallbackEvents::After, &window);
+        let event_loop = EventLoop::new()?;
+        event_loop.set_control_flow(self.event_loop_control_flow);
+        event_loop.run_app(self)?;
 
         Ok(())
     }
 }
 
+impl ApplicationHandler for Engine {
+    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        if self.window.is_none() {
+            self.window.window = Some(std::sync::Arc::new(
+                event_loop
+                    .create_window(self.window.default_attributes.clone())
+                    .unwrap(),
+            ));
+
+            if self.renderer.surface.is_none() {
+                let surface = self
+                    .renderer
+                    .instance
+                    .create_surface(self.window.window.as_ref().unwrap().clone())
+                    .unwrap();
+                surface.configure(&self.renderer.device, &self.renderer.config);
+
+                self.renderer.depth_buffer = Renderer::build_depth_buffer(
+                    "Depth Buffer",
+                    &self.renderer.device,
+                    &self.renderer.config,
+                );
+                self.renderer.surface = Some(surface);
+            }
+        }
+    }
+
+    fn device_event(
+        &mut self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        _device_id: winit::event::DeviceId,
+        event: DeviceEvent,
+    ) {
+        self.input_events.process_device_event(&event);
+    }
+
+    fn window_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        _window_id: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
+        let Self {
+            ref mut camera,
+            ref mut renderer,
+            ref mut window,
+            ref mut objects,
+            input_events,
+            signals,
+            update_loop,
+            ..
+        } = self;
+
+        let mut _device_event: winit::event::DeviceEvent =
+            DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
+
+        match event {
+            WindowEvent::CloseRequested => {
+                event_loop.exit();
+                std::process::exit(0);
+            }
+
+            WindowEvent::Resized(size) => {
+                renderer.resize(size);
+                camera
+                    .set_resolution(size)
+                    .expect("Couldn't set the resize to camera");
+                camera
+                    .update_view_projection(renderer)
+                    .expect("Couldn't set the resize to camera in renderer");
+            }
+
+            WindowEvent::RedrawRequested => {
+                input_events.end_step_time();
+
+                if window.should_close {
+                    event_loop.exit();
+                }
+
+                if let Some((mut encoder, view, frame)) = renderer
+                    .pre_render(objects, window.as_ref().unwrap().inner_size(), camera)
+                    .expect("Couldn't get pre render data")
+                {
+                    if let Some(update_function) = update_loop {
+                        update_function(renderer, window, objects, input_events, camera, signals);
+                    }
+
+                    signals.events.iter_mut().for_each(|i| {
+                        i.1.frame(
+                            renderer,
+                            window,
+                            objects,
+                            camera,
+                            input_events,
+                            &mut encoder,
+                            &view,
+                        );
+                    });
+
+                    for camera_value in camera.values_mut() {
+                        camera_value
+                            .update_view_projection(renderer)
+                            .expect("Couldn't update camera");
+                    }
+                    objects.iter_mut().for_each(|i| {
+                        if i.1.changed {
+                            i.1.update(renderer).expect("Couldn't update objects");
+                        }
+                    });
+
+                    match renderer.render(encoder, frame) {
+                        Ok(_) => {}
+                        // Recreate the swap_chain if lost
+                        Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
+                        // The system is out of memory, we should probably quit
+                        Err(wgpu::SurfaceError::OutOfMemory) => {
+                            event_loop.exit();
+                        }
+                        // All other errors (Outdated, Timeout) should be resolved by the next frame
+                        Err(e) => eprintln!("{:?}", e),
+                    }
+                }
+
+                _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
+                if let Some(window_inner) = &window.window {
+                    window_inner.request_redraw();
+                }
+            }
+            _ => {}
+        }
+
+        input_events.process_window_event(&event);
+
+        if event == WindowEvent::RedrawRequested {
+            input_events.step();
+        }
+    }
+}
+
 impl Window {
     /// create a new window
-    pub fn new(window: std::sync::Arc<crate::winit::window::Window>) -> Self {
+    pub fn new(default_attributes: winit::window::WindowAttributes) -> Self {
         Self {
-            window,
+            window: None,
+            default_attributes,
             should_close: false,
         }
     }
