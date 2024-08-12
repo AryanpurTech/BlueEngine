@@ -321,13 +321,13 @@ impl Object {
     /// This will flag object as changed and altered, leading to rebuilding parts, or entirety on next frame.
     /// Best used if you directly altered fields of the object. The functions normally flag the object as
     /// changed on every call anyways. But this function is to manually flag it yourself.
-    pub fn flag_as_changed(&mut self) {
-        self.changed = true;
+    pub fn flag_as_changed(&mut self, is_changed: bool) {
+        self.changed = is_changed;
     }
 
-    /// same as flag_as_changed, but inverse
-    pub fn flag_as_unchanged(&mut self) {
-        self.changed = false;
+    /// Sets if the object will be rendered or not
+    pub fn set_visibility(&mut self, is_visible: bool) {
+        self.is_visible = is_visible;
     }
 
     /// build an inverse of the transformation matrix to be sent to the gpu for lighting and other things.
@@ -569,6 +569,12 @@ impl ShaderBuilder {
         shader_builder.build();
 
         shader_builder
+    }
+
+    /// Sets the new shader
+    pub fn set_shader(&mut self, new_shader: String) {
+        self.shader = new_shader;
+        self.build();
     }
 
     /// Builds the shader with the configuration defined

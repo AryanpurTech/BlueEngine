@@ -334,6 +334,11 @@ impl Renderer {
 
         Ok(())
     }
+
+    /// Sets the background color
+    pub fn set_clear_color(&mut self, r: f64, g: f64, b: f64, a: f64) {
+        self.clear_color = wgpu::Color { r, g, b, a }
+    }
 }
 
 // =========================== Extract Pipeline Data ===========================
