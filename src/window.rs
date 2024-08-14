@@ -201,7 +201,20 @@ impl ApplicationHandler for Engine {
         _device_id: winit::event::DeviceId,
         event: DeviceEvent,
     ) {
-        self.input_events.process_device_event(&event);
+        let Self {
+            ref mut camera,
+            ref mut renderer,
+            ref mut window,
+            ref mut objects,
+            input_events,
+            signals,
+            ..
+        } = self;
+
+        input_events.process_device_event(&event);
+        signals.events.iter_mut().for_each(|i| {
+            i.1.device_events(renderer, window, objects, &event, input_events, camera);
+        });
     }
 
     fn window_event(

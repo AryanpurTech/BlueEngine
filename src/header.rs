@@ -563,12 +563,12 @@ pub struct Instance {
 pub trait Signal: Any {
     /// This is ran before any of the render events, it's generally used to capture raw input.
     #[allow(clippy::too_many_arguments)]
-    fn events(
+    fn device_events(
         &mut self,
         _renderer: &mut crate::Renderer,
         _window: &crate::Window,
         _objects: &mut ObjectStorage,
-        _events: &crate::Event<()>,
+        _events: &crate::DeviceEvent,
         _input: &crate::InputHelper,
         _camera: &mut crate::CameraContainer,
     ) {

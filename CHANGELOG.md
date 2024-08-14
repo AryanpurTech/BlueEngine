@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.16] - 2024-08-12
+
+### Features
+
+- Added window functions that goes to effect during update_loop initialization ([4061da7](https://github.com/AryanpurTech/BlueEngine/commit/4061da79430c058cc58562e717de804248ca0e6b))
+- More sane setter functions ([1913327](https://github.com/AryanpurTech/BlueEngine/commit/191332702b9c5cd52ccdc261acb7c9ce47dd8dda))
+
+### Miscellaneous Tasks
+
+- Fix: #68 - updated dependencies to latest version ([f13bcf8](https://github.com/AryanpurTech/BlueEngine/commit/f13bcf8f7ed69cb057dbb4efa36629d6524de8a1))
+
 ## [0.5.10] - 2024-06-06
 
 ### Bug Fixes
