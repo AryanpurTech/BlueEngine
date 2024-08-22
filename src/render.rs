@@ -50,10 +50,14 @@ impl Renderer {
             .await
             .expect("Failed to create device");
 
-        let tex_format = wgpu::TextureFormat::Rgba8UnormSrgb;
+        let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
+
+        #[cfg(target_os = "android")]
+        let texture_format = wgpu::TextureFormat::Rgba8UnormSrgb;
+
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: texture_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
             #[cfg(target_os = "android")]
             width: 1080,
             #[cfg(not(feature = "android"))]
@@ -67,7 +71,7 @@ impl Renderer {
             #[cfg(not(target_os = "android"))]
             present_mode: settings.present_mode,
             alpha_mode: settings.alpha_mode,
-            view_formats: vec![tex_format],
+            view_formats: vec![texture_format],
             desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
         };
 

@@ -161,8 +161,19 @@ impl ApplicationHandler for Engine {
                     .instance
                     .create_surface(self.window.window.as_ref().unwrap().clone())
                     .unwrap();
-                surface.configure(&self.renderer.device, &self.renderer.config);
 
+                let surface_capabilities = surface.get_capabilities(&self.renderer.adapter);
+                let tex_format = surface_capabilities
+                    .formats
+                    .iter()
+                    .copied()
+                    .find(|f| f.is_srgb())
+                    .unwrap_or(surface_capabilities.formats[0]);
+
+                self.renderer.config.format = tex_format;
+                self.renderer.config.view_formats = vec![tex_format];
+
+                surface.configure(&self.renderer.device, &self.renderer.config);
                 self.renderer.depth_buffer = Renderer::build_depth_buffer(
                     "Depth Buffer",
                     &self.renderer.device,
@@ -336,7 +347,7 @@ impl Window {
     }
 
     // ====================================================== WINDOW SETTERS ====================================================== //
-    //MARK: WINDOW SETTERS
+    //MARK: SETTERS
 
     /// see [winit::window::Window::set_min_inner_size]
     pub fn set_min_inner_size(&mut self, value: Option<winit::dpi::Size>) {
