@@ -9,6 +9,7 @@ repository = "https://github.com/AryanpurTech/BlueEngine"
 keywords = ["gamedev", "graphics", "3D", "2D"]
 categories = ["game-development", "gui", "graphics", "rendering"]
 license = "Apache-2.0"
+exclude = ["/examples"]
 
 [lib]
 name = "blue_engine"
@@ -96,6 +97,10 @@ path = "examples/utils/scissor.rs"
 [[example]]
 name = "clear_color"
 path = "examples/utils/clear_color.rs"
+
+[[example]]
+name = "signals"
+path = "examples/utils/signals.rs"
 
 # Development ONLY
 [[example]]
