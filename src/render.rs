@@ -135,16 +135,22 @@ impl Renderer {
             scissor_rect: None,
         };
 
-        let default_texture = renderer.build_texture(
+        renderer.build_default_data()?;
+
+        Ok(renderer)
+    }
+
+    pub(crate) fn build_default_data(&mut self) -> eyre::Result<()> {
+        let default_texture = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
         )?;
 
-        let default_uniform = renderer.build_uniform_buffer(&vec![
-            renderer.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-            renderer.build_uniform_buffer_part(
+        let default_uniform = self.build_uniform_buffer(&vec![
+            self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+            self.build_uniform_buffer_part(
                 "Color",
                 uniform_type::Array4 {
                     data: DEFAULT_COLOR,
@@ -152,16 +158,16 @@ impl Renderer {
             ),
         ])?;
 
-        let default_shader = renderer.build_shader(
+        let default_shader = self.build_shader(
             "Default Shader",
             DEFAULT_SHADER.to_string(),
             Some(&default_uniform.1),
             ShaderSettings::default(),
         )?;
 
-        renderer.default_data = Some((default_texture, default_shader, default_uniform.0));
+        self.default_data = Some((default_texture, default_shader, default_uniform.0));
 
-        Ok(renderer)
+        Ok(())
     }
 
     /// Resize the window.

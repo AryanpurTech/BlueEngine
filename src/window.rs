@@ -148,21 +148,27 @@ impl Engine {
 
 impl ApplicationHandler for Engine {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        if self.window.is_none() {
-            self.window.window = Some(std::sync::Arc::new(
+        let Self {
+            ref mut window,
+            ref mut renderer,
+            ref mut objects,
+            ..
+        } = self;
+
+        if window.is_none() {
+            window.window = Some(std::sync::Arc::new(
                 event_loop
-                    .create_window(self.window.default_attributes.clone())
+                    .create_window(window.default_attributes.clone())
                     .unwrap(),
             ));
 
-            if self.renderer.surface.is_none() {
-                let surface = self
-                    .renderer
+            if renderer.surface.is_none() {
+                let surface = renderer
                     .instance
-                    .create_surface(self.window.window.as_ref().unwrap().clone())
+                    .create_surface(window.window.as_ref().unwrap().clone())
                     .unwrap();
 
-                let surface_capabilities = surface.get_capabilities(&self.renderer.adapter);
+                let surface_capabilities = surface.get_capabilities(&renderer.adapter);
                 let tex_format = surface_capabilities
                     .formats
                     .iter()
@@ -170,16 +176,23 @@ impl ApplicationHandler for Engine {
                     .find(|f| f.is_srgb())
                     .unwrap_or(surface_capabilities.formats[0]);
 
-                self.renderer.config.format = tex_format;
-                self.renderer.config.view_formats = vec![tex_format];
+                renderer.config.format = tex_format;
+                renderer.config.view_formats = vec![tex_format];
 
-                surface.configure(&self.renderer.device, &self.renderer.config);
-                self.renderer.depth_buffer = Renderer::build_depth_buffer(
+                surface.configure(&renderer.device, &renderer.config);
+                renderer.depth_buffer = Renderer::build_depth_buffer(
                     "Depth Buffer",
-                    &self.renderer.device,
-                    &self.renderer.config,
+                    &renderer.device,
+                    &renderer.config,
                 );
-                self.renderer.surface = Some(surface);
+                renderer.surface = Some(surface);
+
+                renderer
+                    .build_default_data()
+                    .expect("couldn't rebuild the default data");
+                objects.iter_mut().for_each(|i| {
+                    i.1.update(renderer).expect("Couldn't update objects");
+                });
             }
 
             if let Some(window) = self.window.window.as_mut() {
