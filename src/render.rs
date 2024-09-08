@@ -304,7 +304,7 @@ impl Renderer {
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
                         vertex_buffer.index_buffer.slice(..),
-                        wgpu::IndexFormat::Uint16,
+                        wgpu::IndexFormat::Uint32,
                     );
 
                     // shader

@@ -27,7 +27,7 @@ impl Renderer {
         &mut self,
         name: impl StringBuffer,
         vertices: Vec<Vertex>,
-        indices: Vec<u16>,
+        indices: Vec<u32>,
         settings: ObjectSettings,
     ) -> eyre::Result<Object> {
         let vertex_buffer = self.build_vertex_buffer(&vertices, &indices)?;
@@ -117,7 +117,7 @@ impl ObjectStorage {
         &mut self,
         name: impl StringBuffer,
         vertices: Vec<Vertex>,
-        indices: Vec<u16>,
+        indices: Vec<u32>,
         settings: ObjectSettings,
         renderer: &mut Renderer,
     ) -> eyre::Result<()> {

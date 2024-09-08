@@ -97,7 +97,7 @@ pub struct Object {
     /// A list of Vertex
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
-    pub indices: Vec<u16>,
+    pub indices: Vec<u32>,
     /// Describes how to uniform buffer is structures
     pub uniform_layout: wgpu::BindGroupLayout,
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures

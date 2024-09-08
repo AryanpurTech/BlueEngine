@@ -4,6 +4,8 @@
 [![Rust Windows](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml)
 [![Rust MacOS](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml)
 [![rust-clippy analyze](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml)
+![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)
+![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)
 
 Make sure to use latest Rust version, as the engine is always kept up to date.
 
@@ -33,19 +35,12 @@ fn main() {
 }
 ```
 
-* [Join our discord server](https://discord.gg/s7xsj9q)
-
 * [WIP] [Guide](https://aryanpurtech.github.io/BlueEngineDocs/)
-
-* Check out the [workflow](https://github.com/orgs/AryanpurTech/projects/2) for roadmap, status, ...
 
 * Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
 * Check out the [utilities library](https://github.com/AryanpurTech/BlueEngineUtilities) for extra functionality with the engine
 
-* Check out the [editor](https://github.com/rustylabs/blue_flame)
-
 *the credits to the image on top: NotPB*
-
 
 *the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow.*
