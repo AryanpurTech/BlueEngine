@@ -170,7 +170,7 @@ pub fn uv_sphere(
     let stack_step = std::f32::consts::PI / stacks;
 
     let mut vertices: Vec<Vertex> = Vec::with_capacity(details.0 * details.1);
-    let mut indices: Vec<u16> = Vec::with_capacity(details.0 * details.1 * 2 * 3);
+    let mut indices: Vec<u32> = Vec::with_capacity(details.0 * details.1 * 2 * 3);
 
     for i in 0..details.0 + 1 {
         let stack_angle = std::f32::consts::PI / 2. - (i as f32) * stack_step;
@@ -194,14 +194,14 @@ pub fn uv_sphere(
         let mut k2 = k1 + details.1 + 1;
         for _j in 0..details.1 {
             if i != 0 {
-                indices.push(k1 as u16);
-                indices.push(k2 as u16);
-                indices.push((k1 + 1) as u16);
+                indices.push(k1 as u32);
+                indices.push(k2 as u32);
+                indices.push((k1 + 1) as u32);
             }
             if i != details.0 - 1 {
-                indices.push((k1 + 1) as u16);
-                indices.push(k2 as u16);
-                indices.push((k2 + 1) as u16);
+                indices.push((k1 + 1) as u32);
+                indices.push(k2 as u32);
+                indices.push((k2 + 1) as u32);
             }
             k1 += 1;
             k2 += 1;

@@ -303,7 +303,7 @@ impl crate::header::Renderer {
     pub fn build_vertex_buffer(
         &mut self,
         vertices: &Vec<Vertex>,
-        indices: &Vec<u16>,
+        indices: &Vec<u32>,
     ) -> eyre::Result<VertexBuffers> {
         let vertex_buffer = self
             .device
