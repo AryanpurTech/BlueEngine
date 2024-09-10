@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.5.19"
+version = "0.5.20"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -15,11 +15,15 @@ exclude = ["/examples"]
 name = "blue_engine"
 
 [features]
-default = ["debug"]
+default = ["debug", "u16"]
 debug = ["dep:env_logger"]
 android = ["dep:log", "dep:android_logger"]
 android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
+# using u16 for indices and others
+u16 = []
+# using u32 for indices and others
+u32 = []
 
 [dependencies]
 image = { version = "0.25.2" }

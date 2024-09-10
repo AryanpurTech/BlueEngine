@@ -1,4 +1,5 @@
-use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
+use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, UnsignedIntType, Vertex};
+use std::f32::consts::PI;
 
 /// Creates a 3D cube
 pub fn cube(
@@ -13,127 +14,127 @@ pub fn cube(
             Vertex {
                 position: [-1.0, -1.0, 1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, 1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, 1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, 1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             // Back Face
             Vertex {
                 position: [-1.0, 1.0, -1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, -1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, -1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, -1.0, -1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             // Right face
             Vertex {
                 position: [1.0, -1.0, -1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, -1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, 1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, 1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             // Left Face
             Vertex {
                 position: [-1.0, -1.0, 1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, 1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, -1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, -1.0, -1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             // Top Face
             Vertex {
                 position: [1.0, 1.0, -1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, -1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, 1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, 1.0, 1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             // Bottom Face
             Vertex {
                 position: [1.0, -1.0, 1.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, -1.0, 1.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, -1.0, -1.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, -1.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
         ],
         vec![
@@ -155,7 +156,7 @@ pub fn cube(
 ///
 /// ```
 /// details = (stacks, sectors, radius)
-/// example = (18, 36, 1f32)
+/// example = (18, 36, 1.0)
 /// ```
 pub fn uv_sphere(
     name: impl StringBuffer,
@@ -166,21 +167,21 @@ pub fn uv_sphere(
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
     let length_inv = 1. / details.2;
-    let sector_step = 2. * std::f32::consts::PI / sectors;
-    let stack_step = std::f32::consts::PI / stacks;
+    let sector_step = 2. * PI / sectors;
+    let stack_step = PI / stacks;
 
     let mut vertices: Vec<Vertex> = Vec::with_capacity(details.0 * details.1);
-    let mut indices: Vec<u32> = Vec::with_capacity(details.0 * details.1 * 2 * 3);
+    let mut indices: Vec<UnsignedIntType> = Vec::with_capacity(details.0 * details.1 * 2 * 3);
 
     for i in 0..details.0 + 1 {
-        let stack_angle = std::f32::consts::PI / 2. - (i as f32) * stack_step;
-        let xy = details.2 * stack_angle.cos();
-        let z = details.2 * stack_angle.sin();
+        let stack_angle = PI / 2.0 - (i as f32) * stack_step;
+        let xy: f32 = details.2 * stack_angle.cos();
+        let z: f32 = details.2 * stack_angle.sin();
 
         for j in 0..details.1 + 1 {
             let sector_angle = (j as f32) * sector_step;
-            let x = xy * sector_angle.cos();
-            let y = xy * sector_angle.sin();
+            let x: f32 = xy * sector_angle.cos();
+            let y: f32 = xy * sector_angle.sin();
 
             vertices.push(Vertex {
                 position: [x, y, z],
@@ -194,14 +195,14 @@ pub fn uv_sphere(
         let mut k2 = k1 + details.1 + 1;
         for _j in 0..details.1 {
             if i != 0 {
-                indices.push(k1 as u32);
-                indices.push(k2 as u32);
-                indices.push((k1 + 1) as u32);
+                indices.push(k1 as UnsignedIntType);
+                indices.push(k2 as UnsignedIntType);
+                indices.push((k1 + 1) as UnsignedIntType);
             }
             if i != details.0 - 1 {
-                indices.push((k1 + 1) as u32);
-                indices.push(k2 as u32);
-                indices.push((k2 + 1) as u32);
+                indices.push((k1 + 1) as UnsignedIntType);
+                indices.push(k2 as UnsignedIntType);
+                indices.push((k2 + 1) as UnsignedIntType);
             }
             k1 += 1;
             k2 += 1;

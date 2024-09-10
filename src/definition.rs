@@ -12,7 +12,7 @@ use crate::{
         Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
         Textures, UniformBuffers, Vertex, VertexBuffers,
     },
-    InstanceRaw,
+    InstanceRaw, UnsignedIntType,
 };
 
 impl crate::header::Renderer {
@@ -303,7 +303,7 @@ impl crate::header::Renderer {
     pub fn build_vertex_buffer(
         &mut self,
         vertices: &Vec<Vertex>,
-        indices: &Vec<u32>,
+        indices: &Vec<UnsignedIntType>,
     ) -> eyre::Result<VertexBuffers> {
         let vertex_buffer = self
             .device

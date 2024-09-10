@@ -304,6 +304,9 @@ impl Renderer {
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
                         vertex_buffer.index_buffer.slice(..),
+                        #[cfg(feature = "u16")]
+                        wgpu::IndexFormat::Uint16,
+                        #[cfg(feature = "u32")]
                         wgpu::IndexFormat::Uint32,
                     );
 

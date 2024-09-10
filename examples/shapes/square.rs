@@ -18,22 +18,22 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> eyre::Result<()> 
             Vertex {
                 position: [1.0, 1.0, 0.0],
                 uv: [1.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [1.0, -1.0, 0.0],
                 uv: [1.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, -1.0, 0.0],
                 uv: [0.0, 1.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
             Vertex {
                 position: [-1.0, 1.0, 0.0],
                 uv: [0.0, 0.0],
-                normal: [0f32, 0f32, 0f32],
+                normal: [0.0, 0.0, 0.0],
             },
         ],
         vec![2, 1, 0, 2, 0, 3],

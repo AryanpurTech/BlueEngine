@@ -13,6 +13,12 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
+/// The uint type used for indices and more
+#[cfg(feature = "u16")]
+pub type UnsignedIntType = u16;
+#[cfg(feature = "u32")]
+pub type UnsignedIntType = u32;
+
 macro_rules! impl_deref {
     ($struct:ty,$type:ty) => {
         impl std::ops::Deref for $struct {
@@ -97,7 +103,7 @@ pub struct Object {
     /// A list of Vertex
     pub vertices: Vec<Vertex>,
     /// A list of indices that dictates the order that vertices appear
-    pub indices: Vec<u32>,
+    pub indices: Vec<UnsignedIntType>,
     /// Describes how to uniform buffer is structures
     pub uniform_layout: wgpu::BindGroupLayout,
     /// Pipeline holds all the data that is sent to GPU, including shaders and textures

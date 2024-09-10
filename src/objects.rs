@@ -10,7 +10,7 @@ use crate::header::{
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
-use crate::{ObjectStorage, StringBuffer};
+use crate::{ObjectStorage, StringBuffer, UnsignedIntType};
 
 impl Renderer {
     /// Creates a new object
@@ -27,7 +27,7 @@ impl Renderer {
         &mut self,
         name: impl StringBuffer,
         vertices: Vec<Vertex>,
-        indices: Vec<u32>,
+        indices: Vec<UnsignedIntType>,
         settings: ObjectSettings,
     ) -> eyre::Result<Object> {
         let vertex_buffer = self.build_vertex_buffer(&vertices, &indices)?;
@@ -117,7 +117,7 @@ impl ObjectStorage {
         &mut self,
         name: impl StringBuffer,
         vertices: Vec<Vertex>,
-        indices: Vec<u32>,
+        indices: Vec<UnsignedIntType>,
         settings: ObjectSettings,
         renderer: &mut Renderer,
     ) -> eyre::Result<()> {
