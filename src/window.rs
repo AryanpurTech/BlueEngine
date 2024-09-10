@@ -152,6 +152,8 @@ impl ApplicationHandler for Engine {
             ref mut window,
             ref mut renderer,
             ref mut objects,
+            ref mut signals,
+            ref mut camera,
             ..
         } = self;
 
@@ -216,6 +218,10 @@ impl ApplicationHandler for Engine {
                 window.set_cursor(self.window.default_attributes.cursor.clone());
                 window.set_fullscreen(self.window.default_attributes.fullscreen.clone());
             }
+
+            signals.events.iter_mut().for_each(|i| {
+                i.1.init(renderer, &self.window, objects, camera);
+            });
         }
     }
 
@@ -257,6 +263,10 @@ impl ApplicationHandler for Engine {
             update_loop,
             ..
         } = self;
+
+        signals.events.iter_mut().for_each(|i| {
+            i.1.window_events(renderer, window, objects, &event, input_events, camera);
+        });
 
         let mut _device_event: winit::event::DeviceEvent =
             DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
