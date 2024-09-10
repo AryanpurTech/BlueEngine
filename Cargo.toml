@@ -24,7 +24,7 @@ android_game_activity = ["winit/android-game-activity"]
 [dependencies]
 image = { version = "0.25.2" }
 pollster = "0.3"
-winit = { version = "0.30", features = ["rwh_06"] }
+winit = { version = "0.30.5", features = ["rwh_06"] }
 wgpu = { version = "22.1.0" }
 bytemuck = { version = "1.16", features = ["derive"] }
 eyre = "0.6"

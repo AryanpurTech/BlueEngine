@@ -561,7 +561,18 @@ pub struct Instance {
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait Signal: Any {
-    /// This is ran before any of the render events, it's generally used to capture raw input.
+    /// This is ran as soon as the engine is properly initialized and all components are ready
+    #[allow(clippy::too_many_arguments)]
+    fn init(
+        &mut self,
+        _renderer: &mut crate::Renderer,
+        _window: &crate::Window,
+        _objects: &mut ObjectStorage,
+        _camera: &mut crate::CameraContainer,
+    ) {
+    }
+
+    /// This is ran at the device events when available
     #[allow(clippy::too_many_arguments)]
     fn device_events(
         &mut self,
@@ -569,6 +580,19 @@ pub trait Signal: Any {
         _window: &crate::Window,
         _objects: &mut ObjectStorage,
         _events: &crate::DeviceEvent,
+        _input: &crate::InputHelper,
+        _camera: &mut crate::CameraContainer,
+    ) {
+    }
+
+    /// This is ran at the window events when available
+    #[allow(clippy::too_many_arguments)]
+    fn window_events(
+        &mut self,
+        _renderer: &mut crate::Renderer,
+        _window: &crate::Window,
+        _objects: &mut ObjectStorage,
+        _events: &crate::WindowEvent,
         _input: &crate::InputHelper,
         _camera: &mut crate::CameraContainer,
     ) {
