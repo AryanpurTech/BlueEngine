@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.20] - 2024-09-10
+
+### Features
+
+- Moved unsigned int types into feature flags ([fd5f495](https://github.com/AryanpurTech/BlueEngine/commit/fd5f495f6bb302a4e4826e2fb7b9a4370644b080))
+- Added 2 more signals ([8a72062](https://github.com/AryanpurTech/BlueEngine/commit/8a72062f432735c346b91beb837012469d5ea81c))
+
+## [0.5.19] - 2024-09-08
+
+### Bug Fixes
+
+- Default data and objects rebuilt upon window creation for correct texture formats ([540931d](https://github.com/AryanpurTech/BlueEngine/commit/540931d5f851823b12f26f7d72d5bcc3cdc53086))
+- Events signal not firing ([31b53f9](https://github.com/AryanpurTech/BlueEngine/commit/31b53f9b10bca6cf7bc04f5589f0798155b91d1d))
+
+### Documentation
+
+- Added signals example! ([0e3aa61](https://github.com/AryanpurTech/BlueEngine/commit/0e3aa613b66e34c66b310ad509d6a459095adc82))
+
+### Features
+
+- Increased indices from u16 to u32 ([11d6aa9](https://github.com/AryanpurTech/BlueEngine/commit/11d6aa9299eca5350d6054805ac69d1c71d9e7bc))
+
 ## [0.5.16] - 2024-08-12
 
 ### Features
