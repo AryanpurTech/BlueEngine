@@ -235,10 +235,6 @@ impl Object {
 
     /// Rotates the object in the axis you specify
     pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) -> &mut Self {
-        // The reason for using different transformation matrix is because
-        // of alteration of translation that happens due to rotation. The
-        // solution suggested by https://github.com/tksuoran fixed this through
-        // separating the matrices and multiplying them back at the end.
         let mut rotation_matrix = self.rotation_matrix;
         let axis = match axis {
             RotateAxis::X => {
