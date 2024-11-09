@@ -635,6 +635,17 @@ pub enum RotateAxis {
 unsafe impl Send for RotateAxis {}
 unsafe impl Sync for RotateAxis {}
 
+/// Defines how the rotation amount is
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RotateAmount {
+    #[doc(hidden)]
+    Radians(f32),
+    #[doc(hidden)]
+    Degrees(f32),
+}
+unsafe impl Send for RotateAmount {}
+unsafe impl Sync for RotateAmount {}
+
 /// Defines how the texture data is
 #[derive(Debug, Clone)]
 pub enum TextureData {
@@ -755,7 +766,7 @@ pub enum ExecuteOrder {
 pub struct Window {
     /// The winit window itself.
     pub window: Option<std::sync::Arc<crate::winit::window::Window>>,
-    /// Default attributes of the window\
+    /// Default attributes of the window
     pub default_attributes: winit::window::WindowAttributes,
     /// Whether the engine should close.
     pub should_close: bool,
