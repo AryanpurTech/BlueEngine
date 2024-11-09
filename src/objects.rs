@@ -10,7 +10,7 @@ use crate::header::{
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
-use crate::{ObjectStorage, StringBuffer, UnsignedIntType};
+use crate::{ObjectStorage, RotateAmount, StringBuffer, UnsignedIntType};
 
 impl Renderer {
     /// Creates a new object
@@ -234,11 +234,10 @@ impl Object {
     }
 
     /// Rotates the object in the axis you specify
+    ///
+    /// THIS METHOD IS DEPRECATED, USE [crate::Object::set_rotation] or [crate::Object::rotate]
+    #[deprecated]
     pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) -> &mut Self {
-        // The reason for using different transformation matrix is because
-        // of alteration of translation that happens due to rotation. The
-        // solution suggested by https://github.com/tksuoran fixed this through
-        // separating the matrices and multiplying them back at the end.
         let mut rotation_matrix = self.rotation_matrix;
         let axis = match axis {
             RotateAxis::X => {
@@ -256,6 +255,68 @@ impl Object {
         };
 
         rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis);
+        self.rotation_matrix = rotation_matrix;
+        self.inverse_matrices();
+
+        self.changed = true;
+        self
+    }
+
+    /// Sets the rotation of the object in the axis you specify
+    pub fn set_rotation(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
+        let mut rotation_matrix = self.rotation_matrix;
+
+        let amount_radians = match amount {
+            RotateAmount::Radians(amount) => amount,
+            RotateAmount::Degrees(amount) => amount.to_radians(),
+        };
+        let axis = match axis {
+            RotateAxis::X => {
+                self.rotation.x = amount_radians;
+                nalgebra_glm::Vec3::x_axis()
+            }
+            RotateAxis::Y => {
+                self.rotation.y = amount_radians;
+                nalgebra_glm::Vec3::y_axis()
+            }
+            RotateAxis::Z => {
+                self.rotation.z = amount_radians;
+                nalgebra_glm::Vec3::z_axis()
+            }
+        };
+
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis);
+        self.rotation_matrix = rotation_matrix;
+        self.inverse_matrices();
+
+        self.changed = true;
+        self
+    }
+
+    /// Rotates the object in the axis you specify
+    pub fn rotate(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
+        let mut rotation_matrix = self.rotation_matrix;
+
+        let amount_radians = match amount {
+            RotateAmount::Radians(amount) => amount,
+            RotateAmount::Degrees(amount) => amount.to_radians(),
+        };
+        let axis = match axis {
+            RotateAxis::X => {
+                self.rotation.x += amount_radians;
+                nalgebra_glm::Vec3::x_axis()
+            }
+            RotateAxis::Y => {
+                self.rotation.y += amount_radians;
+                nalgebra_glm::Vec3::y_axis()
+            }
+            RotateAxis::Z => {
+                self.rotation.z += amount_radians;
+                nalgebra_glm::Vec3::z_axis()
+            }
+        };
+
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis);
         self.rotation_matrix = rotation_matrix;
         self.inverse_matrices();
 
