@@ -188,17 +188,15 @@ impl CameraContainer {
 
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_projection_matrix(&mut self) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .build_view_projection_matrix();
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.build_view_projection_matrix();
+        }
     }
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_orthographic_matrix(&mut self) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .build_view_orthographic_matrix();
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.build_view_orthographic_matrix();
+        }
     }
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
     pub fn camera_uniform_buffer(&self) -> Option<Matrix> {
@@ -210,51 +208,57 @@ impl CameraContainer {
     }
     /// Sets the position of camera
     pub fn set_position(&mut self, x: f32, y: f32, z: f32) {
-        self.cameras.get_mut("main").unwrap().set_position(x, y, z);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_position(x, y, z);
+        }
     }
     /// Sets the target of camera
     pub fn set_target(&mut self, x: f32, y: f32, z: f32) {
-        self.cameras.get_mut("main").unwrap().set_target(x, y, z);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_target(x, y, z);
+        }
     }
     /// Sets the up of camera
     pub fn set_up(&mut self, x: f32, y: f32, z: f32) {
-        self.cameras.get_mut("main").unwrap().set_up(x, y, z);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_up(x, y, z);
+        }
     }
     /// Sets how far camera can look
     pub fn set_far(&mut self, new_far: f32) {
-        self.cameras.get_mut("main").unwrap().set_far(new_far);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_far(new_far);
+        }
     }
     /// Sets how near the camera can look
     pub fn set_near(&mut self, new_near: f32) {
-        self.cameras.get_mut("main").unwrap().set_near(new_near);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_near(new_near);
+        }
     }
     /// Sets the aspect ratio of the camera
     pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .set_resolution(window_size);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_resolution(window_size);
+        }
     }
     /// Sets the projection of the camera
     pub fn set_projection(&mut self, projection: Projection) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .set_projection(projection);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.set_projection(projection);
+        }
     }
     /// Enables adding position and target for the view target
     pub fn add_position_and_target(&mut self, enable: bool) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .add_position_and_target(enable);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.add_position_and_target(enable);
+        }
     }
     /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame
     pub fn update_view_projection(&mut self, renderer: &mut Renderer) {
-        self.cameras
-            .get_mut("main")
-            .unwrap()
-            .update_view_projection(renderer);
+        if let Some(main_camera) = self.cameras.get_mut("main") {
+            main_camera.update_view_projection(renderer);
+        }
     }
     /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame, and returns the bindgroup
     pub fn update_view_projection_and_return(
@@ -267,11 +271,19 @@ impl CameraContainer {
         }
     }
     /// Builds a view matrix for camera projection
-    pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
-        self.cameras.get("main").unwrap().build_view_matrix()
+    pub fn build_view_matrix(&self) -> Option<nalgebra_glm::Mat4> {
+        if let Some(main_camera) = self.cameras.get("main") {
+            Some(main_camera.build_view_matrix())
+        } else {
+            None
+        }
     }
     /// Builds a projection matrix for camera
-    pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
-        self.cameras.get("main").unwrap().build_projection_matrix()
+    pub fn build_projection_matrix(&self) -> Option<nalgebra_glm::Mat4> {
+        if let Some(main_camera) = self.cameras.get("main") {
+            Some(main_camera.build_projection_matrix())
+        } else {
+            None
+        }
     }
 }

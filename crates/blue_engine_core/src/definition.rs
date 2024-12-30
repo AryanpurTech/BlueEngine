@@ -120,7 +120,7 @@ impl crate::header::Renderer {
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
-    ) -> Textures {
+    ) -> Option<Textures> {
         let mode: wgpu::AddressMode = match texture_mode {
             TextureMode::Clamp => wgpu::AddressMode::Repeat,
             TextureMode::Repeat => wgpu::AddressMode::MirrorRepeat,
@@ -128,78 +128,96 @@ impl crate::header::Renderer {
         };
 
         let img = match texture_data {
-            TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
-                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
-            TextureData::Image(data) => data,
-            TextureData::Path(path) => image::open(path)
-                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
+            TextureData::Bytes(data) => match image::load_from_memory(data.as_slice()) {
+                Ok(image) => Some(image),
+                Err(e) => {
+                    eprintln!("Error while loading the texture from memory: {e:#?}");
+
+                    None
+                }
+            },
+            TextureData::Image(data) => Some(data),
+            TextureData::Path(path) => match image::open(path) {
+                Ok(image) => Some(image),
+                Err(e) => {
+                    eprintln!("Error while loading the texture from path: {e:#?}");
+
+                    None
+                }
+            },
         };
 
-        let rgba = img.to_rgba8();
-        let dimensions = img.dimensions();
+        match img {
+            Some(img) => {
+                let rgba = img.to_rgba8();
+                let dimensions = img.dimensions();
 
-        let size = wgpu::Extent3d {
-            width: dimensions.0,
-            height: dimensions.1,
-            depth_or_array_layers: 1,
-        };
-        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some(name.as_str()),
-            size,
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING
-                | wgpu::TextureUsages::COPY_DST
-                | wgpu::TextureUsages::COPY_SRC
-                | wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        });
+                let size = wgpu::Extent3d {
+                    width: dimensions.0,
+                    height: dimensions.1,
+                    depth_or_array_layers: 1,
+                };
+                let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+                    label: Some(name.as_str()),
+                    size,
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                    usage: wgpu::TextureUsages::TEXTURE_BINDING
+                        | wgpu::TextureUsages::COPY_DST
+                        | wgpu::TextureUsages::COPY_SRC
+                        | wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    view_formats: &[],
+                });
 
-        self.queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            &rgba,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(4 * dimensions.0),
-                rows_per_image: Some(dimensions.1),
-            },
-            size,
-        );
+                self.queue.write_texture(
+                    wgpu::ImageCopyTexture {
+                        texture: &texture,
+                        mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO,
+                        aspect: wgpu::TextureAspect::All,
+                    },
+                    &rgba,
+                    wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: Some(4 * dimensions.0),
+                        rows_per_image: Some(dimensions.1),
+                    },
+                    size,
+                );
 
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: mode,
-            address_mode_v: mode,
-            address_mode_w: mode,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
-            ..Default::default()
-        });
+                let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+                let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+                    address_mode_u: mode,
+                    address_mode_v: mode,
+                    address_mode_w: mode,
+                    mag_filter: wgpu::FilterMode::Linear,
+                    min_filter: wgpu::FilterMode::Nearest,
+                    mipmap_filter: wgpu::FilterMode::Nearest,
+                    ..Default::default()
+                });
 
-        let diffuse_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &self.texture_bind_group_layout,
-            label: Some("Diffuse Bind Group"),
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&sampler),
-                },
-            ],
-        });
+                let diffuse_bind_group =
+                    self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        layout: &self.texture_bind_group_layout,
+                        label: Some("Diffuse Bind Group"),
+                        entries: &[
+                            wgpu::BindGroupEntry {
+                                binding: 0,
+                                resource: wgpu::BindingResource::TextureView(&view),
+                            },
+                            wgpu::BindGroupEntry {
+                                binding: 1,
+                                resource: wgpu::BindingResource::Sampler(&sampler),
+                            },
+                        ],
+                    });
 
-        diffuse_bind_group
+                Some(diffuse_bind_group)
+            }
+            None => None,
+        }
     }
 
     pub(crate) fn build_depth_buffer(
@@ -266,21 +284,23 @@ impl crate::header::Renderer {
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
 
         for i in 0..uniforms.len() {
-            let descriptor = wgpu::BindGroupEntry {
-                binding: i as u32,
-                resource: uniforms.get(i).unwrap().as_entire_binding(),
-            };
-            buffer_entry.push(descriptor);
-            buffer_layout.push(wgpu::BindGroupLayoutEntry {
-                binding: i as u32,
-                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            });
+            if let Some(uniform) = uniforms.get(i) {
+                let descriptor = wgpu::BindGroupEntry {
+                    binding: i as u32,
+                    resource: uniform.as_entire_binding(),
+                };
+                buffer_entry.push(descriptor);
+                buffer_layout.push(wgpu::BindGroupLayoutEntry {
+                    binding: i as u32,
+                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                });
+            }
         }
 
         let uniform_bind_group_layout =
@@ -367,9 +387,8 @@ impl crate::SignalStorage {
             .find(|k| k.0 == key.as_string())
             .map(|k| &mut k.1);
 
-        if event.is_some() {
+        if let Some(event) = event {
             // downcast the event
-            let event = event.unwrap();
             let event_type = event.downcast_mut::<T>();
             Some(event_type)
         } else {

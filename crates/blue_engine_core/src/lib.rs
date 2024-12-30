@@ -32,7 +32,7 @@
 //!     let mut engine = Engine::new().expect("engine couldn't be initialized");
 //!
 //!     // create a triangle
-//!     triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects).unwrap();
+//!     triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
 //!
 //!    // run the engine
 //!    engine

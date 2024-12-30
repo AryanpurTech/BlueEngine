@@ -26,11 +26,14 @@ fn main() {
         .unwrap()
         .set_texture(
             // build a texture as an example of resource to be shared
-            engine.renderer.build_texture(
-                "background",
-                TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
-                blue_engine::TextureMode::Clamp,
-            ),
+            engine
+                .renderer
+                .build_texture(
+                    "background",
+                    TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
+                    blue_engine::TextureMode::Clamp,
+                )
+                .unwrap(),
         )
         .set_position(-1.5f32, 0f32, 0f32); // set position to make it visible
 

@@ -141,31 +141,34 @@ impl Renderer {
     }
 
     pub(crate) fn build_default_data(&mut self) {
-        let default_texture = self.build_texture(
+        if let Some(default_texture) = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
-        );
+        ) {
+            let default_uniform = self.build_uniform_buffer(&vec![
+                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+                self.build_uniform_buffer_part(
+                    "Color",
+                    uniform_type::Array4 {
+                        data: DEFAULT_COLOR,
+                    },
+                ),
+            ]);
 
-        let default_uniform = self.build_uniform_buffer(&vec![
-            self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-            self.build_uniform_buffer_part(
-                "Color",
-                uniform_type::Array4 {
-                    data: DEFAULT_COLOR,
-                },
-            ),
-        ]);
+            let default_shader = self.build_shader(
+                "Default Shader",
+                DEFAULT_SHADER.to_string(),
+                Some(&default_uniform.1),
+                ShaderSettings::default(),
+            );
 
-        let default_shader = self.build_shader(
-            "Default Shader",
-            DEFAULT_SHADER.to_string(),
-            Some(&default_uniform.1),
-            ShaderSettings::default(),
-        );
-
-        self.default_data = Some((default_texture, default_shader, default_uniform.0));
+            self.default_data = Some((default_texture, default_shader, default_uniform.0));
+        } else {
+            eprintln!("Could not build the default texture, there may be something wrong!");
+            self.default_data = None;
+        }
     }
 
     /// Resize the window.
@@ -178,12 +181,8 @@ impl Renderer {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             #[cfg(not(target_os = "android"))]
-            if self.surface.is_some() {
-                self.surface
-                    .as_ref()
-                    .expect("Couldn't get the surface for resizing")
-                    .configure(&self.device, &self.config);
-
+            if let Some(surface) = self.surface.as_ref() {
+                surface.configure(&self.device, &self.config);
                 {
                     self.depth_buffer =
                         Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
@@ -254,8 +253,7 @@ impl Renderer {
             occlusion_query_set: None,
         });
 
-        if self.scissor_rect.is_some() {
-            let scissor_rect = self.scissor_rect.unwrap();
+        if let Some(scissor_rect) = self.scissor_rect {
             // check if scissor bounds are smaller than the window
             if scissor_rect.0 + scissor_rect.2 < window_size.width
                 && scissor_rect.1 + scissor_rect.3 < window_size.height
@@ -269,10 +267,10 @@ impl Renderer {
             }
         }
 
-        let default_data = self.default_data.as_ref().unwrap();
-
-        render_pass.set_bind_group(0, &default_data.0, &[]);
-        render_pass.set_pipeline(&default_data.1);
+        if let Some(default_data) = self.default_data.as_ref() {
+            render_pass.set_bind_group(0, &default_data.0, &[]);
+            render_pass.set_pipeline(&default_data.1);
+        }
 
         // sort the object list in descending render order
         let mut object_list: Vec<_> = objects.iter().collect();
@@ -280,13 +278,13 @@ impl Renderer {
 
         for (_, i) in object_list {
             if let Some(camera_data) = i.camera_effect.as_ref() {
-                render_pass.set_bind_group(
-                    1,
-                    &camera.get(camera_data.as_ref()).unwrap().uniform_data,
-                    &[],
-                );
+                if let Some(camera) = camera.get(camera_data.as_ref()) {
+                    render_pass.set_bind_group(1, &camera.uniform_data, &[]);
+                }
             } else {
-                render_pass.set_bind_group(1, &camera.get("main").unwrap().uniform_data, &[]);
+                if let Some(main_camera) = camera.get("main") {
+                    render_pass.set_bind_group(1, &main_camera.uniform_data, &[]);
+                }
             }
 
             if i.is_visible {
@@ -296,8 +294,7 @@ impl Renderer {
                 let uniform = get_pipeline_uniform_buffer(&i.pipeline.uniform, objects);
 
                 // vertex
-                if vertex_buffer.is_some() {
-                    let vertex_buffer = vertex_buffer.unwrap();
+                if let Some(vertex_buffer) = vertex_buffer {
                     render_pass.set_vertex_buffer(0, vertex_buffer.vertex_buffer.slice(..));
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(

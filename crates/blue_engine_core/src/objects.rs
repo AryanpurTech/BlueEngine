@@ -52,12 +52,14 @@ impl Renderer {
             settings.shader_settings,
         );
 
-        let texture = self.build_texture(
-            "Default Texture",
-            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::header::TextureMode::Clamp,
-            //crate::header::TextureFormat::PNG
-        );
+        let texture = self
+            .build_texture(
+                "Default Texture",
+                TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
+                crate::header::TextureMode::Clamp,
+                //crate::header::TextureFormat::PNG
+            )
+            .expect("Could not build the default texture for Object");
 
         let instance = Instance::new(
             [0f32, 0f32, 0f32].into(),
