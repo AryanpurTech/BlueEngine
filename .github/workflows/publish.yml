@@ -18,11 +18,11 @@ jobs:
         toolchain: stable
         override: true
 
-    - name: Install cargo-cliff
-      run: cargo install cargo-cliff
+    - name: Install git-cliff
+      run: cargo install git-cliff
 
     - name: Generate changelog
-      run: cargo cliff --config cliff.toml --unreleased --output CHANGELOG.md --tag ${{ github.ref_name }}
+      run: git-cliff --config cliff.toml --unreleased --output CHANGELOG.md --tag ${{ github.ref_name }}
 
     - name: Update release notes
       env:
