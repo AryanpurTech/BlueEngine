@@ -6,7 +6,7 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{primitive_shapes::triangle, Engine, ObjectSettings, ShaderSettings};
+use blue_engine::{primitive_shapes::triangle, wgpu, Engine, ObjectSettings, ShaderSettings};
 
 pub fn main() {
     let mut engine = Engine::new().expect("win");
