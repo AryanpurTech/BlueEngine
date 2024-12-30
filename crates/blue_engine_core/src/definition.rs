@@ -23,13 +23,13 @@ impl crate::header::Renderer {
         vertex_buffer: VertexBuffers,
         texture: Textures,
         uniform: Option<UniformBuffers>,
-    ) -> eyre::Result<Pipeline> {
-        Ok(Pipeline {
+    ) -> Pipeline {
+        Pipeline {
             shader: PipelineData::Data(shader),
             vertex_buffer: PipelineData::Data(vertex_buffer),
             texture: PipelineData::Data(texture),
             uniform: PipelineData::Data(uniform),
-        })
+        }
     }
 
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
@@ -39,7 +39,7 @@ impl crate::header::Renderer {
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
-    ) -> eyre::Result<Shaders> {
+    ) -> Shaders {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -110,7 +110,7 @@ impl crate::header::Renderer {
                 cache: None,
             });
 
-        Ok(render_pipeline)
+        render_pipeline
     }
 
     /// Creates a new texture data
@@ -120,7 +120,7 @@ impl crate::header::Renderer {
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
-    ) -> eyre::Result<Textures> {
+    ) -> Textures {
         let mode: wgpu::AddressMode = match texture_mode {
             TextureMode::Clamp => wgpu::AddressMode::Repeat,
             TextureMode::Repeat => wgpu::AddressMode::MirrorRepeat,
@@ -199,7 +199,7 @@ impl crate::header::Renderer {
             ],
         });
 
-        Ok(diffuse_bind_group)
+        diffuse_bind_group
     }
 
     pub(crate) fn build_depth_buffer(
@@ -261,7 +261,7 @@ impl crate::header::Renderer {
     pub fn build_uniform_buffer(
         &mut self,
         uniforms: &[wgpu::Buffer],
-    ) -> eyre::Result<(UniformBuffers, BindGroupLayout)> {
+    ) -> (UniformBuffers, BindGroupLayout) {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
 
@@ -296,7 +296,7 @@ impl crate::header::Renderer {
             entries: buffer_entry.as_slice(),
         });
 
-        Ok((uniform_bind_group, uniform_bind_group_layout))
+        (uniform_bind_group, uniform_bind_group_layout)
     }
 
     /// Creates a new vertex buffer and indices
@@ -304,7 +304,7 @@ impl crate::header::Renderer {
         &mut self,
         vertices: &Vec<Vertex>,
         indices: &Vec<UnsignedIntType>,
-    ) -> eyre::Result<VertexBuffers> {
+    ) -> VertexBuffers {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -321,11 +321,11 @@ impl crate::header::Renderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        Ok(VertexBuffers {
+        VertexBuffers {
             vertex_buffer,
             index_buffer,
             length: indices.len() as u32,
-        })
+        }
     }
 
     /// Creates a new instance buffer for the object

@@ -71,8 +71,8 @@ impl Engine {
             .with_resizable(settings.resizable); // sets the window to be resizable
 
         // The renderer init on current window
-        let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()))?;
-        let camera = CameraContainer::new(dimension, &mut renderer)?;
+        let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()));
+        let camera = CameraContainer::new(dimension, &mut renderer);
 
         Ok(Self {
             window: Window::new(default_attributes),
@@ -189,11 +189,9 @@ impl ApplicationHandler for Engine {
                 );
                 renderer.surface = Some(surface);
 
-                renderer
-                    .build_default_data()
-                    .expect("couldn't rebuild the default data");
+                renderer.build_default_data();
                 objects.iter_mut().for_each(|i| {
-                    i.1.update(renderer).expect("Couldn't update objects");
+                    i.1.update(renderer);
                 });
             }
 
@@ -279,12 +277,8 @@ impl ApplicationHandler for Engine {
 
             WindowEvent::Resized(size) => {
                 renderer.resize(size);
-                camera
-                    .set_resolution(size)
-                    .expect("Couldn't set the resize to camera");
-                camera
-                    .update_view_projection(renderer)
-                    .expect("Couldn't set the resize to camera in renderer");
+                camera.set_resolution(size);
+                camera.update_view_projection(renderer);
             }
 
             WindowEvent::RedrawRequested => {
@@ -315,27 +309,15 @@ impl ApplicationHandler for Engine {
                     });
 
                     for camera_value in camera.values_mut() {
-                        camera_value
-                            .update_view_projection(renderer)
-                            .expect("Couldn't update camera");
+                        camera_value.update_view_projection(renderer);
                     }
                     objects.iter_mut().for_each(|i| {
                         if i.1.changed {
-                            i.1.update(renderer).expect("Couldn't update objects");
+                            i.1.update(renderer);
                         }
                     });
 
-                    match renderer.render(encoder, frame) {
-                        Ok(_) => {}
-                        // Recreate the swap_chain if lost
-                        Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
-                        // The system is out of memory, we should probably quit
-                        Err(wgpu::SurfaceError::OutOfMemory) => {
-                            event_loop.exit();
-                        }
-                        // All other errors (Outdated, Timeout) should be resolved by the next frame
-                        Err(e) => eprintln!("{:?}", e),
-                    }
+                    renderer.render(encoder, frame);
                 }
 
                 _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };

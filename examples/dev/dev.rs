@@ -19,31 +19,22 @@ fn main() {
     //let test_instance = Instance::default();
     //println!("{:?}", test_instance.to_raw());
 
-    let texture = engine
-        .renderer
-        .build_texture(
-            "background",
-            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
-            blue_engine::TextureMode::Clamp,
-        )
-        .unwrap();
-    let texture2 = engine
-        .renderer
-        .build_texture(
-            "background",
-            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
-            blue_engine::TextureMode::Clamp,
-        )
-        .unwrap();
+    let texture = engine.renderer.build_texture(
+        "background",
+        TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
+        blue_engine::TextureMode::Clamp,
+    );
+    let texture2 = engine.renderer.build_texture(
+        "background",
+        TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
+        blue_engine::TextureMode::Clamp,
+    );
 
-    let texture3 = engine
-        .renderer
-        .build_texture(
-            "background",
-            TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
-            blue_engine::TextureMode::Clamp,
-        )
-        .unwrap();
+    let texture3 = engine.renderer.build_texture(
+        "background",
+        TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
+        blue_engine::TextureMode::Clamp,
+    );
 
     square(
         "main",

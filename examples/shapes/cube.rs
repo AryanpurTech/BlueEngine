@@ -9,7 +9,7 @@ use blue_engine::{header::Engine, primitive_shapes::cube};
 fn main() {
     let mut engine = Engine::new().expect("win");
 
-    cube("Cube", &mut engine.renderer, &mut engine.objects).unwrap();
+    cube("Cube", &mut engine.renderer, &mut engine.objects);
     engine
         .objects
         .get_mut("Cube")
@@ -23,9 +23,7 @@ fn main() {
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-            camera
-                .set_position(camx, camy, camz)
-                .expect("Couldn't update the camera eye");
+            camera.set_position(camx, camy, camz);
         })
         .expect("Error during update loop");
 }

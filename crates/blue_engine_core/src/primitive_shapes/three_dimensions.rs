@@ -2,11 +2,7 @@ use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, UnsignedIntTy
 use std::f32::consts::PI;
 
 /// Creates a 3D cube
-pub fn cube(
-    name: impl StringBuffer,
-    renderer: &mut Renderer,
-    objects: &mut ObjectStorage,
-) -> eyre::Result<()> {
+pub fn cube(name: impl StringBuffer, renderer: &mut Renderer, objects: &mut ObjectStorage) {
     objects.new_object(
         name.clone(),
         vec![
@@ -147,9 +143,7 @@ pub fn cube(
         ],
         ObjectSettings::default(),
         renderer,
-    )?;
-
-    Ok(())
+    );
 }
 
 /// Create a 3D UV Sphere
@@ -163,7 +157,7 @@ pub fn uv_sphere(
     details: (usize, usize, f32),
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> eyre::Result<()> {
+) {
     let sectors = details.1 as f32;
     let stacks = details.0 as f32;
     let length_inv = 1. / details.2;
@@ -215,7 +209,5 @@ pub fn uv_sphere(
         indices,
         ObjectSettings::default(),
         renderer,
-    )?;
-
-    Ok(())
+    );
 }

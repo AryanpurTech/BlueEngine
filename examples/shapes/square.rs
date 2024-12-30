@@ -11,7 +11,7 @@ use blue_engine::{
     StringBuffer,
 };
 
-pub fn square(name: impl StringBuffer, engine: &mut Engine) -> eyre::Result<()> {
+pub fn square(name: impl StringBuffer, engine: &mut Engine) {
     engine.objects.new_object(
         name,
         vec![
@@ -42,15 +42,13 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) -> eyre::Result<()> 
             ..Default::default()
         },
         &mut engine.renderer,
-    )?;
-
-    Ok(())
+    );
 }
 
 fn main() {
     let mut engine = Engine::new().expect("win");
 
-    square("Square", &mut engine).unwrap();
+    square("Square", &mut engine);
 
     engine
         .update_loop(move |_, _, _, _, _, _| {})

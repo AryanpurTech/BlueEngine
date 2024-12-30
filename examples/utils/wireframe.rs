@@ -22,8 +22,7 @@ pub fn main() {
         },
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     engine
         .update_loop(move |_, _, _, _, _, _| {})

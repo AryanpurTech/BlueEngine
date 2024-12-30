@@ -65,6 +65,8 @@
 //! with these two changes, hopefully you can get Blue Engine to run on older hardware. If not, please let me know so I can help you further.
 
 pub(crate) mod definition;
+/// interal error definitions of the engine
+pub mod error;
 /// contains all the declarations such as structs, exports, enums, ...
 pub mod header;
 /// contains the definition for Object type, which is a type that make it easier to manage data for rendering.

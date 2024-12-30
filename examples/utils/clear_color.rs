@@ -16,8 +16,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     engine.renderer.clear_color = wgpu::Color {
         r: 0.0,

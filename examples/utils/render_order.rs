@@ -17,8 +17,7 @@ fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .expect("failed to create square");
+    );
 
     // make the second layer
     square(
@@ -26,8 +25,7 @@ fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .expect("failed to create square");
+    );
 
     // Get layer 1 object
     engine

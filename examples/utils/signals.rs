@@ -58,8 +58,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     // initialize your plugin
     let mut myplugin = MyPlugin::new();

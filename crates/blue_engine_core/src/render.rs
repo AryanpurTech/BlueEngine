@@ -21,7 +21,7 @@ impl Renderer {
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
-    ) -> eyre::Result<Self> {
+    ) -> Self {
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: settings.backends,
@@ -135,18 +135,18 @@ impl Renderer {
             scissor_rect: None,
         };
 
-        renderer.build_default_data()?;
+        renderer.build_default_data();
 
-        Ok(renderer)
+        renderer
     }
 
-    pub(crate) fn build_default_data(&mut self) -> eyre::Result<()> {
+    pub(crate) fn build_default_data(&mut self) {
         let default_texture = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
-        )?;
+        );
 
         let default_uniform = self.build_uniform_buffer(&vec![
             self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
@@ -156,18 +156,16 @@ impl Renderer {
                     data: DEFAULT_COLOR,
                 },
             ),
-        ])?;
+        ]);
 
         let default_shader = self.build_shader(
             "Default Shader",
             DEFAULT_SHADER.to_string(),
             Some(&default_uniform.1),
             ShaderSettings::default(),
-        )?;
+        );
 
         self.default_data = Some((default_texture, default_shader, default_uniform.0));
-
-        Ok(())
     }
 
     /// Resize the window.
@@ -336,16 +334,10 @@ impl Renderer {
     /// # Arguments
     /// * `encoder` - The command encoder.
     /// * `frame` - The surface texture.
-    pub(crate) fn render(
-        &mut self,
-        encoder: wgpu::CommandEncoder,
-        frame: wgpu::SurfaceTexture,
-    ) -> Result<(), wgpu::SurfaceError> {
+    pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         frame.present();
-
-        Ok(())
     }
 
     /// Sets the background color
