@@ -1,61 +1,63 @@
 [package]
 name = "blue_engine"
-version = "0.5.21"
+version = "0.6.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2021"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
 documentation = "https://aryanpurtech.github.io/BlueEngineDocs/"
 repository = "https://github.com/AryanpurTech/BlueEngine"
-keywords = ["gamedev", "graphics", "3D", "2D"]
-categories = ["game-development", "gui", "graphics", "rendering"]
+keywords = [
+    "game-development",
+    "gamedev",
+    "engine",
+    "gui",
+    "3D",
+    "2D",
+    "graphics",
+    "rendering",
+]
+categories = [
+    "game-development",
+    "gamedev",
+    "engine",
+    "gui",
+    "3D",
+    "2D",
+    "graphics",
+    "rendering",
+]
 license = "Apache-2.0"
-exclude = ["/examples"]
+exclude = ["/examples", "/resources"]
 
 [lib]
 name = "blue_engine"
 
 [features]
-default = ["debug", "u16"]
-debug = ["dep:env_logger"]
-android = ["dep:log", "dep:android_logger"]
-android_native_activity = ["winit/android-native-activity"]
-android_game_activity = ["winit/android-game-activity"]
+default = ["debug", "u16", "dep:blue_engine_core"]
+# Use the default engine
+dynamic_link = ["dep:blue_engine_dynamic"]
+
+debug = ["blue_engine_core?/debug", "blue_engine_dynamic?/debug"]
+android = ["blue_engine_core?/android", "blue_engine_dynamic?/android"]
+android_native_activity = [
+    "blue_engine_core?/android_native_activity",
+    "blue_engine_dynamic?/android_native_activity",
+]
+android_game_activity = [
+    "blue_engine_core?/android_game_activity",
+    "blue_engine_dynamic?/android_game_activity",
+]
 # using u16 for indices and others
-u16 = []
+u16 = ["blue_engine_core?/u16", "blue_engine_dynamic?/u16"]
 # using u32 for indices and others
-u32 = []
+u32 = ["blue_engine_core?/u32", "blue_engine_dynamic?/u32"]
 
 [dependencies]
-image = { version = "0.25.2" }
-pollster = "0.3"
-winit = { version = "0.30.5", features = ["rwh_06"] }
-wgpu = { version = "22.1.0" }
-bytemuck = { version = "1.16", features = ["derive"] }
-eyre = "0.6"
-downcast = "0.11"
-nalgebra-glm = "0.19"
-# debug logs
-env_logger = { version = "0.11", optional = true }
-# android
-log = { version = "0.4", optional = true }
-android_logger = { version = "0.14", optional = true }
+blue_engine_core = { path = "crates/blue_engine_core", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "22.1.0", features = ["webgl"] }
-
-# Smallest possible release build
-#
-#[profile.release]
-#opt-level = "z"
-#panic = "abort"
-#lto = true
-#codegen-units = 1
-#overflow-checks = false
-#debug-assertions = false
-#strip = "debuginfo"
-#[profile.release.package."*"]
-#opt-level = "z"
-#codegen-units = 1
+# Wasm does not support dynamic linking.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
 
 # ========== EXAMPLES ========== #
 

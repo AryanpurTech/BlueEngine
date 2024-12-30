@@ -9,5 +9,6 @@ As an open source project, the community is the backbone of the engine. As such,
 * `Writing documentation`: The codebase move fast, often times documentation is forgotten to be added until a few versions.
 
 ## Contribution license
+
 By contributing to this repository through issues, addition, modification, or deletion of any kind to the codebase,
 you agree to your work being licensed under the same license as the engine, which you can obtain a copy of in the repository.

@@ -16,8 +16,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     // set scissor rect
     engine.renderer.scissor_rect = Some((0, 0, 450, 350));

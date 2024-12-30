@@ -22,8 +22,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     // update the triangle
     engine.objects.update_object("Triangle", |object| {
@@ -53,8 +52,7 @@ pub fn main() {
         .objects
         .get_mut("Triangle")
         .expect("Couldn't get the triangle")
-        .update_instance_buffer(&mut engine.renderer)
-        .expect("Couldn't update instance buffer");
+        .update_instance_buffer(&mut engine.renderer);
 
     // run the loop as normal
     engine

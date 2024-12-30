@@ -15,7 +15,7 @@ pub fn triangle(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> eyre::Result<()> {
+) {
     objects.new_object(
         name.clone(),
         vec![
@@ -38,9 +38,7 @@ pub fn triangle(
         vec![0, 1, 2],
         settings,
         renderer,
-    )?;
-
-    Ok(())
+    );
 }
 
 /// Creates a 2D square
@@ -49,7 +47,7 @@ pub fn square(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> eyre::Result<()> {
+) {
     objects.new_object(
         name.clone(),
         vec![
@@ -77,9 +75,7 @@ pub fn square(
         vec![2, 1, 0, 2, 0, 3],
         settings,
         renderer,
-    )?;
-
-    Ok(())
+    );
 }
 
 /// Create a 2D rectangle based on a width and height
@@ -90,7 +86,7 @@ pub fn rectangle(
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
-) -> eyre::Result<()> {
+) {
     objects.new_object(
         name.clone(),
         vec![
@@ -118,7 +114,5 @@ pub fn rectangle(
         vec![2, 1, 0, 2, 0, 3],
         settings,
         renderer,
-    )?;
-
-    Ok(())
+    );
 }

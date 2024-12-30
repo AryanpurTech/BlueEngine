@@ -21,153 +21,158 @@ impl Renderer {
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
-    ) -> eyre::Result<Self> {
+    ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
 
-        let adapter = instance
+        match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: settings.power_preference,
                 compatible_surface: None,
                 force_fallback_adapter: false,
             })
             .await
-            .expect("Failed to find an appropriate adapter");
-
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: Some("Device"),
-                    required_features: settings.features,
-                    required_limits: settings.limits,
-                    memory_hints: wgpu::MemoryHints::Performance,
-                },
-                None, // Trace path
-            )
-            .await
-            .expect("Failed to create device");
-
-        let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
-
-        #[cfg(target_os = "android")]
-        let texture_format = wgpu::TextureFormat::Rgba8UnormSrgb;
-
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: texture_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
-            #[cfg(target_os = "android")]
-            width: 1080,
-            #[cfg(not(feature = "android"))]
-            width: size.width,
-            #[cfg(target_os = "android")]
-            height: 2300,
-            #[cfg(not(target_os = "android"))]
-            height: size.height,
-            #[cfg(target_os = "android")]
-            present_mode: wgpu::PresentMode::Mailbox,
-            #[cfg(not(target_os = "android"))]
-            present_mode: settings.present_mode,
-            alpha_mode: settings.alpha_mode,
-            view_formats: vec![texture_format],
-            desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
-        };
-
-        let texture_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
+        {
+            Some(adapter) => {
+                let (device, queue) = adapter
+                    .request_device(
+                        &wgpu::DeviceDescriptor {
+                            label: Some("Device"),
+                            required_features: settings.features,
+                            required_limits: settings.limits,
+                            memory_hints: wgpu::MemoryHints::Performance,
                         },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), //comparison: false,
-                        // filtering: true,
-                        count: None,
-                    },
-                ],
-                label: Some("texture_bind_group_layout"),
-            });
+                        None, // Trace path
+                    )
+                    .await?;
 
-        let default_uniform_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("uniform dynamic bind group layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-            });
+                let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
 
-        let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
+                #[cfg(target_os = "android")]
+                let texture_format = wgpu::TextureFormat::Rgba8UnormSrgb;
 
-        let mut renderer = Self {
-            instance,
-            adapter,
-            surface: None,
-            device,
-            queue,
-            config,
-            size,
+                let config = wgpu::SurfaceConfiguration {
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    format: texture_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
+                    #[cfg(target_os = "android")]
+                    width: 1080,
+                    #[cfg(not(feature = "android"))]
+                    width: size.width,
+                    #[cfg(target_os = "android")]
+                    height: 2300,
+                    #[cfg(not(target_os = "android"))]
+                    height: size.height,
+                    #[cfg(target_os = "android")]
+                    present_mode: wgpu::PresentMode::Mailbox,
+                    #[cfg(not(target_os = "android"))]
+                    present_mode: settings.present_mode,
+                    alpha_mode: settings.alpha_mode,
+                    view_formats: vec![texture_format],
+                    desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
+                };
 
-            texture_bind_group_layout,
-            default_uniform_bind_group_layout,
-            depth_buffer,
+                let texture_bind_group_layout =
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        entries: &[
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 0,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Texture {
+                                    sample_type: wgpu::TextureSampleType::Float {
+                                        filterable: true,
+                                    },
+                                    view_dimension: wgpu::TextureViewDimension::D2,
+                                    multisampled: false,
+                                },
+                                count: None,
+                            },
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 1,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), //comparison: false,
+                                // filtering: true,
+                                count: None,
+                            },
+                        ],
+                        label: Some("texture_bind_group_layout"),
+                    });
 
-            default_data: None,
-            camera: None,
-            clear_color: wgpu::Color::BLACK,
-            scissor_rect: None,
-        };
+                let default_uniform_bind_group_layout =
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        label: Some("uniform dynamic bind group layout"),
+                        entries: &[wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        }],
+                    });
 
-        renderer.build_default_data()?;
+                let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
-        Ok(renderer)
+                let mut renderer = Self {
+                    instance,
+                    adapter,
+                    surface: None,
+                    device,
+                    queue,
+                    config,
+                    size,
+
+                    texture_bind_group_layout,
+                    default_uniform_bind_group_layout,
+                    depth_buffer,
+
+                    default_data: None,
+                    camera: None,
+                    clear_color: wgpu::Color::BLACK,
+                    scissor_rect: None,
+                };
+
+                renderer.build_default_data();
+
+                Ok(renderer)
+            }
+            None => Err(crate::error::Error::AdapterNotFound),
+        }
     }
 
-    pub(crate) fn build_default_data(&mut self) -> eyre::Result<()> {
-        let default_texture = self.build_texture(
+    pub(crate) fn build_default_data(&mut self) {
+        if let Ok(default_texture) = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,
             //crate::header::TextureFormat::PNG
-        )?;
+        ) {
+            let default_uniform = self.build_uniform_buffer(&vec![
+                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+                self.build_uniform_buffer_part(
+                    "Color",
+                    uniform_type::Array4 {
+                        data: DEFAULT_COLOR,
+                    },
+                ),
+            ]);
 
-        let default_uniform = self.build_uniform_buffer(&vec![
-            self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-            self.build_uniform_buffer_part(
-                "Color",
-                uniform_type::Array4 {
-                    data: DEFAULT_COLOR,
-                },
-            ),
-        ])?;
+            let default_shader = self.build_shader(
+                "Default Shader",
+                DEFAULT_SHADER.to_string(),
+                Some(&default_uniform.1),
+                ShaderSettings::default(),
+            );
 
-        let default_shader = self.build_shader(
-            "Default Shader",
-            DEFAULT_SHADER.to_string(),
-            Some(&default_uniform.1),
-            ShaderSettings::default(),
-        )?;
-
-        self.default_data = Some((default_texture, default_shader, default_uniform.0));
-
-        Ok(())
+            self.default_data = Some((default_texture, default_shader, default_uniform.0));
+        } else {
+            eprintln!("Could not build the default texture, there may be something wrong!");
+            self.default_data = None;
+        }
     }
 
     /// Resize the window.
@@ -180,12 +185,8 @@ impl Renderer {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             #[cfg(not(target_os = "android"))]
-            if self.surface.is_some() {
-                self.surface
-                    .as_ref()
-                    .expect("Couldn't get the surface for resizing")
-                    .configure(&self.device, &self.config);
-
+            if let Some(surface) = self.surface.as_ref() {
+                surface.configure(&self.device, &self.config);
                 {
                     self.depth_buffer =
                         Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
@@ -256,8 +257,7 @@ impl Renderer {
             occlusion_query_set: None,
         });
 
-        if self.scissor_rect.is_some() {
-            let scissor_rect = self.scissor_rect.unwrap();
+        if let Some(scissor_rect) = self.scissor_rect {
             // check if scissor bounds are smaller than the window
             if scissor_rect.0 + scissor_rect.2 < window_size.width
                 && scissor_rect.1 + scissor_rect.3 < window_size.height
@@ -271,10 +271,10 @@ impl Renderer {
             }
         }
 
-        let default_data = self.default_data.as_ref().unwrap();
-
-        render_pass.set_bind_group(0, &default_data.0, &[]);
-        render_pass.set_pipeline(&default_data.1);
+        if let Some(default_data) = self.default_data.as_ref() {
+            render_pass.set_bind_group(0, &default_data.0, &[]);
+            render_pass.set_pipeline(&default_data.1);
+        }
 
         // sort the object list in descending render order
         let mut object_list: Vec<_> = objects.iter().collect();
@@ -282,13 +282,13 @@ impl Renderer {
 
         for (_, i) in object_list {
             if let Some(camera_data) = i.camera_effect.as_ref() {
-                render_pass.set_bind_group(
-                    1,
-                    &camera.get(camera_data.as_ref()).unwrap().uniform_data,
-                    &[],
-                );
+                if let Some(camera) = camera.get(camera_data.as_ref()) {
+                    render_pass.set_bind_group(1, &camera.uniform_data, &[]);
+                }
             } else {
-                render_pass.set_bind_group(1, &camera.get("main").unwrap().uniform_data, &[]);
+                if let Some(main_camera) = camera.get("main") {
+                    render_pass.set_bind_group(1, &main_camera.uniform_data, &[]);
+                }
             }
 
             if i.is_visible {
@@ -298,8 +298,7 @@ impl Renderer {
                 let uniform = get_pipeline_uniform_buffer(&i.pipeline.uniform, objects);
 
                 // vertex
-                if vertex_buffer.is_some() {
-                    let vertex_buffer = vertex_buffer.unwrap();
+                if let Some(vertex_buffer) = vertex_buffer {
                     render_pass.set_vertex_buffer(0, vertex_buffer.vertex_buffer.slice(..));
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
@@ -336,16 +335,10 @@ impl Renderer {
     /// # Arguments
     /// * `encoder` - The command encoder.
     /// * `frame` - The surface texture.
-    pub(crate) fn render(
-        &mut self,
-        encoder: wgpu::CommandEncoder,
-        frame: wgpu::SurfaceTexture,
-    ) -> Result<(), wgpu::SurfaceError> {
+    pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         frame.present();
-
-        Ok(())
     }
 
     /// Sets the background color

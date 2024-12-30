@@ -18,7 +18,7 @@ use winit::{
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
-    pub fn new() -> eyre::Result<Self> {
+    pub fn new() -> Result<Self, crate::error::Error> {
         Self::new_inner(
             WindowDescriptor::default(),
             #[cfg(target_os = "android")]
@@ -27,7 +27,7 @@ impl Engine {
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> eyre::Result<Self> {
+    pub fn new_config(settings: WindowDescriptor) -> Result<Self, crate::error::Error> {
         Self::new_inner(
             settings,
             #[cfg(target_os = "android")]
@@ -40,7 +40,7 @@ impl Engine {
     pub fn new_android(
         settings: WindowDescriptor,
         app: winit::platform::android::activity::AndroidApp,
-    ) -> eyre::Result<Self> {
+    ) -> Result<Self, crate::error::Error> {
         Self::new_inner(settings, Some(app))
     }
 
@@ -51,7 +51,7 @@ impl Engine {
         #[cfg(target_os = "android")] android_app: Option<
             winit::platform::android::activity::AndroidApp,
         >,
-    ) -> eyre::Result<Self> {
+    ) -> Result<Self, crate::error::Error> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimensions of the window, as width and height
@@ -72,7 +72,7 @@ impl Engine {
 
         // The renderer init on current window
         let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()))?;
-        let camera = CameraContainer::new(dimension, &mut renderer)?;
+        let camera = CameraContainer::new(dimension, &mut renderer);
 
         Ok(Self {
             window: Window::new(default_attributes),
@@ -104,7 +104,7 @@ impl Engine {
                 &mut CameraContainer,
                 &mut crate::SignalStorage,
             ),
-    ) -> eyre::Result<()> {
+    ) -> Result<(), crate::error::Error> {
         self.update_loop = Some(Box::new(update_function));
 
         // will create the main event loop of the window.
@@ -127,8 +127,8 @@ impl Engine {
             );
 
             winit::event_loop::EventLoopBuilder::new()
-                .with_android_app(if android_app.is_some() {
-                    android_app.unwrap()
+                .with_android_app(if let Some(android_app) = android_app {
+                    android_app
                 } else {
                     panic!("No android app")
                 })
@@ -158,65 +158,58 @@ impl ApplicationHandler for Engine {
         } = self;
 
         if window.is_none() {
-            window.window = Some(std::sync::Arc::new(
-                event_loop
-                    .create_window(window.default_attributes.clone())
-                    .unwrap(),
-            ));
+            if let Ok(new_window) = event_loop.create_window(window.default_attributes.clone()) {
+                let new_window = std::sync::Arc::new(new_window);
 
-            if renderer.surface.is_none() {
-                let surface = renderer
-                    .instance
-                    .create_surface(window.window.as_ref().unwrap().clone())
-                    .unwrap();
+                if renderer.surface.is_none() {
+                    if let Ok(surface) = renderer.instance.create_surface(new_window.clone()) {
+                        let surface_capabilities = surface.get_capabilities(&renderer.adapter);
+                        let tex_format = surface_capabilities
+                            .formats
+                            .iter()
+                            .copied()
+                            .find(|f| f.is_srgb())
+                            .unwrap_or(surface_capabilities.formats[0]);
 
-                let surface_capabilities = surface.get_capabilities(&renderer.adapter);
-                let tex_format = surface_capabilities
-                    .formats
-                    .iter()
-                    .copied()
-                    .find(|f| f.is_srgb())
-                    .unwrap_or(surface_capabilities.formats[0]);
+                        renderer.config.format = tex_format;
+                        renderer.config.view_formats = vec![tex_format];
 
-                renderer.config.format = tex_format;
-                renderer.config.view_formats = vec![tex_format];
+                        surface.configure(&renderer.device, &renderer.config);
+                        renderer.depth_buffer = Renderer::build_depth_buffer(
+                            "Depth Buffer",
+                            &renderer.device,
+                            &renderer.config,
+                        );
+                        renderer.surface = Some(surface);
 
-                surface.configure(&renderer.device, &renderer.config);
-                renderer.depth_buffer = Renderer::build_depth_buffer(
-                    "Depth Buffer",
-                    &renderer.device,
-                    &renderer.config,
-                );
-                renderer.surface = Some(surface);
-
-                renderer
-                    .build_default_data()
-                    .expect("couldn't rebuild the default data");
-                objects.iter_mut().for_each(|i| {
-                    i.1.update(renderer).expect("Couldn't update objects");
-                });
-            }
-
-            if let Some(window) = self.window.window.as_mut() {
-                window.set_min_inner_size(self.window.default_attributes.min_inner_size);
-                window.set_max_inner_size(self.window.default_attributes.max_inner_size);
-                if let Some(position) = self.window.default_attributes.position {
-                    window.set_outer_position(position);
+                        renderer.build_default_data();
+                        objects.iter_mut().for_each(|i| {
+                            i.1.update(renderer);
+                        });
+                    }
                 }
-                window.set_resizable(self.window.default_attributes.resizable);
-                window.set_enabled_buttons(self.window.default_attributes.enabled_buttons);
-                window.set_title(self.window.default_attributes.title.as_str());
-                window.set_maximized(self.window.default_attributes.maximized);
-                window.set_visible(self.window.default_attributes.visible);
-                window.set_transparent(self.window.default_attributes.transparent);
-                window.set_blur(self.window.default_attributes.blur);
-                window.set_decorations(self.window.default_attributes.decorations);
-                window.set_window_icon(self.window.default_attributes.window_icon.clone());
-                window.set_theme(self.window.default_attributes.preferred_theme);
-                window.set_resize_increments(self.window.default_attributes.resize_increments);
-                window.set_window_level(self.window.default_attributes.window_level);
-                window.set_cursor(self.window.default_attributes.cursor.clone());
-                window.set_fullscreen(self.window.default_attributes.fullscreen.clone());
+
+                new_window.set_min_inner_size(window.default_attributes.min_inner_size);
+                new_window.set_max_inner_size(window.default_attributes.max_inner_size);
+                if let Some(position) = window.default_attributes.position {
+                    new_window.set_outer_position(position);
+                }
+                new_window.set_resizable(window.default_attributes.resizable);
+                new_window.set_enabled_buttons(window.default_attributes.enabled_buttons);
+                new_window.set_title(window.default_attributes.title.as_str());
+                new_window.set_maximized(window.default_attributes.maximized);
+                new_window.set_visible(window.default_attributes.visible);
+                new_window.set_transparent(window.default_attributes.transparent);
+                new_window.set_blur(window.default_attributes.blur);
+                new_window.set_decorations(window.default_attributes.decorations);
+                new_window.set_window_icon(window.default_attributes.window_icon.clone());
+                new_window.set_theme(window.default_attributes.preferred_theme);
+                new_window.set_resize_increments(window.default_attributes.resize_increments);
+                new_window.set_window_level(window.default_attributes.window_level);
+                new_window.set_cursor(window.default_attributes.cursor.clone());
+                new_window.set_fullscreen(window.default_attributes.fullscreen.clone());
+
+                window.window = Some(new_window);
             }
 
             signals.events.iter_mut().for_each(|i| {
@@ -279,12 +272,8 @@ impl ApplicationHandler for Engine {
 
             WindowEvent::Resized(size) => {
                 renderer.resize(size);
-                camera
-                    .set_resolution(size)
-                    .expect("Couldn't set the resize to camera");
-                camera
-                    .update_view_projection(renderer)
-                    .expect("Couldn't set the resize to camera in renderer");
+                camera.set_resolution(size);
+                camera.update_view_projection(renderer);
             }
 
             WindowEvent::RedrawRequested => {
@@ -294,47 +283,43 @@ impl ApplicationHandler for Engine {
                     event_loop.exit();
                 }
 
-                if let Some((mut encoder, view, frame)) = renderer
-                    .pre_render(objects, window.as_ref().unwrap().inner_size(), camera)
-                    .expect("Couldn't get pre render data")
-                {
-                    if let Some(update_function) = update_loop {
-                        update_function(renderer, window, objects, input_events, camera, signals);
-                    }
-
-                    signals.events.iter_mut().for_each(|i| {
-                        i.1.frame(
-                            renderer,
-                            window,
-                            objects,
-                            camera,
-                            input_events,
-                            &mut encoder,
-                            &view,
-                        );
-                    });
-
-                    for camera_value in camera.values_mut() {
-                        camera_value
-                            .update_view_projection(renderer)
-                            .expect("Couldn't update camera");
-                    }
-                    objects.iter_mut().for_each(|i| {
-                        if i.1.changed {
-                            i.1.update(renderer).expect("Couldn't update objects");
+                if let Some(window_ref) = window.as_ref() {
+                    if let Ok(Some((mut encoder, view, frame))) =
+                        renderer.pre_render(objects, window_ref.inner_size(), camera)
+                    {
+                        if let Some(update_function) = update_loop {
+                            update_function(
+                                renderer,
+                                window,
+                                objects,
+                                input_events,
+                                camera,
+                                signals,
+                            );
                         }
-                    });
 
-                    match renderer.render(encoder, frame) {
-                        Ok(_) => {}
-                        // Recreate the swap_chain if lost
-                        Err(wgpu::SurfaceError::Lost) => renderer.resize(renderer.size),
-                        // The system is out of memory, we should probably quit
-                        Err(wgpu::SurfaceError::OutOfMemory) => {
-                            event_loop.exit();
+                        signals.events.iter_mut().for_each(|i| {
+                            i.1.frame(
+                                renderer,
+                                window,
+                                objects,
+                                camera,
+                                input_events,
+                                &mut encoder,
+                                &view,
+                            );
+                        });
+
+                        for camera_value in camera.values_mut() {
+                            camera_value.update_view_projection(renderer);
                         }
-                        // All other errors (Outdated, Timeout) should be resolved by the next frame
-                        Err(e) => eprintln!("{:?}", e),
+                        objects.iter_mut().for_each(|i| {
+                            if i.1.changed {
+                                i.1.update(renderer);
+                            }
+                        });
+
+                        renderer.render(encoder, frame);
                     }
                 }
 
@@ -545,18 +530,15 @@ impl Window {
     /// **Does not work unless during update_loop**
     pub fn set_fullscreen_exclusive(&mut self, value: bool) {
         if let Some(window) = self.window.as_mut() {
-            let full_screen_result = if value {
-                Some(winit::window::Fullscreen::Exclusive(
-                    window
-                        .available_monitors()
-                        .next()
-                        .expect("Couldn't get monitor handle for exclusive fullscreen")
-                        .video_modes()
-                        .next()
-                        .expect("Couldn't get monitor handle for exclusive fullscreen"),
-                ))
-            } else {
-                None
+            let full_screen_result = match value {
+                true => match window.available_monitors().next() {
+                    Some(monitor) => match monitor.video_modes().next() {
+                        Some(vide_mode) => Some(winit::window::Fullscreen::Exclusive(vide_mode)),
+                        None => None,
+                    },
+                    None => None,
+                },
+                false => None,
             };
 
             window.set_fullscreen(full_screen_result);

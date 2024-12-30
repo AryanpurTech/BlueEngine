@@ -23,13 +23,13 @@ impl crate::header::Renderer {
         vertex_buffer: VertexBuffers,
         texture: Textures,
         uniform: Option<UniformBuffers>,
-    ) -> eyre::Result<Pipeline> {
-        Ok(Pipeline {
+    ) -> Pipeline {
+        Pipeline {
             shader: PipelineData::Data(shader),
             vertex_buffer: PipelineData::Data(vertex_buffer),
             texture: PipelineData::Data(texture),
             uniform: PipelineData::Data(uniform),
-        })
+        }
     }
 
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
@@ -39,7 +39,7 @@ impl crate::header::Renderer {
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
-    ) -> eyre::Result<Shaders> {
+    ) -> Shaders {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -70,13 +70,13 @@ impl crate::header::Renderer {
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
-                    entry_point: "vs_main",
+                    entry_point: Some("vs_main"),
                     buffers: &[Vertex::desc(), InstanceRaw::desc()],
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
-                    entry_point: "fs_main",
+                    entry_point: Some("fs_main"),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: self.config.format,
                         write_mask: wgpu::ColorWrites::ALL,
@@ -110,7 +110,7 @@ impl crate::header::Renderer {
                 cache: None,
             });
 
-        Ok(render_pipeline)
+        render_pipeline
     }
 
     /// Creates a new texture data
@@ -120,7 +120,7 @@ impl crate::header::Renderer {
         texture_data: TextureData,
         texture_mode: TextureMode,
         //texture_format: TextureFormat,
-    ) -> eyre::Result<Textures> {
+    ) -> Result<Textures, crate::error::Error> {
         let mode: wgpu::AddressMode = match texture_mode {
             TextureMode::Clamp => wgpu::AddressMode::Repeat,
             TextureMode::Repeat => wgpu::AddressMode::MirrorRepeat,
@@ -128,11 +128,9 @@ impl crate::header::Renderer {
         };
 
         let img = match texture_data {
-            TextureData::Bytes(data) => image::load_from_memory(data.as_slice())
-                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
+            TextureData::Bytes(data) => image::load_from_memory(data.as_slice())?,
             TextureData::Image(data) => data,
-            TextureData::Path(path) => image::open(path)
-                .unwrap_or_else(|_| panic!("Couldn't Load Image For Texture Of {}", name.as_str())),
+            TextureData::Path(path) => image::open(path)?,
         };
 
         let rgba = img.to_rgba8();
@@ -261,26 +259,28 @@ impl crate::header::Renderer {
     pub fn build_uniform_buffer(
         &mut self,
         uniforms: &[wgpu::Buffer],
-    ) -> eyre::Result<(UniformBuffers, BindGroupLayout)> {
+    ) -> (UniformBuffers, BindGroupLayout) {
         let mut buffer_entry = Vec::<wgpu::BindGroupEntry>::new();
         let mut buffer_layout = Vec::<wgpu::BindGroupLayoutEntry>::new();
 
         for i in 0..uniforms.len() {
-            let descriptor = wgpu::BindGroupEntry {
-                binding: i as u32,
-                resource: uniforms.get(i).unwrap().as_entire_binding(),
-            };
-            buffer_entry.push(descriptor);
-            buffer_layout.push(wgpu::BindGroupLayoutEntry {
-                binding: i as u32,
-                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            });
+            if let Some(uniform) = uniforms.get(i) {
+                let descriptor = wgpu::BindGroupEntry {
+                    binding: i as u32,
+                    resource: uniform.as_entire_binding(),
+                };
+                buffer_entry.push(descriptor);
+                buffer_layout.push(wgpu::BindGroupLayoutEntry {
+                    binding: i as u32,
+                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                });
+            }
         }
 
         let uniform_bind_group_layout =
@@ -296,7 +296,7 @@ impl crate::header::Renderer {
             entries: buffer_entry.as_slice(),
         });
 
-        Ok((uniform_bind_group, uniform_bind_group_layout))
+        (uniform_bind_group, uniform_bind_group_layout)
     }
 
     /// Creates a new vertex buffer and indices
@@ -304,7 +304,7 @@ impl crate::header::Renderer {
         &mut self,
         vertices: &Vec<Vertex>,
         indices: &Vec<UnsignedIntType>,
-    ) -> eyre::Result<VertexBuffers> {
+    ) -> VertexBuffers {
         let vertex_buffer = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -321,11 +321,11 @@ impl crate::header::Renderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
-        Ok(VertexBuffers {
+        VertexBuffers {
             vertex_buffer,
             index_buffer,
             length: indices.len() as u32,
-        })
+        }
     }
 
     /// Creates a new instance buffer for the object
@@ -367,9 +367,8 @@ impl crate::SignalStorage {
             .find(|k| k.0 == key.as_string())
             .map(|k| &mut k.1);
 
-        if event.is_some() {
+        if let Some(event) = event {
             // downcast the event
-            let event = event.unwrap();
             let event_type = event.downcast_mut::<T>();
             Some(event_type)
         } else {

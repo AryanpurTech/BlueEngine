@@ -6,7 +6,7 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{primitive_shapes::triangle, Engine, ObjectSettings};
+use blue_engine::{primitive_shapes::triangle, wgpu, Engine, ObjectSettings};
 
 pub fn main() {
     let mut engine = Engine::new().expect("win");
@@ -16,8 +16,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    )
-    .unwrap();
+    );
 
     engine.renderer.clear_color = wgpu::Color {
         r: 0.0,
