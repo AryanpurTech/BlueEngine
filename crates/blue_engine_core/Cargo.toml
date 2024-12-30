@@ -26,7 +26,6 @@ pollster = "0.4"
 winit = { version = "0.30.5", features = ["rwh_06"] }
 wgpu = { version = "23.0.1" }
 bytemuck = { version = "1.16", features = ["derive"] }
-eyre = "0.6"
 downcast = "0.11"
 nalgebra-glm = "0.19"
 # debug logs

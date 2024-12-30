@@ -30,7 +30,7 @@ fn main() {
                 .renderer
                 .build_texture(
                     "background",
-                    TextureData::Path("resources/BlueLogoDiscord.png".to_string()),
+                    TextureData::Path("examples/resources/BlueLogoDiscord.png".to_string()),
                     blue_engine::TextureMode::Clamp,
                 )
                 .unwrap(),

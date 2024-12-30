@@ -21,127 +21,131 @@ impl Renderer {
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
-    ) -> Self {
+    ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
 
-        let adapter = instance
+        match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: settings.power_preference,
                 compatible_surface: None,
                 force_fallback_adapter: false,
             })
             .await
-            .expect("Failed to find an appropriate adapter");
-
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: Some("Device"),
-                    required_features: settings.features,
-                    required_limits: settings.limits,
-                    memory_hints: wgpu::MemoryHints::Performance,
-                },
-                None, // Trace path
-            )
-            .await
-            .expect("Failed to create device");
-
-        let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
-
-        #[cfg(target_os = "android")]
-        let texture_format = wgpu::TextureFormat::Rgba8UnormSrgb;
-
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: texture_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
-            #[cfg(target_os = "android")]
-            width: 1080,
-            #[cfg(not(feature = "android"))]
-            width: size.width,
-            #[cfg(target_os = "android")]
-            height: 2300,
-            #[cfg(not(target_os = "android"))]
-            height: size.height,
-            #[cfg(target_os = "android")]
-            present_mode: wgpu::PresentMode::Mailbox,
-            #[cfg(not(target_os = "android"))]
-            present_mode: settings.present_mode,
-            alpha_mode: settings.alpha_mode,
-            view_formats: vec![texture_format],
-            desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
-        };
-
-        let texture_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            multisampled: false,
+        {
+            Some(adapter) => {
+                let (device, queue) = adapter
+                    .request_device(
+                        &wgpu::DeviceDescriptor {
+                            label: Some("Device"),
+                            required_features: settings.features,
+                            required_limits: settings.limits,
+                            memory_hints: wgpu::MemoryHints::Performance,
                         },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), //comparison: false,
-                        // filtering: true,
-                        count: None,
-                    },
-                ],
-                label: Some("texture_bind_group_layout"),
-            });
+                        None, // Trace path
+                    )
+                    .await?;
 
-        let default_uniform_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("uniform dynamic bind group layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                }],
-            });
+                let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
 
-        let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
+                #[cfg(target_os = "android")]
+                let texture_format = wgpu::TextureFormat::Rgba8UnormSrgb;
 
-        let mut renderer = Self {
-            instance,
-            adapter,
-            surface: None,
-            device,
-            queue,
-            config,
-            size,
+                let config = wgpu::SurfaceConfiguration {
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    format: texture_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
+                    #[cfg(target_os = "android")]
+                    width: 1080,
+                    #[cfg(not(feature = "android"))]
+                    width: size.width,
+                    #[cfg(target_os = "android")]
+                    height: 2300,
+                    #[cfg(not(target_os = "android"))]
+                    height: size.height,
+                    #[cfg(target_os = "android")]
+                    present_mode: wgpu::PresentMode::Mailbox,
+                    #[cfg(not(target_os = "android"))]
+                    present_mode: settings.present_mode,
+                    alpha_mode: settings.alpha_mode,
+                    view_formats: vec![texture_format],
+                    desired_maximum_frame_latency: settings.desired_maximum_frame_latency,
+                };
 
-            texture_bind_group_layout,
-            default_uniform_bind_group_layout,
-            depth_buffer,
+                let texture_bind_group_layout =
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        entries: &[
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 0,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Texture {
+                                    sample_type: wgpu::TextureSampleType::Float {
+                                        filterable: true,
+                                    },
+                                    view_dimension: wgpu::TextureViewDimension::D2,
+                                    multisampled: false,
+                                },
+                                count: None,
+                            },
+                            wgpu::BindGroupLayoutEntry {
+                                binding: 1,
+                                visibility: wgpu::ShaderStages::FRAGMENT,
+                                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), //comparison: false,
+                                // filtering: true,
+                                count: None,
+                            },
+                        ],
+                        label: Some("texture_bind_group_layout"),
+                    });
 
-            default_data: None,
-            camera: None,
-            clear_color: wgpu::Color::BLACK,
-            scissor_rect: None,
-        };
+                let default_uniform_bind_group_layout =
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        label: Some("uniform dynamic bind group layout"),
+                        entries: &[wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        }],
+                    });
 
-        renderer.build_default_data();
+                let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
-        renderer
+                let mut renderer = Self {
+                    instance,
+                    adapter,
+                    surface: None,
+                    device,
+                    queue,
+                    config,
+                    size,
+
+                    texture_bind_group_layout,
+                    default_uniform_bind_group_layout,
+                    depth_buffer,
+
+                    default_data: None,
+                    camera: None,
+                    clear_color: wgpu::Color::BLACK,
+                    scissor_rect: None,
+                };
+
+                renderer.build_default_data();
+
+                Ok(renderer)
+            }
+            None => Err(crate::error::Error::AdapterNotFound),
+        }
     }
 
     pub(crate) fn build_default_data(&mut self) {
-        if let Some(default_texture) = self.build_texture(
+        if let Ok(default_texture) = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
             crate::header::TextureMode::Clamp,

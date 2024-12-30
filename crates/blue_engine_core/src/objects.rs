@@ -29,7 +29,7 @@ impl Renderer {
         vertices: Vec<Vertex>,
         indices: Vec<UnsignedIntType>,
         settings: ObjectSettings,
-    ) -> Object {
+    ) -> Result<Object, crate::error::Error> {
         let vertex_buffer = self.build_vertex_buffer(&vertices, &indices);
 
         let uniform = self.build_uniform_buffer(&vec![
@@ -52,14 +52,12 @@ impl Renderer {
             settings.shader_settings,
         );
 
-        let texture = self
-            .build_texture(
-                "Default Texture",
-                TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-                crate::header::TextureMode::Clamp,
-                //crate::header::TextureFormat::PNG
-            )
-            .expect("Could not build the default texture for Object");
+        let texture = self.build_texture(
+            "Default Texture",
+            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
+            crate::header::TextureMode::Clamp,
+            //crate::header::TextureFormat::PNG
+        )?;
 
         let instance = Instance::new(
             [0f32, 0f32, 0f32].into(),
@@ -69,7 +67,7 @@ impl Renderer {
 
         let instance_buffer = self.build_instance(vec![instance.to_raw()]);
 
-        Object {
+        Ok(Object {
             name: name.as_arc(),
             vertices,
             indices,
@@ -109,7 +107,7 @@ impl Renderer {
             ],
             is_visible: true,
             render_order: 0,
-        }
+        })
     }
 }
 
@@ -123,10 +121,12 @@ impl ObjectStorage {
         settings: ObjectSettings,
         renderer: &mut Renderer,
     ) {
-        self.add_object(
-            name.clone(),
-            renderer.build_object(name.clone(), vertices, indices, settings),
-        );
+        match renderer.build_object(name.clone(), vertices, indices, settings) {
+            Ok(object) => self.add_object(name.clone(), object),
+            Err(e) => {
+                eprintln!("Could not create a new Object: {e:#?}");
+            }
+        }
     }
 
     /// Adds an object to the storage

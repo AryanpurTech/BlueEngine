@@ -29,15 +29,14 @@
 //!
 //! fn main() {
 //!     // initialize the engine
-//!     let mut engine = Engine::new().expect("engine couldn't be initialized");
+//!     let mut engine = Engine::new();
 //!
 //!     // create a triangle
 //!     triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
 //!
 //!    // run the engine
 //!    engine
-//!        .update_loop(move |_, _, _, _, _, _| {})
-//!        .expect("Error during update loop");
+//!        .update_loop(move |_, _, _, _, _, _| {});
 //! }
 //! ```
 //!

@@ -18,7 +18,7 @@ use winit::{
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
-    pub fn new() -> eyre::Result<Self> {
+    pub fn new() -> Result<Self, crate::error::Error> {
         Self::new_inner(
             WindowDescriptor::default(),
             #[cfg(target_os = "android")]
@@ -27,7 +27,7 @@ impl Engine {
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> eyre::Result<Self> {
+    pub fn new_config(settings: WindowDescriptor) -> Result<Self, crate::error::Error> {
         Self::new_inner(
             settings,
             #[cfg(target_os = "android")]
@@ -40,7 +40,7 @@ impl Engine {
     pub fn new_android(
         settings: WindowDescriptor,
         app: winit::platform::android::activity::AndroidApp,
-    ) -> eyre::Result<Self> {
+    ) -> Result<Self, crate::error::Error> {
         Self::new_inner(settings, Some(app))
     }
 
@@ -51,7 +51,7 @@ impl Engine {
         #[cfg(target_os = "android")] android_app: Option<
             winit::platform::android::activity::AndroidApp,
         >,
-    ) -> eyre::Result<Self> {
+    ) -> Result<Self, crate::error::Error> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimensions of the window, as width and height
@@ -71,7 +71,7 @@ impl Engine {
             .with_resizable(settings.resizable); // sets the window to be resizable
 
         // The renderer init on current window
-        let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()));
+        let mut renderer = pollster::block_on(Renderer::new(dimension, settings.clone()))?;
         let camera = CameraContainer::new(dimension, &mut renderer);
 
         Ok(Self {
@@ -104,7 +104,7 @@ impl Engine {
                 &mut CameraContainer,
                 &mut crate::SignalStorage,
             ),
-    ) -> eyre::Result<()> {
+    ) -> Result<(), crate::error::Error> {
         self.update_loop = Some(Box::new(update_function));
 
         // will create the main event loop of the window.
