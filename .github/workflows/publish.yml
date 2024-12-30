@@ -1,0 +1,49 @@
+name: Publish to crates.io
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install cargo-cliff
+      run: cargo install cargo-cliff
+
+    - name: Generate changelog
+      run: cargo cliff --config cliff.toml --unreleased --output CHANGELOG.md --tag ${{ github.ref_name }}
+
+    - name: Update release notes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        CHANGELOG=$(cat CHANGELOG.md)
+        gh release edit ${{ github.ref_name }} --notes "$CHANGELOG"
+
+    - name: Publish crates in the crates folder
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        for crate in crates/*; do
+          if [ -d "$crate" ]; then
+            cd "$crate"
+            cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+            cd ..
+          fi
+        done
+
+    - name: Publish root crate
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
