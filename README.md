@@ -4,8 +4,8 @@
 [![Rust Windows](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-win.yml)
 [![Rust MacOS](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-osx.yml)
 [![rust-clippy analyze](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml)
-![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)
-![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)
+[![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/s7xsj9q)
+[![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://docs.rs/blue_engine)
 
 Make sure to use latest Rust version, as the engine is always kept up to date.
 
