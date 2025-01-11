@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::header::{Vector2, Vector3};
 use bytemuck::Pod;
@@ -321,6 +321,19 @@ impl DivAssign<f32> for Vector3 {
     }
 }
 
+impl Index<usize> for Vector3 {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bounds"),
+        }
+    }
+}
+
 impl From<[f32; 3]> for Vector3 {
     fn from(pos: [f32; 3]) -> Self {
         Self {
@@ -366,6 +379,18 @@ impl From<nalgebra_glm::Vec3> for Vector3 {
 impl From<Vector3> for nalgebra_glm::Vec3 {
     fn from(pos: Vector3) -> Self {
         nalgebra_glm::vec3(pos.x, pos.y, pos.z)
+    }
+}
+
+impl Neg for Vector3 {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
@@ -675,5 +700,28 @@ impl From<nalgebra_glm::Vec2> for Vector2 {
 impl From<Vector2> for nalgebra_glm::Vec2 {
     fn from(pos: Vector2) -> Self {
         nalgebra_glm::vec2(pos.x, pos.y)
+    }
+}
+
+impl Index<usize> for Vector2 {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            _ => panic!("Index out of bounds"),
+        }
+    }
+}
+
+impl Neg for Vector2 {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+        }
     }
 }
