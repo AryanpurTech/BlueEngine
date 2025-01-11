@@ -5,7 +5,7 @@ use blue_engine::{
     uniform_type::Matrix,
     utils::default_resources::DEFAULT_MATRIX_4,
     Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
-    TextureData, Vertex, WindowDescriptor,
+    TextureData, Vector3, Vertex, WindowDescriptor,
 };
 
 fn main() {
@@ -57,7 +57,7 @@ fn main() {
         .objects
         .get_mut("main")
         .unwrap()
-        .set_position(-1f32, 0f32, 0f32);
+        .set_position(Vector3::new(-1f32, 0f32, 0f32));
 
     square(
         "alt",
@@ -70,7 +70,7 @@ fn main() {
         .objects
         .get_mut("alt")
         .unwrap()
-        .set_position(0.2f32, 0f32, 0.001f32);
+        .set_position(Vector3::new(0.2f32, 0f32, 0.001f32));
 
     square(
         "alt2",
@@ -87,7 +87,7 @@ fn main() {
         .objects
         .get_mut("alt2")
         .unwrap()
-        .set_position(-0.2f32, 0f32, 0.001f32);
+        .set_position(Vector3::new(-0.2f32, 0f32, 0.001f32));
 
     engine.window.set_fullscreen_borderless(true);
 
@@ -112,50 +112,50 @@ fn main() {
                 _window.close_engine();
             }
             if input.key_held(blue_engine::KeyCode::ArrowUp) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x,
                     sprite.position.y - speed,
                     sprite.position.z,
-                );
+                ));
                 //lm.ambient_color.data = [1f32, 1f32, 1f32, 1f32];
             }
             if input.key_held(blue_engine::KeyCode::ArrowDown) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x,
                     sprite.position.y + speed,
                     sprite.position.z,
-                );
+                ));
                 //lm.ambient_color.data = [0.1f32, 0.1f32, 0.1f32, 1f32];
             }
 
             if input.key_held(blue_engine::KeyCode::ArrowLeft) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x + speed,
                     sprite.position.y,
                     sprite.position.z,
-                );
+                ));
             }
             if input.key_held(blue_engine::KeyCode::ArrowRight) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x - speed,
                     sprite.position.y,
                     sprite.position.z,
-                );
+                ));
             }
 
             if input.key_held(blue_engine::KeyCode::KeyE) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x,
                     sprite.position.y,
                     sprite.position.z + speed,
-                );
+                ));
             }
             if input.key_held(blue_engine::KeyCode::KeyQ) {
-                sprite.set_position(
+                sprite.set_position((
                     sprite.position.x,
                     sprite.position.y,
                     sprite.position.z - speed,
-                );
+                ));
             }
         })
         .expect("Error during update loop");

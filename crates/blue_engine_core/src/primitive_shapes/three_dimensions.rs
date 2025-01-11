@@ -69,62 +69,52 @@ pub fn cube(name: impl StringBuffer, renderer: &mut Renderer, objects: &mut Obje
             },
             Vertex {
                 position: Vector3::new(1.0, -1.0, 1.0),
-                uv: Vector2::new(1.0, 1.0),
-                normal: Vector3::new(0.0, 0.0, 0.0),
-            },
-            // Left face
-            Vertex {
-                position: Vector3::new(-1.0, -1.0, -1.0),
                 uv: Vector2::new(0.0, 1.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
-            Vertex {
-                position: Vector3::new(-1.0, 1.0, -1.0),
-                uv: Vector2::new(0.0, 0.0),
-                normal: Vector3::new(0.0, 0.0, 0.0),
-            },
-            Vertex {
-                position: Vector3::new(-1.0, 1.0, 1.0),
-                uv: Vector2::new(1.0, 0.0),
-                normal: Vector3::new(0.0, 0.0, 0.0),
-            },
+            // Left face
             Vertex {
                 position: Vector3::new(-1.0, -1.0, 1.0),
                 uv: Vector2::new(1.0, 1.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
-            // Top face
             Vertex {
-                position: Vector3::new(-1.0, 1.0, -1.0),
-                uv: Vector2::new(0.0, 1.0),
-                normal: Vector3::new(0.0, 0.0, 0.0),
-            },
-            Vertex {
-                position: Vector3::new(1.0, 1.0, -1.0),
-                uv: Vector2::new(1.0, 1.0),
-                normal: Vector3::new(0.0, 0.0, 0.0),
-            },
-            Vertex {
-                position: Vector3::new(1.0, 1.0, 1.0),
+                position: Vector3::new(-1.0, 1.0, 1.0),
                 uv: Vector2::new(1.0, 0.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: Vector3::new(-1.0, 1.0, 1.0),
+                position: Vector3::new(-1.0, 1.0, -1.0),
                 uv: Vector2::new(0.0, 0.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
-            // Bottom face
             Vertex {
                 position: Vector3::new(-1.0, -1.0, -1.0),
                 uv: Vector2::new(0.0, 1.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
+            // Top face
             Vertex {
-                position: Vector3::new(1.0, -1.0, -1.0),
+                position: Vector3::new(1.0, 1.0, -1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(-1.0, 1.0, -1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(-1.0, 1.0, 1.0),
+                uv: Vector2::new(0.0, -1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(1.0, 1.0, 1.0),
                 uv: Vector2::new(1.0, 1.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
+            // Bottom face
             Vertex {
                 position: Vector3::new(1.0, -1.0, 1.0),
                 uv: Vector2::new(1.0, 0.0),
@@ -133,6 +123,16 @@ pub fn cube(name: impl StringBuffer, renderer: &mut Renderer, objects: &mut Obje
             Vertex {
                 position: Vector3::new(-1.0, -1.0, 1.0),
                 uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(-1.0, -1.0, -1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(1.0, -1.0, 1.0),
+                uv: Vector2::new(1.0, 1.0),
                 normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ],

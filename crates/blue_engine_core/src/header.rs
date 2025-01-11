@@ -78,7 +78,7 @@ impl Vertex {
                 },
                 wgpu::VertexAttribute {
                     // This should be replaced with `std::mem::size_of::<Vector3>() as wgpu::BufferAddress`
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress, 
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
                 },
@@ -441,7 +441,7 @@ pub struct Camera {
     /// The up vector of the camera. This defines the elevation of the camera
     pub up: Vector3,
     /// The resolution of the camera view
-    pub resolution: (f32, f32),
+    pub resolution: (f32, f32), //maybe this should be a Vector2i
     /// The projection of the camera
     pub projection: Projection,
     /// The closest view of camera

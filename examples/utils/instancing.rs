@@ -9,7 +9,7 @@
 use blue_engine::{
     header::{Engine, ObjectSettings},
     primitive_shapes::triangle,
-    Instance,
+    Instance, Vector3,
 };
 
 pub fn main() {
@@ -27,15 +27,11 @@ pub fn main() {
     // update the triangle
     engine.objects.update_object("Triangle", |object| {
         // set the position of the main triangle
-        object.set_position(0f32, 0f32, -3f32);
+        object.set_position(Vector3::new(0f32, 0f32, -3f32));
 
         // a function to make instance creation easier
         let create_instance = |x: f32, y: f32, z: f32| {
-            Instance::new(
-                [x, y, z].into(),
-                [0f32, 0f32, 0f32].into(),
-                [1f32, 1f32, 1f32].into(),
-            )
+            Instance::new([x, y, z], [0f32, 0f32, 0f32], [1f32, 1f32, 1f32])
         };
 
         // add an instance

@@ -23,7 +23,7 @@ fn main() {
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-            camera.set_position(camx, camy, camz);
+            camera.set_position((camx, camy, camz));
         })
         .expect("Error during update loop");
 }
