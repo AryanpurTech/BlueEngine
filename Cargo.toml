@@ -35,7 +35,7 @@ u16 = ["blue_engine_core?/u16", "blue_engine_dynamic?/u16"]
 u32 = ["blue_engine_core?/u32", "blue_engine_dynamic?/u32"]
 
 [dependencies]
-blue_engine_core = { version = "0.6.0", optional = true }
+blue_engine_core = { path = "./crates/blue_engine_core", optional = true }
 
 # Wasm does not support dynamic linking.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

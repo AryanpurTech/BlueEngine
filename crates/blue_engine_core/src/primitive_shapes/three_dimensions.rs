@@ -1,4 +1,7 @@
-use crate::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, UnsignedIntType, Vertex};
+use crate::{
+    ObjectSettings, ObjectStorage, Renderer, StringBuffer, UnsignedIntType, Vector2, Vector3,
+    Vertex,
+};
 use std::f32::consts::PI;
 
 /// Creates a 3D cube
@@ -8,129 +11,129 @@ pub fn cube(name: impl StringBuffer, renderer: &mut Renderer, objects: &mut Obje
         vec![
             // Front Face
             Vertex {
-                position: [-1.0, -1.0, 1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, 1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, 1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, 1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, 1.0, 1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, 1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, 1.0, 1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, 1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             // Back Face
             Vertex {
-                position: [-1.0, 1.0, -1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, -1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, 1.0, -1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, -1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, -1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, -1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, -1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, -1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             // Right face
             Vertex {
-                position: [1.0, -1.0, -1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, -1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, 1.0, -1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, -1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, 1.0, 1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, 1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, 1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, 1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
-            // Left Face
+            // Left face
             Vertex {
-                position: [-1.0, -1.0, 1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [-1.0, 1.0, 1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, 1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, 1.0, -1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, 1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, -1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
-            },
-            // Top Face
-            Vertex {
-                position: [1.0, 1.0, -1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, -1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, 1.0, -1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, -1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            // Top face
+            Vertex {
+                position: Vector3::new(1.0, 1.0, -1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, 1.0, 1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, -1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, 1.0, 1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
-            },
-            // Bottom Face
-            Vertex {
-                position: [1.0, -1.0, 1.0],
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, 1.0),
+                uv: Vector2::new(0.0, -1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, 1.0],
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, 1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            // Bottom face
+            Vertex {
+                position: Vector3::new(1.0, -1.0, 1.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, -1.0],
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, 1.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, -1.0],
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, -1.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+            Vertex {
+                position: Vector3::new(1.0, -1.0, 1.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ],
         vec![
@@ -178,9 +181,9 @@ pub fn uv_sphere(
             let y: f32 = xy * sector_angle.sin();
 
             vertices.push(Vertex {
-                position: [x, y, z],
-                uv: [(j as f32) / sectors, (i as f32) / stacks],
-                normal: [x * length_inv, y * length_inv, z * length_inv],
+                position: [x, y, z].into(),
+                uv: Vector2::new((j as f32) / sectors, (i as f32) / stacks),
+                normal: Vector3::new(x * length_inv, y * length_inv, z * length_inv),
             });
         }
     }

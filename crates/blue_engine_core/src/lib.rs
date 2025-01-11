@@ -78,6 +78,8 @@ pub mod render;
 /// Utilities for the engine (soon moving to it's own
 /// [crate](https://github.com/AryanpurTech/BlueEngineUtilities)).
 pub mod utils;
+/// contains definition for 2D and 3D vectors.
+pub mod vector;
 /// contains definition for creation of window and instance creation.
 pub mod window;
 #[doc(inline)]

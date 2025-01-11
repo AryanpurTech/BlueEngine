@@ -7,6 +7,7 @@
 use blue_engine::{
     header::{Engine, ObjectSettings, ShaderSettings},
     primitive_shapes::square,
+    Vector3,
 };
 
 fn main() {
@@ -38,7 +39,7 @@ fn main() {
         .update_loop(move |_, _, _, _, camera, _| {
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
-            camera.set_position(camx, 0.0, camz);
+            camera.set_position(Vector3::new(camx, 0.0, camz));
         })
         .expect("Error during update loop");
 }

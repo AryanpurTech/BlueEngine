@@ -59,11 +59,11 @@ macro_rules! impl_deref_field {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     /// Contains position data for the vertex in 3D space
-    pub position: [f32; 3],
+    pub position: Vector3,
     /// Contains uv position data for the vertex
-    pub uv: [f32; 2],
+    pub uv: Vector2,
     /// Contains the normal face of the vertex
-    pub normal: [f32; 3],
+    pub normal: Vector3,
 }
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -77,6 +77,7 @@ impl Vertex {
                     format: wgpu::VertexFormat::Float32x3,
                 },
                 wgpu::VertexAttribute {
+                    // This should be replaced with `std::mem::size_of::<Vector3>() as wgpu::BufferAddress`
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
@@ -113,11 +114,11 @@ pub struct Object {
     /// instance buffer
     pub instance_buffer: wgpu::Buffer,
     /// Dictates the size of your object in relation to the world
-    pub size: glm::Vec3,
+    pub size: Vector3,
     /// Dictates the position of your object in pixels
-    pub position: glm::Vec3,
+    pub position: Vector3,
     /// Dictates the rotation of your object
-    pub rotation: glm::Vec3,
+    pub rotation: Vector3,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
@@ -434,13 +435,13 @@ pub enum Projection {
 #[derive(Debug)]
 pub struct Camera {
     /// The position of the camera in 3D space
-    pub position: nalgebra_glm::Vec3,
+    pub position: Vector3,
     /// The target at which the camera should be looking
-    pub target: nalgebra_glm::Vec3,
+    pub target: Vector3,
     /// The up vector of the camera. This defines the elevation of the camera
-    pub up: nalgebra_glm::Vec3,
+    pub up: Vector3,
     /// The resolution of the camera view
-    pub resolution: (f32, f32),
+    pub resolution: (f32, f32), //maybe this should be a Vector2i
     /// The projection of the camera
     pub projection: Projection,
     /// The closest view of camera
@@ -558,11 +559,11 @@ pub struct InstanceRaw {
 #[derive(Debug, Clone, Copy)]
 pub struct Instance {
     /// The position of the instance
-    pub position: nalgebra_glm::Vec3,
+    pub position: Vector3,
     /// The rotation of the instance
-    pub rotation: nalgebra_glm::Vec3,
+    pub rotation: Vector3,
     /// The scale of the instance
-    pub scale: nalgebra_glm::Vec3,
+    pub scale: Vector3,
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
@@ -776,3 +777,25 @@ impl_deref_field!(
     Option<std::sync::Arc<crate::winit::window::Window>>,
     window
 );
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
+/// General purposes 3D vector
+pub struct Vector3 {
+    /// X coordinate in 3D space
+    pub x: f32,
+    /// Y coordinate in 3D space
+    pub y: f32,
+    /// Z coordinate in 3D space
+    pub z: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
+/// General purposes 2D vector
+pub struct Vector2 {
+    /// X coordinate in 2D space
+    pub x: f32,
+    /// Y coordinate in 2D space
+    pub y: f32,
+}

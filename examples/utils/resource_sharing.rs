@@ -5,7 +5,7 @@
  *
  * The license is same as the one on the root.
 */
-use blue_engine::{primitive_shapes::square, Engine, ObjectSettings, TextureData};
+use blue_engine::{primitive_shapes::square, Engine, ObjectSettings, TextureData, Vector3};
 
 fn main() {
     // Start the engine
@@ -35,7 +35,7 @@ fn main() {
                 )
                 .unwrap(),
         )
-        .set_position(-1.5f32, 0f32, 0f32); // set position to make it visible
+        .set_position(Vector3::new(-1.5f32, 0f32, 0f32)); // set position to make it visible
 
     // create another object where you want to get resources shared with
     square(
@@ -51,7 +51,7 @@ fn main() {
         .get_mut("alt")
         .expect("Error during copying texture of the main square")
         // setting position again to make it visible
-        .set_position(1.5f32, 0f32, 0f32)
+        .set_position(Vector3::new(1.5f32, 0f32, 0f32))
         .reference_texture("main");
 
     engine

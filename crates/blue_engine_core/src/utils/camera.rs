@@ -5,7 +5,7 @@
 */
 
 use crate::{
-    header::{uniform_type::Matrix, Camera, Renderer},
+    header::{uniform_type::Matrix, Camera, Renderer, Vector3},
     CameraContainer, Projection,
 };
 use winit::dpi::PhysicalSize;
@@ -20,9 +20,9 @@ impl Camera {
         ]);
 
         let mut camera = Self {
-            position: nalgebra_glm::vec3(0.0, 0.0, 3.0),
-            target: nalgebra_glm::vec3(0.0, 0.0, -1.0),
-            up: nalgebra_glm::vec3(0.0, 1.0, 0.0),
+            position: Vector3::new(0.0, 0.0, 3.0),
+            target: Vector3::new(0.0, 0.0, -1.0),
+            up: Vector3::new(0.0, 1.0, 0.0),
             resolution: (window_size.width as f32, window_size.height as f32),
             projection: crate::Projection::Perspective {
                 fov: 70f32 * (std::f32::consts::PI / 180f32),
@@ -68,20 +68,20 @@ impl Camera {
     }
 
     /// Sets the position of camera
-    pub fn set_position(&mut self, x: f32, y: f32, z: f32) {
-        self.position = nalgebra_glm::vec3(x, y, z);
+    pub fn set_position(&mut self, new_pos: impl Into<Vector3>) {
+        self.position = new_pos.into();
         self.build_view_projection_matrix();
     }
 
     /// Sets the target of camera
-    pub fn set_target(&mut self, x: f32, y: f32, z: f32) {
-        self.target = nalgebra_glm::vec3(x, y, z);
+    pub fn set_target(&mut self, target_pos: impl Into<Vector3>) {
+        self.target = target_pos.into();
         self.build_view_projection_matrix();
     }
 
     /// Sets the up of camera
-    pub fn set_up(&mut self, x: f32, y: f32, z: f32) {
-        self.up = nalgebra_glm::vec3(x, y, z);
+    pub fn set_up(&mut self, pos: impl Into<Vector3>) {
+        self.up = pos.into();
         self.build_view_projection_matrix();
     }
 
@@ -143,13 +143,13 @@ impl Camera {
     /// Builds a view matrix for camera projection
     pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
         nalgebra_glm::look_at_rh(
-            &self.position,
+            &self.position.into(),
             &if self.add_position_and_target {
-                self.position + self.target
+                (self.position + self.target).into()
             } else {
-                self.target
+                self.target.into()
             },
-            &self.up,
+            &self.up.into(),
         )
     }
 
@@ -207,21 +207,21 @@ impl CameraContainer {
         }
     }
     /// Sets the position of camera
-    pub fn set_position(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_position(&mut self, new_pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
-            main_camera.set_position(x, y, z);
+            main_camera.set_position(new_pos.into());
         }
     }
     /// Sets the target of camera
-    pub fn set_target(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_target(&mut self, pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
-            main_camera.set_target(x, y, z);
+            main_camera.set_target(pos.into());
         }
     }
     /// Sets the up of camera
-    pub fn set_up(&mut self, x: f32, y: f32, z: f32) {
+    pub fn set_up(&mut self, pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
-            main_camera.set_up(x, y, z);
+            main_camera.set_up(pos.into());
         }
     }
     /// Sets how far camera can look
