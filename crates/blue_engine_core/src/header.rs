@@ -13,8 +13,6 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
-use crate::position::Position3D;
-
 /// The uint type used for indices and more
 #[cfg(feature = "u16")]
 pub type UnsignedIntType = u16;
@@ -61,7 +59,7 @@ macro_rules! impl_deref_field {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     /// Contains position data for the vertex in 3D space
-    pub position: Position3D,
+    pub position: Vector3,
     /// Contains uv position data for the vertex
     pub uv: [f32; 2],
     /// Contains the normal face of the vertex
@@ -115,11 +113,11 @@ pub struct Object {
     /// instance buffer
     pub instance_buffer: wgpu::Buffer,
     /// Dictates the size of your object in relation to the world
-    pub size: glm::Vec3,
+    pub size: Vector3,
     /// Dictates the position of your object in pixels
-    pub position: Position3D,
+    pub position: Vector3,
     /// Dictates the rotation of your object
-    pub rotation: glm::Vec3,
+    pub rotation: Vector3,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
@@ -436,11 +434,11 @@ pub enum Projection {
 #[derive(Debug)]
 pub struct Camera {
     /// The position of the camera in 3D space
-    pub position: Position3D,
+    pub position: Vector3,
     /// The target at which the camera should be looking
-    pub target: Position3D,
+    pub target: Vector3,
     /// The up vector of the camera. This defines the elevation of the camera
-    pub up: Position3D,
+    pub up: Vector3,
     /// The resolution of the camera view
     pub resolution: (f32, f32),
     /// The projection of the camera
@@ -560,11 +558,11 @@ pub struct InstanceRaw {
 #[derive(Debug, Clone, Copy)]
 pub struct Instance {
     /// The position of the instance
-    pub position: Position3D,
+    pub position: Vector3,
     /// The rotation of the instance
-    pub rotation: nalgebra_glm::Vec3,
+    pub rotation: Vector3,
     /// The scale of the instance
-    pub scale: nalgebra_glm::Vec3,
+    pub scale: Vector3,
 }
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
@@ -778,3 +776,23 @@ impl_deref_field!(
     Option<std::sync::Arc<crate::winit::window::Window>>,
     window
 );
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+/// General purposes 3D vector
+pub struct Vector3 {
+    /// X coordinate in 3D space
+    pub x: f32,
+    /// Y coordinate in 3D space
+    pub y: f32,
+    /// Z coordinate in 3D space
+    pub z: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+/// General purposes 2D vector
+pub struct Vector2 {
+    /// X coordinate in 3D space
+    pub x: f32,
+    /// Y coordinate in 2D space
+    pub y: f32,
+}

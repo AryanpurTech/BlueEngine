@@ -8,10 +8,9 @@ use crate::header::{
     glm, pixel_to_cartesian, uniform_type, Instance, InstanceRaw, Object, ObjectSettings, Pipeline,
     PipelineData, Renderer, RotateAxis, TextureData, Textures, Vertex,
 };
-use crate::position::Position3D;
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
-use crate::{ObjectStorage, RotateAmount, StringBuffer, UnsignedIntType};
+use crate::{ObjectStorage, RotateAmount, StringBuffer, UnsignedIntType, Vector3};
 
 impl Renderer {
     /// Creates a new object
@@ -60,11 +59,7 @@ impl Renderer {
             //crate::header::TextureFormat::PNG
         )?;
 
-        let instance = Instance::new(
-            [0f32, 0f32, 0f32],
-            [0f32, 0f32, 0f32].into(),
-            [1f32, 1f32, 1f32].into(),
-        );
+        let instance = Instance::new([0f32, 0f32, 0f32], [0f32, 0f32, 0f32], [1f32, 1f32, 1f32]);
 
         let instance_buffer = self.build_instance(vec![instance.to_raw()]);
 
@@ -81,9 +76,9 @@ impl Renderer {
             instances: vec![instance],
             instance_buffer,
             uniform_layout: uniform.1,
-            size: glm::vec3(1f32, 1f32, 1f32),
-            position: Position3D::default(),
-            rotation: glm::vec3(0f32, 0f32, 0f32),
+            size: Vector3::new(1f32, 1f32, 1f32),
+            position: Vector3::default(),
+            rotation: Vector3::new(0f32, 0f32, 0f32),
             changed: false,
             position_matrix: DEFAULT_MATRIX_4.to_im(),
             scale_matrix: DEFAULT_MATRIX_4.to_im(),
@@ -163,13 +158,12 @@ impl Object {
     }
 
     /// Scales an object. e.g. 2.0 doubles the size and 0.5 halves
-    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.size.x *= x;
-        self.size.y *= y;
-        self.size.z *= z;
+    pub fn set_scale(&mut self, scale: impl Into<Vector3>) -> &mut Self {
+        let scale = scale.into();
+        self.size *= scale;
 
         let transformation_matrix = self.scale_matrix;
-        let result = nalgebra_glm::scale(&transformation_matrix, &nalgebra_glm::vec3(x, y, z));
+        let result = nalgebra_glm::scale(&transformation_matrix, &scale.into());
         self.scale_matrix = result;
         self.inverse_matrices();
 
@@ -220,11 +214,11 @@ impl Object {
             0.0
         };
 
-        self.set_scale(
+        self.set_scale(Vector3::new(
             difference_in_width,
             difference_in_height,
             difference_in_depth,
-        );
+        ));
         self
     }
 
@@ -237,19 +231,19 @@ impl Object {
         let axis = match axis {
             RotateAxis::X => {
                 self.rotation.x += angle;
-                nalgebra_glm::Vec3::x_axis()
+                Vector3::x_axis()
             }
             RotateAxis::Y => {
                 self.rotation.y += angle;
-                nalgebra_glm::Vec3::y_axis()
+                Vector3::y_axis()
             }
             RotateAxis::Z => {
                 self.rotation.z += angle;
-                nalgebra_glm::Vec3::z_axis()
+                Vector3::z_axis()
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis);
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis.into());
         self.rotation_matrix = rotation_matrix;
         self.inverse_matrices();
 
@@ -268,19 +262,19 @@ impl Object {
         let axis = match axis {
             RotateAxis::X => {
                 self.rotation.x = amount_radians;
-                nalgebra_glm::Vec3::x_axis()
+                Vector3::x_axis()
             }
             RotateAxis::Y => {
                 self.rotation.y = amount_radians;
-                nalgebra_glm::Vec3::y_axis()
+                Vector3::y_axis()
             }
             RotateAxis::Z => {
                 self.rotation.z = amount_radians;
-                nalgebra_glm::Vec3::z_axis()
+                Vector3::z_axis()
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis);
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis.into());
         self.rotation_matrix = rotation_matrix;
         self.inverse_matrices();
 
@@ -299,19 +293,19 @@ impl Object {
         let axis = match axis {
             RotateAxis::X => {
                 self.rotation.x += amount_radians;
-                nalgebra_glm::Vec3::x_axis()
+                Vector3::x_axis()
             }
             RotateAxis::Y => {
                 self.rotation.y += amount_radians;
-                nalgebra_glm::Vec3::y_axis()
+                Vector3::y_axis()
             }
             RotateAxis::Z => {
                 self.rotation.z += amount_radians;
-                nalgebra_glm::Vec3::z_axis()
+                Vector3::z_axis()
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis);
+        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis.into());
         self.rotation_matrix = rotation_matrix;
         self.inverse_matrices();
 
@@ -320,7 +314,7 @@ impl Object {
     }
 
     /// Moves the object by the amount you specify in the axis you specify
-    pub fn set_translation(&mut self, new_pos: impl Into<Position3D>) -> &mut Self {
+    pub fn set_translation(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         self.position -= new_pos.into();
 
         let mut position_matrix = self.position_matrix;
@@ -333,7 +327,7 @@ impl Object {
     }
 
     /// Sets the position of the object in 3D space relative to the window
-    pub fn set_position(&mut self, new_pos: impl Into<Position3D>) -> &mut Self {
+    pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
         self.set_translation((self.position - new_pos) * -1f32);
 
@@ -624,46 +618,51 @@ impl ShaderBuilder {
 
 impl Instance {
     /// Creates a new instance
-    pub fn new(position: impl Into<Position3D>, rotation: glm::Vec3, scale: glm::Vec3) -> Self {
+    pub fn new(
+        position: impl Into<Vector3>,
+        rotation: impl Into<Vector3>,
+        scale: impl Into<Vector3>,
+    ) -> Self {
         Self {
             position: position.into(),
-            rotation,
-            scale,
+            rotation: rotation.into(),
+            scale: scale.into(),
         }
     }
 
     /// Gathers all information and builds a Raw Instance to be sent to GPU
     pub fn to_raw(&self) -> InstanceRaw {
         let position_matrix = glm::translate(&DEFAULT_MATRIX_4.to_im(), &self.position.into());
-        let rotation_matrix = nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation);
-        let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale);
+        let rotation_matrix =
+            nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation.into());
+        let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale.into());
         InstanceRaw {
             model: Matrix::from_im(position_matrix * rotation_matrix * scale_matrix),
         }
     }
 
     /// Sets the position
-    pub fn set_position(&mut self, position: impl Into<Position3D>) {
+    pub fn set_position(&mut self, position: impl Into<Vector3>) {
         self.position = position.into();
     }
 
     /// Sets the rotation
-    pub fn set_rotation(&mut self, rotation: glm::Vec3) {
-        self.rotation = rotation;
+    pub fn set_rotation(&mut self, rotation: impl Into<Vector3>) {
+        self.rotation = rotation.into();
     }
 
     /// Sets the scale
-    pub fn set_scale(&mut self, scale: glm::Vec3) {
-        self.scale = scale;
+    pub fn set_scale(&mut self, scale: impl Into<Vector3>) {
+        self.scale = scale.into();
     }
 }
 
 impl Default for Instance {
     fn default() -> Self {
         Self {
-            position: Position3D::default(),
-            rotation: glm::Vec3::new(0.0, 0.0, 0.0),
-            scale: glm::Vec3::new(1.0, 1.0, 1.0),
+            position: Vector3::default(),
+            rotation: Vector3::default(),
+            scale: Vector3::new(1.0, 1.0, 1.0),
         }
     }
 }

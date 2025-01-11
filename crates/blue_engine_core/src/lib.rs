@@ -70,8 +70,6 @@ pub mod error;
 pub mod header;
 /// contains the definition for Object type, which is a type that make it easier to manage data for rendering.
 pub mod objects;
-/// contains definition for position and rotation in 2D and 3D space.
-pub mod position;
 /// contains definition for some 2D and 3D shapes. They are basic shapes and
 /// can be used as examples of how to create your own content.
 pub mod primitive_shapes;
@@ -80,6 +78,8 @@ pub mod render;
 /// Utilities for the engine (soon moving to it's own
 /// [crate](https://github.com/AryanpurTech/BlueEngineUtilities)).
 pub mod utils;
+/// contains definition for 2D and 3D vectors.
+pub mod vector;
 /// contains definition for creation of window and instance creation.
 pub mod window;
 #[doc(inline)]

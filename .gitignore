@@ -4,3 +4,4 @@ target
 tools
 res
 resources/*.png
+crates/blue_engine_core/Cargo.lock

@@ -5,7 +5,8 @@
 */
 
 use crate::{
-    header::{uniform_type::Matrix, Camera, Renderer}, position::Position3D, CameraContainer, Projection
+    header::{uniform_type::Matrix, Camera, Renderer, Vector3},
+    CameraContainer, Projection,
 };
 use winit::dpi::PhysicalSize;
 
@@ -19,9 +20,9 @@ impl Camera {
         ]);
 
         let mut camera = Self {
-            position: Position3D::new(0.0, 0.0, 3.0),
-            target: Position3D::new(0.0, 0.0, -1.0),
-            up: Position3D::new(0.0, 1.0, 0.0),
+            position: Vector3::new(0.0, 0.0, 3.0),
+            target: Vector3::new(0.0, 0.0, -1.0),
+            up: Vector3::new(0.0, 1.0, 0.0),
             resolution: (window_size.width as f32, window_size.height as f32),
             projection: crate::Projection::Perspective {
                 fov: 70f32 * (std::f32::consts::PI / 180f32),
@@ -67,19 +68,19 @@ impl Camera {
     }
 
     /// Sets the position of camera
-    pub fn set_position(&mut self, new_pos: impl Into<Position3D>) {
+    pub fn set_position(&mut self, new_pos: impl Into<Vector3>) {
         self.position = new_pos.into();
         self.build_view_projection_matrix();
     }
 
     /// Sets the target of camera
-    pub fn set_target(&mut self, target_pos: impl Into<Position3D>) {
+    pub fn set_target(&mut self, target_pos: impl Into<Vector3>) {
         self.target = target_pos.into();
         self.build_view_projection_matrix();
     }
 
     /// Sets the up of camera
-    pub fn set_up(&mut self, pos: impl Into<Position3D>) {
+    pub fn set_up(&mut self, pos: impl Into<Vector3>) {
         self.up = pos.into();
         self.build_view_projection_matrix();
     }
@@ -206,19 +207,19 @@ impl CameraContainer {
         }
     }
     /// Sets the position of camera
-    pub fn set_position(&mut self, new_pos: impl Into<Position3D>) {
+    pub fn set_position(&mut self, new_pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
             main_camera.set_position(new_pos.into());
         }
     }
     /// Sets the target of camera
-    pub fn set_target(&mut self, pos: impl Into<Position3D>) {
+    pub fn set_target(&mut self, pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
             main_camera.set_target(pos.into());
         }
     }
     /// Sets the up of camera
-    pub fn set_up(&mut self, pos: impl Into<Position3D>) {
+    pub fn set_up(&mut self, pos: impl Into<Vector3>) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
             main_camera.set_up(pos.into());
         }
