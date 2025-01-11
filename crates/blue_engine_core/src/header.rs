@@ -61,9 +61,9 @@ pub struct Vertex {
     /// Contains position data for the vertex in 3D space
     pub position: Vector3,
     /// Contains uv position data for the vertex
-    pub uv: [f32; 2],
+    pub uv: Vector2,
     /// Contains the normal face of the vertex
-    pub normal: [f32; 3],
+    pub normal: Vector3,
 }
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -77,7 +77,8 @@ impl Vertex {
                     format: wgpu::VertexFormat::Float32x3,
                 },
                 wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    // This should be replaced with `std::mem::size_of::<Vector3>() as wgpu::BufferAddress`
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress, 
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x2,
                 },
@@ -778,6 +779,7 @@ impl_deref_field!(
 );
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
 /// General purposes 3D vector
 pub struct Vector3 {
     /// X coordinate in 3D space
@@ -789,9 +791,10 @@ pub struct Vector3 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
 /// General purposes 2D vector
 pub struct Vector2 {
-    /// X coordinate in 3D space
+    /// X coordinate in 2D space
     pub x: f32,
     /// Y coordinate in 2D space
     pub y: f32,

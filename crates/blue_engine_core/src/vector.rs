@@ -520,6 +520,8 @@ impl Vector2 {
 unsafe impl Send for Vector2 {}
 unsafe impl Sync for Vector2 {}
 
+unsafe impl Pod for Vector2 {}
+
 impl Add for Vector2 {
     type Output = Self;
 

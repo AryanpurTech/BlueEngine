@@ -2,11 +2,15 @@
  * Blue Engine by Elham Aryanpur
  *
  * The license is same as the one on the root.
-*/
+ */
+
+/*
+ * For the sake of example we never use Vector3::default() or Vector3::x_axis() or any axis.
+ */
 
 use crate::{
     header::{ObjectSettings, Vertex},
-    ObjectStorage, Renderer, StringBuffer,
+    ObjectStorage, Renderer, StringBuffer, Vector2, Vector3,
 };
 
 /// Creates a 2D triangle
@@ -20,19 +24,19 @@ pub fn triangle(
         name.clone(),
         vec![
             Vertex {
-                position: [0.0, 1.0, 0.0].into(),
-                uv: [0.5, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(0.0, 1.0, 0.0),
+                uv: Vector2::new(0.5, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, 0.0].into(),
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, 0.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, 0.0].into(),
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, 0.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ],
         vec![0, 1, 2],
@@ -52,24 +56,24 @@ pub fn square(
         name.clone(),
         vec![
             Vertex {
-                position: [1.0, 1.0, 0.0].into(),
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, 1.0, 0.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [1.0, -1.0, 0.0].into(),
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(1.0, -1.0, 0.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, -1.0, 0.0].into(),
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, -1.0, 0.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-1.0, 1.0, 0.0].into(),
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-1.0, 1.0, 0.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ],
         vec![2, 1, 0, 2, 0, 3],
@@ -91,24 +95,24 @@ pub fn rectangle(
         name.clone(),
         vec![
             Vertex {
-                position: [width / 2.0, height / 2.0, 0.0].into(),
-                uv: [1.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(width / 2.0, height / 2.0, 0.0),
+                uv: Vector2::new(1.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [width / 2.0, -height / 2.0, 0.0].into(),
-                uv: [1.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(width / 2.0, -height / 2.0, 0.0),
+                uv: Vector2::new(1.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-width / 2.0, -height / 2.0, 0.0].into(),
-                uv: [0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-width / 2.0, -height / 2.0, 0.0),
+                uv: Vector2::new(0.0, 1.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Vertex {
-                position: [-width / 2.0, height / 2.0, 0.0].into(),
-                uv: [0.0, 0.0],
-                normal: [0.0, 0.0, 0.0],
+                position: Vector3::new(-width / 2.0, height / 2.0, 0.0),
+                uv: Vector2::new(0.0, 0.0),
+                normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ],
         vec![2, 1, 0, 2, 0, 3],
