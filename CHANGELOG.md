@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2025-01-11
+
+### Features
+
+- Adding Vector3 for all the [f32; 3] ([b84b193](https://github.com/AryanpurTech/BlueEngine/commit/b84b1934c426fb63348aec368b4e53003945ad3a))
+- Finalized vector.rs ([da69d1e](https://github.com/AryanpurTech/BlueEngine/commit/da69d1e2aee9abe251a084d3d22e8b7dc52f245a))
+- Added Indexing & Neg to Vector3 & Vector2 ([c648c14](https://github.com/AryanpurTech/BlueEngine/commit/c648c14637fb10babe6bf89d7409b9e22dfcac22))
+- Added Position3D for all of the position: [f32; 3] ([eff4e4e](https://github.com/AryanpurTech/BlueEngine/commit/eff4e4e6a31f7989034d34adb63972f924c7dfd6))
+
+### Miscellaneous Tasks
+
+- Remove Cargo.lock ([820c960](https://github.com/AryanpurTech/BlueEngine/commit/820c960b01ec74ed1329bd2e79bf811e4f930065))
+- Changelog from the release workflow ([ec69cb0](https://github.com/AryanpurTech/BlueEngine/commit/ec69cb0f208a1c9307cd0f1ae82438c913197099))
+
+### Refactor
+
+- Replaced every [f32; 2] with Vector2 ([4dbf03c](https://github.com/AryanpurTech/BlueEngine/commit/4dbf03cb112605ced62afbc167fd4edcdbab6ab6))
+- Position3D to Vector3 ([6081dc2](https://github.com/AryanpurTech/BlueEngine/commit/6081dc2783ddf96e5d91adc7201b7120c1f7045b))
+
 ## [0.6.0] - 2024-12-30
 
 ### Features
