@@ -9,8 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
@@ -18,18 +20,23 @@ jobs:
         toolchain: stable
         override: true
 
-    - name: Install git-cliff
-      run: cargo install git-cliff
-
-    - name: Generate changelog
-      run: git-cliff --config cliff.toml --unreleased --output CHANGELOG.md --tag ${{ github.ref_name }}
-
-    - name: Update release notes
+    - name: Generate a changelog
+      uses: orhun/git-cliff-action@v4
+      id: git-cliff
+      with:
+        config: cliff.toml
+        args: -vv --latest --strip header
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        CHANGELOG=$(cat CHANGELOG.md)
-        gh release edit ${{ github.ref_name }} --notes "$CHANGELOG"
+        OUTPUT: CHANGES.md
+        GITHUB_REPO: ${{ github.repository }}
+
+    # use release body in the same job
+    - name: Upload the binary releases
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref }}
+        body: ${{ steps.git-cliff.outputs.content }}
 
     - name: Publish crates in the crates folder
       env:
