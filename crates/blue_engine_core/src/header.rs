@@ -13,6 +13,8 @@ pub use uniform_buffer::*;
 
 use downcast::{downcast, Any};
 
+use crate::position::Position3D;
+
 /// The uint type used for indices and more
 #[cfg(feature = "u16")]
 pub type UnsignedIntType = u16;
@@ -59,7 +61,7 @@ macro_rules! impl_deref_field {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     /// Contains position data for the vertex in 3D space
-    pub position: [f32; 3],
+    pub position: Position3D,
     /// Contains uv position data for the vertex
     pub uv: [f32; 2],
     /// Contains the normal face of the vertex
@@ -115,7 +117,7 @@ pub struct Object {
     /// Dictates the size of your object in relation to the world
     pub size: glm::Vec3,
     /// Dictates the position of your object in pixels
-    pub position: glm::Vec3,
+    pub position: Position3D,
     /// Dictates the rotation of your object
     pub rotation: glm::Vec3,
     // flags the object to be updated until next frame
@@ -434,11 +436,11 @@ pub enum Projection {
 #[derive(Debug)]
 pub struct Camera {
     /// The position of the camera in 3D space
-    pub position: nalgebra_glm::Vec3,
+    pub position: Position3D,
     /// The target at which the camera should be looking
-    pub target: nalgebra_glm::Vec3,
+    pub target: Position3D,
     /// The up vector of the camera. This defines the elevation of the camera
-    pub up: nalgebra_glm::Vec3,
+    pub up: Position3D,
     /// The resolution of the camera view
     pub resolution: (f32, f32),
     /// The projection of the camera
@@ -558,7 +560,7 @@ pub struct InstanceRaw {
 #[derive(Debug, Clone, Copy)]
 pub struct Instance {
     /// The position of the instance
-    pub position: nalgebra_glm::Vec3,
+    pub position: Position3D,
     /// The rotation of the instance
     pub rotation: nalgebra_glm::Vec3,
     /// The scale of the instance

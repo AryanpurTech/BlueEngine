@@ -8,6 +8,7 @@ use crate::header::{
     glm, pixel_to_cartesian, uniform_type, Instance, InstanceRaw, Object, ObjectSettings, Pipeline,
     PipelineData, Renderer, RotateAxis, TextureData, Textures, Vertex,
 };
+use crate::position::Position3D;
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
 use crate::{ObjectStorage, RotateAmount, StringBuffer, UnsignedIntType};
@@ -60,7 +61,7 @@ impl Renderer {
         )?;
 
         let instance = Instance::new(
-            [0f32, 0f32, 0f32].into(),
+            [0f32, 0f32, 0f32],
             [0f32, 0f32, 0f32].into(),
             [1f32, 1f32, 1f32].into(),
         );
@@ -81,7 +82,7 @@ impl Renderer {
             instance_buffer,
             uniform_layout: uniform.1,
             size: glm::vec3(1f32, 1f32, 1f32),
-            position: glm::vec3(0f32, 0f32, 0f32),
+            position: Position3D::default(),
             rotation: glm::vec3(0f32, 0f32, 0f32),
             changed: false,
             position_matrix: DEFAULT_MATRIX_4.to_im(),
@@ -319,13 +320,11 @@ impl Object {
     }
 
     /// Moves the object by the amount you specify in the axis you specify
-    pub fn set_translation(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.position.x -= x;
-        self.position.y -= y;
-        self.position.z -= z;
+    pub fn set_translation(&mut self, new_pos: impl Into<Position3D>) -> &mut Self {
+        self.position -= new_pos.into();
 
         let mut position_matrix = self.position_matrix;
-        position_matrix = nalgebra_glm::translate(&position_matrix, &nalgebra_glm::vec3(x, y, z));
+        position_matrix = nalgebra_glm::translate(&position_matrix, &self.position.into());
         self.position_matrix = position_matrix;
 
         self.inverse_matrices();
@@ -334,16 +333,13 @@ impl Object {
     }
 
     /// Sets the position of the object in 3D space relative to the window
-    pub fn set_position(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.set_translation(
-            (self.position.x - x) * -1f32,
-            (self.position.y - y) * -1f32,
-            (self.position.z - z) * -1f32,
-        );
+    pub fn set_position(&mut self, new_pos: impl Into<Position3D>) -> &mut Self {
+        let new_pos = new_pos.into();
+        self.set_translation((self.position - new_pos) * -1f32);
 
-        self.position.x = x;
-        self.position.y = y;
-        self.position.z = z;
+        self.position.x = new_pos.x;
+        self.position.y = new_pos.y;
+        self.position.z = new_pos.z;
         self
     }
 
@@ -628,9 +624,9 @@ impl ShaderBuilder {
 
 impl Instance {
     /// Creates a new instance
-    pub fn new(position: glm::Vec3, rotation: glm::Vec3, scale: glm::Vec3) -> Self {
+    pub fn new(position: impl Into<Position3D>, rotation: glm::Vec3, scale: glm::Vec3) -> Self {
         Self {
-            position,
+            position: position.into(),
             rotation,
             scale,
         }
@@ -638,7 +634,7 @@ impl Instance {
 
     /// Gathers all information and builds a Raw Instance to be sent to GPU
     pub fn to_raw(&self) -> InstanceRaw {
-        let position_matrix = glm::translate(&DEFAULT_MATRIX_4.to_im(), &self.position);
+        let position_matrix = glm::translate(&DEFAULT_MATRIX_4.to_im(), &self.position.into());
         let rotation_matrix = nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation);
         let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale);
         InstanceRaw {
@@ -647,8 +643,8 @@ impl Instance {
     }
 
     /// Sets the position
-    pub fn set_position(&mut self, position: glm::Vec3) {
-        self.position = position;
+    pub fn set_position(&mut self, position: impl Into<Position3D>) {
+        self.position = position.into();
     }
 
     /// Sets the rotation
@@ -665,7 +661,7 @@ impl Instance {
 impl Default for Instance {
     fn default() -> Self {
         Self {
-            position: glm::Vec3::new(0.0, 0.0, 0.0),
+            position: Position3D::default(),
             rotation: glm::Vec3::new(0.0, 0.0, 0.0),
             scale: glm::Vec3::new(1.0, 1.0, 1.0),
         }

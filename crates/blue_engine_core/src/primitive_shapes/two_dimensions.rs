@@ -20,17 +20,17 @@ pub fn triangle(
         name.clone(),
         vec![
             Vertex {
-                position: [0.0, 1.0, 0.0],
+                position: [0.0, 1.0, 0.0].into(),
                 uv: [0.5, 0.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-1.0, -1.0, 0.0],
+                position: [-1.0, -1.0, 0.0].into(),
                 uv: [0.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [1.0, -1.0, 0.0],
+                position: [1.0, -1.0, 0.0].into(),
                 uv: [1.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
@@ -52,22 +52,22 @@ pub fn square(
         name.clone(),
         vec![
             Vertex {
-                position: [1.0, 1.0, 0.0],
+                position: [1.0, 1.0, 0.0].into(),
                 uv: [1.0, 0.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [1.0, -1.0, 0.0],
+                position: [1.0, -1.0, 0.0].into(),
                 uv: [1.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-1.0, -1.0, 0.0],
+                position: [-1.0, -1.0, 0.0].into(),
                 uv: [0.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-1.0, 1.0, 0.0],
+                position: [-1.0, 1.0, 0.0].into(),
                 uv: [0.0, 0.0],
                 normal: [0.0, 0.0, 0.0],
             },
@@ -91,22 +91,22 @@ pub fn rectangle(
         name.clone(),
         vec![
             Vertex {
-                position: [width / 2.0, height / 2.0, 0.0],
+                position: [width / 2.0, height / 2.0, 0.0].into(),
                 uv: [1.0, 0.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [width / 2.0, -height / 2.0, 0.0],
+                position: [width / 2.0, -height / 2.0, 0.0].into(),
                 uv: [1.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-width / 2.0, -height / 2.0, 0.0],
+                position: [-width / 2.0, -height / 2.0, 0.0].into(),
                 uv: [0.0, 1.0],
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-width / 2.0, height / 2.0, 0.0],
+                position: [-width / 2.0, height / 2.0, 0.0].into(),
                 uv: [0.0, 0.0],
                 normal: [0.0, 0.0, 0.0],
             },
