@@ -23,3 +23,4 @@ u32 = ["blue_engine_core/u32"]
 
 [dependencies]
 blue_engine_core = { version = "0.6.3" }
+# blue_engine_core = { path = "../blue_engine_core" }

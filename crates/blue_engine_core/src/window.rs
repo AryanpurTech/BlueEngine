@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    header::{Engine, Renderer, WindowDescriptor},
     CameraContainer, ObjectStorage, Window,
+    header::{Engine, Renderer, WindowDescriptor},
 };
 
 use winit::{
@@ -95,15 +95,15 @@ impl Engine {
     pub fn update_loop(
         &mut self,
         update_function: impl 'static
-            + FnMut(
-                // Core
-                &mut Renderer,
-                &mut Window,
-                &mut ObjectStorage,
-                &crate::utils::winit_input_helper::WinitInputHelper,
-                &mut CameraContainer,
-                &mut crate::SignalStorage,
-            ),
+        + FnMut(
+            // Core
+            &mut Renderer,
+            &mut Window,
+            &mut ObjectStorage,
+            &crate::utils::winit_input_helper::WinitInputHelper,
+            &mut CameraContainer,
+            &mut crate::SignalStorage,
+        ),
     ) -> Result<(), crate::error::Error> {
         self.update_loop = Some(Box::new(update_function));
 
@@ -149,11 +149,11 @@ impl Engine {
 impl ApplicationHandler for Engine {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         let Self {
-            ref mut window,
-            ref mut renderer,
-            ref mut objects,
-            ref mut signals,
-            ref mut camera,
+            window,
+            renderer,
+            objects,
+            signals,
+            camera,
             ..
         } = self;
 
@@ -225,10 +225,10 @@ impl ApplicationHandler for Engine {
         event: DeviceEvent,
     ) {
         let Self {
-            ref mut camera,
-            ref mut renderer,
-            ref mut window,
-            ref mut objects,
+            camera,
+            renderer,
+            window,
+            objects,
             input_events,
             signals,
             ..
@@ -247,10 +247,10 @@ impl ApplicationHandler for Engine {
         event: WindowEvent,
     ) {
         let Self {
-            ref mut camera,
-            ref mut renderer,
-            ref mut window,
-            ref mut objects,
+            camera,
+            renderer,
+            window,
+            objects,
             input_events,
             signals,
             update_loop,

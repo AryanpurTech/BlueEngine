@@ -7,6 +7,8 @@
 #![warn(missing_docs)]
 #![allow(clippy::needless_doctest_main)]
 
+//!
+
 pub(crate) mod definition;
 /// interal error definitions of the engine
 pub mod error;
