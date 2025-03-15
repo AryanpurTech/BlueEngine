@@ -1,8 +1,8 @@
 [package]
 name = "blue_engine_dynamic"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
 license = "Apache-2.0"
 
@@ -22,4 +22,4 @@ u16 = ["blue_engine_core/u16"]
 u32 = ["blue_engine_core/u32"]
 
 [dependencies]
-blue_engine_core = { version = "0.6.1" }
+blue_engine_core = { version = "0.6.2" }

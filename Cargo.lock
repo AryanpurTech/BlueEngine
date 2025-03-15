@@ -304,34 +304,17 @@ dependencies = [
 
 [[package]]
 name = "blue_engine"
-version = "0.6.0"
+version = "0.6.2"
 dependencies = [
- "blue_engine_core 0.6.1",
+ "blue_engine_core",
  "blue_engine_dynamic",
 ]
 
 [[package]]
 name = "blue_engine_core"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "065e9318c0c5774c7d56ed39ce7bb2f76971b26269d2affe2033d90d4a8ab136"
-dependencies = [
- "android_logger",
- "bytemuck",
- "downcast",
- "env_logger",
- "image",
- "log",
- "nalgebra-glm",
- "pollster",
- "thiserror 2.0.9",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "blue_engine_core"
-version = "0.6.1"
+checksum = "7e3196358d589e0daaf0c1725cc83511ff7fe3fbf31f52405ec3104e5671ff20"
 dependencies = [
  "android_logger",
  "bytemuck",
@@ -348,11 +331,11 @@ dependencies = [
 
 [[package]]
 name = "blue_engine_dynamic"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d0cd9abed2ba61755516749271862760059a264b6011077afb3dff5d9857583"
+checksum = "5900856b30bcb0ed9c9cd561b1d57479b4a6788c539ed28cec4ee607da3abc3e"
 dependencies = [
- "blue_engine_core 0.6.0",
+ "blue_engine_core",
 ]
 
 [[package]]

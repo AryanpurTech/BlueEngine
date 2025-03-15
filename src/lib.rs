@@ -1,3 +1,5 @@
+#![doc = include_str!("../crates/docs/main.md")]
+
 #[cfg(not(feature = "dynamic_link"))]
 pub use blue_engine_core::*;
 
