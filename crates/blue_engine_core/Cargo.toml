@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_core"
-version = "0.6.4"
+version = "0.6.5"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
