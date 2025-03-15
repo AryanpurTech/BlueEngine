@@ -6,5 +6,5 @@ update-changelog release_tag:
 publish release_tag:
     @cd crates/blue_engine_core && cargo publish
     @cd crates/blue_engine_dynamic && cargo publish
-    @cargo publish
+    @cargo publish --allow-dirty
     @just update-changelog {{release_tag}}

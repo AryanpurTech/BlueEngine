@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.5] - 2025-03-15
+
+### Miscellaneous Tasks
+
+- Updated versions of all parts ([9a9a2b0](https://github.com/AryanpurTech/BlueEngine/commit/9a9a2b09e8dcd609b76ac84ff6f7fca203b04d60))
+- Updated wgpu to the latest version ([5f45266](https://github.com/AryanpurTech/BlueEngine/commit/5f4526608e145e7a09750403e76a219652506372))
+- Cleaned up github actions ([fbf01a9](https://github.com/AryanpurTech/BlueEngine/commit/fbf01a9bb0bd85090f5e13e7c20a0f6f54c2efa7))
+
 ## [0.6.3] - 2025-03-15
 
 ### Bug Fixes
