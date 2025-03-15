@@ -1,8 +1,10 @@
 # This file uses Just https://github.com/casey/just | This file also assumes you use a shell
 
-range := "HEAD..HEAD"
-release_tag := "1.0.0"
-
-# use this syntax: just release_tag="0.0.0" update-changelog
-update-changelog:
+update-changelog release_tag:
     git cliff --unreleased --tag {{release_tag}} --prepend CHANGELOG.md
+
+publish release_tag:
+    @cd crates/blue_engine_core && cargo publish
+    @cd crates/blue_engine_dynamic && cargo publish
+    @cargo publish
+    @just update-changelog {{release_tag}}

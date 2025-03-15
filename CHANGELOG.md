@@ -121,7 +121,7 @@ All notable changes to this project will be documented in this file.
 - Added inline impl for ObjectStorage functions for cheaper trait usage ([b0d48bb](https://github.com/AryanpurTech/BlueEngine/commit/b0d48bb8fc47b83dac261352d34c5f1be88024d4))
 - Added justfiles instead of clog ([050ed51](https://github.com/AryanpurTech/BlueEngine/commit/050ed51a8fa8e4d0c8a089d76061dec3f30d9ac3))
 - Added backends option to the window descriptor ([9e86772](https://github.com/AryanpurTech/BlueEngine/commit/9e867729325b47e69d8583cac0539a21092f6620))
-- _and_return functions now return buffers and bindgroups - Objects can now be hidden from rendering ([e68fbd5](https://github.com/AryanpurTech/BlueEngine/commit/e68fbd5a3e214a3128e864c15a91b4cff253e027))
+- \_and_return functions now return buffers and bindgroups - Objects can now be hidden from rendering ([e68fbd5](https://github.com/AryanpurTech/BlueEngine/commit/e68fbd5a3e214a3128e864c15a91b4cff253e027))
 
 ### Miscellaneous Tasks
 

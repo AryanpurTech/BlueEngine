@@ -5,14 +5,14 @@
 */
 
 use image::GenericImageView;
-use wgpu::{util::DeviceExt, BindGroupLayout, Sampler, Texture, TextureView};
+use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
+    InstanceRaw, UnsignedIntType,
     header::{
         Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
         Textures, UniformBuffers, Vertex, VertexBuffers,
     },
-    InstanceRaw, UnsignedIntType,
 };
 
 impl crate::header::Renderer {
@@ -156,14 +156,14 @@ impl crate::header::Renderer {
         });
 
         self.queue.write_texture(
-            wgpu::ImageCopyTexture {
+            wgpu::TexelCopyTextureInfo {
                 texture: &texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
                 aspect: wgpu::TextureAspect::All,
             },
             &rgba,
-            wgpu::ImageDataLayout {
+            wgpu::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(4 * dimensions.0),
                 rows_per_image: Some(dimensions.1),

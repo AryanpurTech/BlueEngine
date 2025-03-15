@@ -7,9 +7,9 @@
 // ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
 
 use crate::{
-    header::{uniform_type, Renderer, ShaderSettings, TextureData},
-    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
     CameraContainer, ObjectStorage, PipelineData,
+    header::{Renderer, ShaderSettings, TextureData, uniform_type},
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
 
 impl Renderer {
@@ -23,7 +23,7 @@ impl Renderer {
         settings: crate::WindowDescriptor,
     ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });

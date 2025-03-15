@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_core"
-version = "0.6.3"
+version = "0.6.4"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
@@ -24,7 +24,7 @@ u32 = []
 image = { version = "0.25.2" }
 pollster = "0.4"
 winit = { version = "0.30.5", features = ["rwh_06"] }
-wgpu = { version = "23.0.1" }
+wgpu = { version = "24.0.1" }
 bytemuck = { version = "1.16", features = ["derive"] }
 downcast = "0.11"
 nalgebra-glm = "0.19"
@@ -32,8 +32,8 @@ nalgebra-glm = "0.19"
 env_logger = { version = "0.11", optional = true }
 # android
 log = { version = "0.4", optional = true }
-android_logger = { version = "0.14", optional = true }
+android_logger = { version = "0.15.0", optional = true }
 thiserror = "2.0.9"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "23.0.1", features = ["webgl"] }
+wgpu = { version = "24.0.1", features = ["webgl"] }
