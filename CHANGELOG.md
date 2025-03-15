@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3] - 2025-03-15
+
+### Bug Fixes
+
+- New edition ref issues ([57a0238](https://github.com/AryanpurTech/BlueEngine/commit/57a023854f3ebaa93c157d81ed6fd371e2c9c418))
+- Docs and upgraded to 2024 edition ([b561ccc](https://github.com/AryanpurTech/BlueEngine/commit/b561ccc790d90218a238cac52523b2a6dc58b469))
+
+### Miscellaneous Tasks
+
+- Updated versions ([7265c25](https://github.com/AryanpurTech/BlueEngine/commit/7265c257358b9d23891fde2ad38fd6cec2adb341))
+
 ## [0.6.1] - 2025-01-11
 
 ### Features
