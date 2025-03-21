@@ -251,15 +251,35 @@ impl Object {
         self
     }
 
+    fn rotation_single_axis(angle: f32, axis_from: usize, axis_into: usize) -> nalgebra_glm::Mat4 {
+        //  angle.cos(), -angle.sin()
+        //  angle.sin(), angle.cos()
+        let mut result = nalgebra_glm::Mat4::identity();
+    
+        result[(axis_from, axis_from)] = angle.cos() as f32;
+        result[(axis_from, axis_into)] = -angle.sin() as f32;
+        result[(axis_into, axis_from)] = angle.sin() as f32;
+        result[(axis_into, axis_into)] = angle.cos() as f32;
+    
+        result
+    }
+    fn rotation_full(euler_angles: nalgebra_glm::Vec3) -> nalgebra_glm::Mat4 {
+        const X: usize = 0;
+        const Y: usize = 1;
+        const Z: usize = 2;
+    
+        Self::rotation_single_axis(euler_angles[2], X, Y) * // Rotation around Z (rotation of X into Y)
+        Self::rotation_single_axis(euler_angles[1], Z, X) * // Rotation around Y (rotation of Z into X)
+        Self::rotation_single_axis(euler_angles[0], Y, Z)   // Rotation around X (rotation of Y into Z)
+    }
+
     /// Sets the rotation of the object in the axis you specify
     pub fn set_rotation(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
-        let mut rotation_matrix = self.rotation_matrix;
-
         let amount_radians = match amount {
             RotateAmount::Radians(amount) => amount,
             RotateAmount::Degrees(amount) => amount.to_radians(),
         };
-        let axis = match axis {
+        match axis {
             RotateAxis::X => {
                 self.rotation.x = amount_radians;
                 Vector3::x_axis()
@@ -274,8 +294,7 @@ impl Object {
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis.into());
-        self.rotation_matrix = rotation_matrix;
+        self.rotation_matrix = Self::rotation_full(self.rotation.into());
         self.inverse_matrices();
 
         self.changed = true;
@@ -329,12 +348,32 @@ impl Object {
     /// Sets the position of the object in 3D space relative to the window
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
-        self.set_translation((self.position - new_pos) * -1f32);
-
+        
         self.position.x = new_pos.x;
         self.position.y = new_pos.y;
         self.position.z = new_pos.z;
+        
+        // self.set_translation((self.position - new_pos) * -1f32);
+        self.update_position_matrix();
+        self.inverse_matrices();
+        self.changed = true;
+
         self
+    }
+
+    fn update_position_matrix(&mut self) {
+        // If there was actual `nalgebra`, it could be just:
+        // nalgebra::matrix![
+        //     1.0,  0.0,  0.0,  shift[0];
+        //     0.0,  1.0,  0.0,  shift[1];
+        //     0.0,  0.0,  1.0,  shift[2];
+        //     0.0,  0.0,  0.0,  1.0;
+        // ]
+
+        self.position_matrix = DEFAULT_MATRIX_4.to_im();
+        self.position_matrix[(0, 3)] = self.position[0];
+        self.position_matrix[(1, 3)] = self.position[1];
+        self.position_matrix[(2, 3)] = self.position[2];
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
