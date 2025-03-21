@@ -329,12 +329,32 @@ impl Object {
     /// Sets the position of the object in 3D space relative to the window
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
-        self.set_translation((self.position - new_pos) * -1f32);
-
+        
         self.position.x = new_pos.x;
         self.position.y = new_pos.y;
         self.position.z = new_pos.z;
+        
+        // self.set_translation((self.position - new_pos) * -1f32);
+        self.update_position_matrix();
+        self.inverse_matrices();
+        self.changed = true;
+
         self
+    }
+
+    fn update_position_matrix(&mut self) {
+        // If there was actual `nalgebra`, it could be just:
+        // nalgebra::matrix![
+        //     1.0,  0.0,  0.0,  shift[0];
+        //     0.0,  1.0,  0.0,  shift[1];
+        //     0.0,  0.0,  1.0,  shift[2];
+        //     0.0,  0.0,  0.0,  1.0;
+        // ]
+
+        self.position_matrix = DEFAULT_MATRIX_4.to_im();
+        self.position_matrix[(0, 3)] = self.position[0];
+        self.position_matrix[(1, 3)] = self.position[1];
+        self.position_matrix[(2, 3)] = self.position[2];
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
