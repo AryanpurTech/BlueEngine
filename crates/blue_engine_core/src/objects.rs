@@ -251,15 +251,35 @@ impl Object {
         self
     }
 
+    fn rotation_single_axis(angle: f32, axis_from: usize, axis_into: usize) -> nalgebra_glm::Mat4 {
+        //  angle.cos(), -angle.sin()
+        //  angle.sin(), angle.cos()
+        let mut result = nalgebra_glm::Mat4::identity();
+    
+        result[(axis_from, axis_from)] = angle.cos() as f32;
+        result[(axis_from, axis_into)] = -angle.sin() as f32;
+        result[(axis_into, axis_from)] = angle.sin() as f32;
+        result[(axis_into, axis_into)] = angle.cos() as f32;
+    
+        result
+    }
+    fn rotation_full(euler_angles: nalgebra_glm::Vec3) -> nalgebra_glm::Mat4 {
+        const X: usize = 0;
+        const Y: usize = 1;
+        const Z: usize = 2;
+    
+        Self::rotation_single_axis(euler_angles[2], X, Y) * // Rotation around Z (rotation of X into Y)
+        Self::rotation_single_axis(euler_angles[1], Z, X) * // Rotation around Y (rotation of Z into X)
+        Self::rotation_single_axis(euler_angles[0], Y, Z)   // Rotation around X (rotation of Y into Z)
+    }
+
     /// Sets the rotation of the object in the axis you specify
     pub fn set_rotation(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
-        let mut rotation_matrix = self.rotation_matrix;
-
         let amount_radians = match amount {
             RotateAmount::Radians(amount) => amount,
             RotateAmount::Degrees(amount) => amount.to_radians(),
         };
-        let axis = match axis {
+        match axis {
             RotateAxis::X => {
                 self.rotation.x = amount_radians;
                 Vector3::x_axis()
@@ -274,8 +294,7 @@ impl Object {
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis.into());
-        self.rotation_matrix = rotation_matrix;
+        self.rotation_matrix = Self::rotation_full(self.rotation.into());
         self.inverse_matrices();
 
         self.changed = true;
