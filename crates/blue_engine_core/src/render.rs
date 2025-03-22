@@ -1,9 +1,3 @@
-/*
- * Blue Engine by Elham Aryanpur
- *
- * The license is same as the one on the root.
-*/
-
 // ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
 
 use crate::{
@@ -14,10 +8,6 @@ use crate::{
 
 impl Renderer {
     /// Creates a new renderer.
-    ///
-    /// # Arguments
-    /// * `window` - The window to create the renderer for.
-    /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
@@ -176,8 +166,6 @@ impl Renderer {
     }
 
     /// Resize the window.
-    /// # Arguments
-    /// * `new_size` - The new window size.
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         // check if new_size is non-zero
         if new_size.width != 0 && new_size.height != 0 {
@@ -196,10 +184,6 @@ impl Renderer {
     }
 
     /// Render the scene. Returns the command encoder, the texture view, and the surface texture.
-    ///
-    /// # Arguments
-    /// * `objects` - The object storage.
-    /// * `camera` - The camera.
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
@@ -303,7 +287,7 @@ impl Renderer {
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
                         vertex_buffer.index_buffer.slice(..),
-                        #[cfg(feature = "u16")]
+                        #[cfg(not(feature = "u32"))]
                         wgpu::IndexFormat::Uint16,
                         #[cfg(feature = "u32")]
                         wgpu::IndexFormat::Uint32,
@@ -331,10 +315,6 @@ impl Renderer {
     }
 
     /// Render the scene.
-    ///
-    /// # Arguments
-    /// * `encoder` - The command encoder.
-    /// * `frame` - The surface texture.
     pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));

@@ -1,8 +1,8 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::{
-    header::{Vector2, Vector3},
     RotateAmount, RotateAxis,
+    header::{Vector2, Vector3},
 };
 use bytemuck::Pod;
 
@@ -97,9 +97,12 @@ impl Vector3 {
     }
     /// Returns the cross product of this vector and ``with``.
     ///
-    /// This returns a vector perpendicular to both ``self`` and ``with``, which would be the normal vector of the plane defined by the two vectors.
-    /// As there are two such vectors, in opposite directions, this method returns the vector defined by a right-handed coordinate system.
-    /// If the two vectors are parallel this returns an empty vector, making it useful for testing if two vectors are parallel.
+    /// This returns a vector perpendicular to both ``self`` and ``with``, which
+    /// would be the normal vector of the plane defined by the two vectors.
+    /// As there are two such vectors, in opposite directions, this method
+    /// returns the vector defined by a right-handed coordinate system.
+    /// If the two vectors are parallel this returns an empty vector, making
+    /// it useful for testing if two vectors are parallel.
     pub const fn cross(&self, with: Self) -> Self {
         Self {
             x: self.y * with.z - self.z * with.y,
@@ -107,13 +110,15 @@ impl Vector3 {
             z: self.x * with.y - self.y * with.x,
         }
     }
-    /// Returns the normalized vector pointing from this vector to ``to``. This is equivalent to using ``(b - a).normalized()``.
+    /// Returns the normalized vector pointing from this vector to ``to``. This
+    /// is equivalent to using ``(b - a).normalized()``.
     pub fn direction_to(&self, to: Self) -> Self {
         (to - *self).normalize()
     }
     /// Returns the squared distance between this vector and ``to``.
     ///
-    /// This method runs faster than [``Vector3::distance_to``], so prefer it if you need to compare vectors or need the squared distance for some formula.
+    /// This method runs faster than [``Vector3::distance_to``], so prefer it if
+    /// you need to compare vectors or need the squared distance for some formula.
     pub fn distance_squared_to(&self, to: Self) -> f32 {
         (*self - to).length_squared()
     }
@@ -121,11 +126,16 @@ impl Vector3 {
     pub fn distance_to(&self, to: Self) -> f32 {
         (*self - to).length()
     }
-    /// Returns the dot product of this vector and ``with``. This can be used to compare the angle between two vectors. For example, this can be used to determine whether an enemy is facing the player.
+    /// Returns the dot product of this vector and ``with``. This can be used to
+    /// compare the angle between two vectors. For example, this can be used to
+    /// determine whether an enemy is facing the player.
     ///
-    /// The dot product will be ``0`` for a right angle (90 degrees), greater than 0 for angles narrower than 90 degrees and lower than 0 for angles wider than 90 degrees.
+    /// The dot product will be ``0`` for a right angle (90 degrees), greater than
+    /// 0 for angles narrower than 90 degrees and lower than 0 for angles wider than 90 degrees.
     ///
-    /// When using unit (normalized) vectors, the result will always be between ``-1.0`` (180 degree angle) when the vectors are facing opposite directions, and ``1.0`` (0 degree angle) when the vectors are aligned.
+    /// When using unit (normalized) vectors, the result will always be between
+    /// ``-1.0`` (180 degree angle) when the vectors are facing opposite directions,
+    /// and ``1.0`` (0 degree angle) when the vectors are aligned.
     ///
     ///> Note: ``a.dot(b)`` is equivalent to ``b.dot(a)``.
     pub fn dot(&self, with: Self) -> f32 {
@@ -165,7 +175,8 @@ impl Vector3 {
     }
     /// Returns the squared length (squared magnitude) of this vector.
     ///
-    /// This method runs faster than [`Vector3::length`], so prefer it if you need to compare vectors or need the squared distance for some formula.
+    /// This method runs faster than [`Vector3::length`], so prefer it if you
+    /// need to compare vectors or need the squared distance for some formula.
     pub const fn length_squared(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -252,7 +263,8 @@ impl Vector3 {
             z: self.z / length,
         }
     }
-    /// Returns a new vector with all components rounded to the nearest integer, with halfway cases rounded away from zero.
+    /// Returns a new vector with all components rounded to the nearest
+    /// integer, with halfway cases rounded away from zero.
     pub fn round(&self) -> Self {
         Self {
             x: self.x.round(),

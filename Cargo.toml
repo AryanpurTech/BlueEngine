@@ -15,7 +15,7 @@ exclude = ["/examples", "/resources"]
 name = "blue_engine"
 
 [features]
-default = ["debug", "u16", "dep:blue_engine_core"]
+default = ["debug", "dep:blue_engine_core"]
 # Use the default engine
 dynamic_link = ["dep:blue_engine_dynamic"]
 
@@ -29,14 +29,12 @@ android_game_activity = [
     "blue_engine_core?/android_game_activity",
     "blue_engine_dynamic?/android_game_activity",
 ]
-# using u16 for indices and others
-u16 = ["blue_engine_core?/u16", "blue_engine_dynamic?/u16"]
 # using u32 for indices and others
 u32 = ["blue_engine_core?/u32", "blue_engine_dynamic?/u32"]
 
 [dependencies]
-blue_engine_core = { version = "0.6.5", optional = true }
-# blue_engine_core = { path = "crates/blue_engine_core", optional = true }
+# blue_engine_core = { version = "0.6.5", optional = true }
+blue_engine_core = { path = "crates/blue_engine_core", optional = true }
 
 # Wasm does not support dynamic linking.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

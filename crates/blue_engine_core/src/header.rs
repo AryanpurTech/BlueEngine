@@ -1,9 +1,3 @@
-/*
- * Blue Engine by Elham Aryanpur
- *
- * The license is Apache-2.0
-*/
-
 /// re-exports from dependencies that are useful
 pub mod imports;
 /// few commonly used uniform buffer structures
@@ -11,10 +5,10 @@ pub mod uniform_buffer;
 pub use imports::*;
 pub use uniform_buffer::*;
 
-use downcast::{downcast, Any};
+use downcast::{Any, downcast};
 
 /// The uint type used for indices and more
-#[cfg(feature = "u16")]
+#[cfg(not(feature = "u32"))]
 pub type UnsignedIntType = u16;
 #[cfg(feature = "u32")]
 pub type UnsignedIntType = u32;
@@ -682,11 +676,7 @@ pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
     } else if result < max as f32 / 2.0 {
     }
 
-    if result > -1.0 {
-        result
-    } else {
-        -1.0
-    }
+    if result > -1.0 { result } else { -1.0 }
 }
 
 /// A unified way to handle strings
