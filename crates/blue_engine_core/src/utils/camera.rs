@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    header::{uniform_type::Matrix, Camera, Renderer, Vector3},
     CameraContainer, Projection,
+    prelude::{Camera, Renderer, Vector3, uniform_type::Matrix},
 };
 use winit::dpi::PhysicalSize;
 

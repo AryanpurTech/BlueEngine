@@ -5,7 +5,7 @@
 */
 
 use blue_engine::{
-    header::{Engine, ObjectSettings, ShaderSettings},
+    prelude::{Engine, ObjectSettings, ShaderSettings},
     primitive_shapes::square,
     Vector3,
 };

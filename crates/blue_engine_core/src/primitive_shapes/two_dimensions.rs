@@ -9,8 +9,8 @@
  */
 
 use crate::{
-    header::{ObjectSettings, Vertex},
     ObjectStorage, Renderer, StringBuffer, Vector2, Vector3,
+    prelude::{ObjectSettings, Vertex},
 };
 
 /// Creates a 2D triangle

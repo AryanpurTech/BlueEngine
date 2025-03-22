@@ -6,7 +6,7 @@
 
 use crate::{
     CameraContainer, ObjectStorage, Window,
-    header::{Engine, Renderer, WindowDescriptor},
+    prelude::{Engine, Renderer, WindowDescriptor},
 };
 
 use winit::{

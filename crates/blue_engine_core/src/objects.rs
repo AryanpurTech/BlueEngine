@@ -4,9 +4,9 @@
  * The license is same as the one on the root.
 */
 
-use crate::header::{
-    glm, pixel_to_cartesian, uniform_type, Instance, InstanceRaw, Object, ObjectSettings, Pipeline,
-    PipelineData, Renderer, RotateAxis, TextureData, Textures, Vertex,
+use crate::prelude::{
+    Instance, InstanceRaw, Object, ObjectSettings, Pipeline, PipelineData, Renderer, RotateAxis,
+    TextureData, Textures, Vertex, glm, pixel_to_cartesian, uniform_type,
 };
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
@@ -55,8 +55,8 @@ impl Renderer {
         let texture = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::header::TextureMode::Clamp,
-            //crate::header::TextureFormat::PNG
+            crate::prelude::TextureMode::Clamp,
+            //crate::prelude::TextureFormat::PNG
         )?;
 
         let instance = Instance::new([0f32, 0f32, 0f32], [0f32, 0f32, 0f32], [1f32, 1f32, 1f32]);
@@ -182,11 +182,7 @@ impl Object {
         let difference_in_width = if self.size.x != 0.0 && width != 0.0 {
             let a = pixel_to_cartesian(width, window_size.width);
             let b = pixel_to_cartesian(self.size.x, window_size.width);
-            if a != 0f32 && b != 0f32 {
-                a / b
-            } else {
-                b
-            }
+            if a != 0f32 && b != 0f32 { a / b } else { b }
         } else {
             0.0
         };
@@ -194,22 +190,14 @@ impl Object {
         let difference_in_height = if self.size.y != 0.0 && height != 0.0 {
             let a = pixel_to_cartesian(height, window_size.height);
             let b = pixel_to_cartesian(self.size.y, window_size.height);
-            if a != 0f32 && b != 0f32 {
-                a / b
-            } else {
-                b
-            }
+            if a != 0f32 && b != 0f32 { a / b } else { b }
         } else {
             0.0
         };
         let difference_in_depth = if self.size.z != 0.0 && depth != 0.0 {
             let a = pixel_to_cartesian(depth, window_size.width);
             let b = pixel_to_cartesian(self.size.z, window_size.width);
-            if a != 0f32 && b != 0f32 {
-                a / b
-            } else {
-                b
-            }
+            if a != 0f32 && b != 0f32 { a / b } else { b }
         } else {
             0.0
         };
@@ -255,22 +243,22 @@ impl Object {
         //  angle.cos(), -angle.sin()
         //  angle.sin(), angle.cos()
         let mut result = nalgebra_glm::Mat4::identity();
-    
+
         result[(axis_from, axis_from)] = angle.cos() as f32;
         result[(axis_from, axis_into)] = -angle.sin() as f32;
         result[(axis_into, axis_from)] = angle.sin() as f32;
         result[(axis_into, axis_into)] = angle.cos() as f32;
-    
+
         result
     }
     fn rotation_full(euler_angles: nalgebra_glm::Vec3) -> nalgebra_glm::Mat4 {
         const X: usize = 0;
         const Y: usize = 1;
         const Z: usize = 2;
-    
+
         Self::rotation_single_axis(euler_angles[2], X, Y) * // Rotation around Z (rotation of X into Y)
         Self::rotation_single_axis(euler_angles[1], Z, X) * // Rotation around Y (rotation of Z into X)
-        Self::rotation_single_axis(euler_angles[0], Y, Z)   // Rotation around X (rotation of Y into Z)
+        Self::rotation_single_axis(euler_angles[0], Y, Z) // Rotation around X (rotation of Y into Z)
     }
 
     /// Sets the rotation of the object in the axis you specify
@@ -348,11 +336,11 @@ impl Object {
     /// Sets the position of the object in 3D space relative to the window
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
-        
+
         self.position.x = new_pos.x;
         self.position.y = new_pos.y;
         self.position.z = new_pos.z;
-        
+
         // self.set_translation((self.position - new_pos) * -1f32);
         self.update_position_matrix();
         self.inverse_matrices();

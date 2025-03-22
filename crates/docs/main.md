@@ -14,7 +14,7 @@ A basic program in Blue Engine is as follow:
 
 ```rust
 use blue_engine::{
-    header::{ Engine, ObjectSettings },
+    prelude::{ Engine, ObjectSettings },
     primitive_shapes::triangle
 };
 

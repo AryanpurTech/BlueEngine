@@ -9,13 +9,13 @@ use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
     InstanceRaw, UnsignedIntType,
-    header::{
+    prelude::{
         Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
         Textures, UniformBuffers, Vertex, VertexBuffers,
     },
 };
 
-impl crate::header::Renderer {
+impl crate::prelude::Renderer {
     /// Creates a new render pipeline. Could be thought of as like materials in game engines.
     pub fn build_pipeline(
         &mut self,

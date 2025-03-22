@@ -12,10 +12,10 @@
 pub(crate) mod definition;
 /// interal error definitions of the engine
 pub mod error;
-/// contains all the declarations such as structs, exports, enums, ...
-pub mod header;
 /// contains the definition for Object type, which is a type that make it easier to manage data for rendering.
 pub mod objects;
+/// contains all the declarations such as structs, exports, enums, ...
+pub mod prelude;
 /// contains definition for some 2D and 3D shapes. They are basic shapes and
 /// can be used as examples of how to create your own content.
 pub mod primitive_shapes;
@@ -29,4 +29,4 @@ pub mod vector;
 /// contains definition for creation of window and instance creation.
 pub mod window;
 #[doc(inline)]
-pub use crate::header::*;
+pub use crate::prelude::*;

@@ -2,7 +2,7 @@
 
 use crate::{
     CameraContainer, ObjectStorage, PipelineData,
-    header::{Renderer, ShaderSettings, TextureData, uniform_type},
+    prelude::{Renderer, ShaderSettings, TextureData, uniform_type},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
 
@@ -138,8 +138,8 @@ impl Renderer {
         if let Ok(default_texture) = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::header::TextureMode::Clamp,
-            //crate::header::TextureFormat::PNG
+            crate::prelude::TextureMode::Clamp,
+            //crate::prelude::TextureFormat::PNG
         ) {
             let default_uniform = self.build_uniform_buffer(&vec![
                 self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
@@ -328,61 +328,34 @@ impl Renderer {
 }
 
 // =========================== Extract Pipeline Data ===========================
-// I couldn't make them into one function, so here they are, four of them
-
-/// Get the pipeline vertex buffer.
-fn get_pipeline_vertex_buffer<'a>(
-    data: &'a PipelineData<crate::VertexBuffers>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::VertexBuffers> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_vertex_buffer(&data.pipeline.vertex_buffer, objects)
-            } else {
-                None
+macro_rules! gen_pipeline {
+    ($function_name:ident, $buffer_type:ty, $buffer_field:ident) => {
+        fn $function_name<'a>(
+            data: &'a PipelineData<$buffer_type>,
+            objects: &'a ObjectStorage,
+        ) -> Option<&'a $buffer_type> {
+            match data {
+                PipelineData::Copy(object_id) => {
+                    let data = objects.get(object_id.as_str());
+                    if let Some(data) = data {
+                        $function_name(&data.pipeline.$buffer_field, objects)
+                    } else {
+                        None
+                    }
+                }
+                PipelineData::Data(data) => Some(data),
             }
         }
-        PipelineData::Data(data) => Some(data),
-    }
+    };
 }
 
-/// Get the pipeline shader.
-fn get_pipeline_shader<'a>(
-    data: &'a PipelineData<crate::Shaders>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::Shaders> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_shader(&data.pipeline.shader, objects)
-            } else {
-                None
-            }
-        }
-        PipelineData::Data(data) => Some(data),
-    }
-}
-
-/// Get the pipeline texture.
-fn get_pipeline_texture<'a>(
-    data: &'a PipelineData<crate::Textures>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::Textures> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_texture(&data.pipeline.texture, objects)
-            } else {
-                None
-            }
-        }
-        PipelineData::Data(data) => Some(data),
-    }
-}
+gen_pipeline!(
+    get_pipeline_vertex_buffer,
+    crate::VertexBuffers,
+    vertex_buffer
+);
+gen_pipeline!(get_pipeline_shader, crate::Shaders, shader);
+gen_pipeline!(get_pipeline_texture, crate::Textures, texture);
 
 /// Get the pipeline uniform_buffer.
 fn get_pipeline_uniform_buffer<'a>(

@@ -174,7 +174,7 @@ unsafe impl Sync for ObjectSettings {}
 ///
 /// To start using the Blue Engine, you can start by creating a new Engine like follows:
 /// ```
-/// use blue_engine::header::{Engine, WindowDescriptor};
+/// use blue_engine::prelude::{Engine, WindowDescriptor};
 ///
 /// fn main() {
 ///     let engine = Engine::new().expect("Couldn't create the engine");

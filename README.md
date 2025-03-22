@@ -15,7 +15,7 @@ Hello World:
 
 ```rust
 use blue_engine::{
-    header::{ Engine, ObjectSettings },
+    prelude::{ Engine, ObjectSettings },
     primitive_shapes::triangle
 };
 
@@ -33,12 +33,12 @@ fn main() {
 }
 ```
 
-* [WIP] [Guide](https://aryanpurtech.github.io/BlueEngineDocs/)
+- [WIP] [Guide](https://aryanpurtech.github.io/BlueEngineDocs/)
 
-* Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
+- Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
-* Check out the [utilities library](https://github.com/AryanpurTech/BlueEngineUtilities) for extra functionality with the engine
+- Check out the [utilities library](https://github.com/AryanpurTech/BlueEngineUtilities) for extra functionality with the engine
 
-*the credits to the image on top: NotPB*
+_the credits to the image on top: NotPB_
 
-*the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow.*
+_the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow._

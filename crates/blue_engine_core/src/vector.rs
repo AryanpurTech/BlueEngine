@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, 
 
 use crate::{
     RotateAmount, RotateAxis,
-    header::{Vector2, Vector3},
+    prelude::{Vector2, Vector3},
 };
 use bytemuck::Pod;
 

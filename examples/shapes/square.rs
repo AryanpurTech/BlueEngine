@@ -8,7 +8,7 @@
 
 use blue_engine::{
     StringBuffer, Vector2, Vector3,
-    header::{Engine, ObjectSettings, Vertex},
+    prelude::{Engine, ObjectSettings, Vertex},
 };
 
 pub fn square(name: impl StringBuffer, engine: &mut Engine) {

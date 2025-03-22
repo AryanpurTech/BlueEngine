@@ -39,8 +39,8 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 0.0];
 
 /// A default matrix 4x4 used in the engine
-pub const DEFAULT_MATRIX_4: crate::header::uniform_type::Matrix =
-    crate::header::uniform_type::Matrix {
+pub const DEFAULT_MATRIX_4: crate::prelude::uniform_type::Matrix =
+    crate::prelude::uniform_type::Matrix {
         data: [
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
