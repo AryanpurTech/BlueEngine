@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    CameraContainer, ObjectStorage, Window,
-    prelude::{Engine, Renderer, WindowDescriptor},
+    CameraContainer, ObjectStorage,
+    prelude::{Engine, Renderer},
 };
 
 use winit::{
@@ -15,6 +15,172 @@ use winit::{
     event_loop::EventLoop,
     window::WindowAttributes,
 };
+
+/// A wrapper for winit window to make it easier to use and more ergonomic.
+#[derive(Debug)]
+pub struct Window {
+    /// The winit window itself.
+    pub window: Option<std::sync::Arc<crate::winit::window::Window>>,
+    /// Default attributes of the window
+    pub default_attributes: winit::window::WindowAttributes,
+    /// Whether the engine should close.
+    pub should_close: bool,
+}
+crate::macros::impl_deref_field!(
+    Window,
+    Option<std::sync::Arc<crate::winit::window::Window>>,
+    window
+);
+
+/// Descriptor and settings for a window.
+#[derive(Debug, Clone)]
+pub struct WindowDescriptor {
+    /// The width of the window
+    pub width: u32,
+    /// The height of the window
+    pub height: u32,
+    /// The title of the window
+    pub title: &'static str,
+    /// Should the window contain the keys like minimize, maximize, or resize?
+    pub decorations: bool,
+    /// Should the window be resizable
+    pub resizable: bool,
+    /// Define how much power should the app ask for
+    pub power_preference: crate::PowerPreference,
+    /// The backend to use for the draw
+    pub backends: crate::Backends,
+    /// The features to be enabled on a backend
+    ///
+    /// read more at [wgpu::Features]
+    pub features: crate::wgpu::Features,
+    /// Controls how the events are processed
+    ///
+    /// read more at [winit::event_loop::ControlFlow]
+    pub control_flow: crate::winit::event_loop::ControlFlow,
+    /// The presentation mode of renderer for things like VSync
+    ///
+    /// read more at [wgpu::PresentMode]
+    pub present_mode: crate::wgpu::PresentMode,
+    /// Limits to be required based on the generation of the GPU and the API.
+    ///
+    /// read more at [wgpu::Limits]
+    pub limits: crate::wgpu::Limits,
+    /// The alpha mode which specifies how the alpha channel of
+    /// the textures should be handled during compositing.
+    pub alpha_mode: crate::wgpu::CompositeAlphaMode,
+    /// The desired frame latency.
+    ///
+    /// read more at [wgpu::SurfaceConfiguration::desired_maximum_frame_latency]
+    pub desired_maximum_frame_latency: u32,
+    /// How the memory should be utilized
+    ///
+    /// read more at [wgpu::MemoryHints]
+    pub memory_hints: crate::wgpu::MemoryHints,
+}
+impl std::default::Default for WindowDescriptor {
+    /// Will quickly create a window with default settings
+    fn default() -> Self {
+        let backends = crate::Backends::all();
+        Self {
+            width: 800,
+            height: 600,
+            title: "Blue Engine",
+            decorations: true,
+            resizable: true,
+            power_preference: crate::PowerPreference::LowPower,
+            backends,
+            features: if backends == wgpu::Backends::VULKAN {
+                wgpu::Features::POLYGON_MODE_LINE | wgpu::Features::POLYGON_MODE_POINT
+            } else if backends
+                .contains(wgpu::Backends::VULKAN | wgpu::Backends::METAL | wgpu::Backends::DX12)
+            {
+                wgpu::Features::POLYGON_MODE_LINE
+            } else {
+                wgpu::Features::empty()
+            },
+            control_flow: crate::winit::event_loop::ControlFlow::Poll,
+            present_mode: crate::wgpu::PresentMode::AutoNoVsync,
+            limits: crate::wgpu::Limits::default(),
+            alpha_mode: crate::wgpu::CompositeAlphaMode::Auto,
+            desired_maximum_frame_latency: 2,
+            memory_hints: crate::MemoryHints::Performance,
+        }
+    }
+}
+unsafe impl Send for WindowDescriptor {}
+unsafe impl Sync for WindowDescriptor {}
+
+/// These definitions are taken from wgpu API docs
+#[derive(Debug, Clone, Copy)]
+pub struct ShaderSettings {
+    // ===== PRIMITIVE ===== //
+    /// The primitive topology used to interpret vertices
+    pub topology: crate::ShaderPrimitive,
+    /// When drawing strip topologies with indices, this is the
+    /// required format for the index buffer. This has no effect
+    /// on non-indexed or non-strip draws.
+    pub strip_index_format: Option<crate::IndexFormat>,
+    /// The face to consider the front for the purpose of
+    /// culling and stencil operations.
+    pub front_face: crate::FrontFace,
+    /// The face culling mode
+    pub cull_mode: Option<crate::CullMode>,
+    /// Controls the way each polygon is rasterized. Can be
+    /// either `Fill` (default), `Line` or `Point`
+    ///
+    /// Setting this to something other than `Fill` requires
+    /// `NON_FILL_POLYGON_MODE` feature to be enabled
+    pub polygon_mode: crate::PolygonMode,
+    /// If set to true, the polygon depth is clamped to 0-1
+    /// range instead of being clipped.
+    ///
+    /// Enabling this requires the `DEPTH_CLAMPING` feature
+    /// to be enabled
+    pub clamp_depth: bool,
+    /// If set to true, the primitives are rendered with
+    /// conservative overestimation. I.e. any rastered
+    /// pixel touched by it is filled. Only valid for PolygonMode::Fill!
+    ///
+    /// Enabling this requires `CONSERVATIVE_RASTERIZATION`
+    /// features to be enabled.
+    pub conservative: bool,
+
+    // ===== Multisample ===== //
+    /// The number of samples calculated per pixel (for MSAA).
+    /// For non-multisampled textures, this should be `1`
+    pub count: u32,
+    /// Bitmask that restricts the samples of a pixel modified
+    /// by this pipeline. All samples can be enabled using the
+    /// value `!0`
+    pub mask: u64,
+    /// When enabled, produces another sample mask per pixel
+    /// based on the alpha output value, that is ANDead with the
+    /// sample_mask and the primitive coverage to restrict the
+    /// set of samples affected by a primitive.
+
+    /// The implicit mask produced for alpha of zero is guaranteed
+    /// to be zero, and for alpha of one is guaranteed to be all
+    /// 1-s.
+    pub alpha_to_coverage_enabled: bool,
+}
+impl Default for ShaderSettings {
+    fn default() -> Self {
+        Self {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: Some(wgpu::Face::Back),
+            polygon_mode: wgpu::PolygonMode::Fill,
+            clamp_depth: false,
+            conservative: false,
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: true,
+        }
+    }
+}
+unsafe impl Send for ShaderSettings {}
+unsafe impl Sync for ShaderSettings {}
 
 impl Engine {
     /// Creates a new window in current thread using default settings.

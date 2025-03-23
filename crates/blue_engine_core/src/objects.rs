@@ -4,13 +4,150 @@
  * The license is same as the one on the root.
 */
 
-use crate::prelude::{
-    Instance, InstanceRaw, Object, ObjectSettings, Pipeline, PipelineData, Renderer, RotateAxis,
-    TextureData, Textures, Vertex, glm, pixel_to_cartesian, uniform_type,
-};
 use crate::uniform_type::{Array4, Matrix};
 use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
-use crate::{ObjectStorage, RotateAmount, StringBuffer, UnsignedIntType, Vector3};
+use crate::{
+    Pipeline, PipelineData, Renderer, ShaderSettings, StringBuffer, TextureData, Textures,
+    UnsignedIntType, Vector3, Vertex, glm, pixel_to_cartesian, uniform_type,
+};
+
+/// Objects make it easier to work with Blue Engine, it automates most of work needed for
+/// creating 3D objects and showing them on screen. A range of default objects are available
+/// as well as ability to customize each of them and even create your own! You can also
+/// customize almost everything there is about them!
+pub struct Object {
+    /// Give your object a name, which can help later on for debugging.
+    pub name: std::sync::Arc<str>,
+    /// A list of Vertex
+    pub vertices: Vec<Vertex>,
+    /// A list of indices that dictates the order that vertices appear
+    pub indices: Vec<UnsignedIntType>,
+    /// Describes how to uniform buffer is structures
+    pub uniform_layout: wgpu::BindGroupLayout,
+    /// Pipeline holds all the data that is sent to GPU, including shaders and textures
+    pub pipeline: Pipeline,
+    /// List of instances of this object
+    pub instances: Vec<Instance>,
+    /// instance buffer
+    pub instance_buffer: wgpu::Buffer,
+    /// Dictates the size of your object in relation to the world
+    pub size: Vector3,
+    /// Dictates the position of your object in pixels
+    pub position: Vector3,
+    /// Dictates the rotation of your object
+    pub rotation: Vector3,
+    // flags the object to be updated until next frame
+    pub(crate) changed: bool,
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
+    pub position_matrix: nalgebra_glm::Mat4,
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
+    pub scale_matrix: nalgebra_glm::Mat4,
+    /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
+    /// Best choice is to let the Object system handle it
+    pub rotation_matrix: nalgebra_glm::Mat4,
+    /// Transformation matrix, but inversed
+    pub inverse_transformation_matrix: crate::uniform_type::Matrix,
+    /// The main color of your object
+    pub color: crate::uniform_type::Array4,
+    /// A struct making it easier to manipulate specific parts of shader
+    pub shader_builder: crate::objects::ShaderBuilder,
+    /// Shader settings
+    pub shader_settings: ShaderSettings,
+    /// Camera have any effect on the object?
+    pub camera_effect: Option<std::sync::Arc<str>>,
+    /// Uniform Buffers to be sent to GPU. These are raw and not compiled for GPU yet
+    pub uniform_buffers: Vec<wgpu::Buffer>,
+    /// Should be rendered or not
+    pub is_visible: bool,
+    /// Objects with higher number get rendered later and appear "on top" when occupying the same space
+    pub render_order: usize,
+}
+unsafe impl Send for Object {}
+unsafe impl Sync for Object {}
+
+/// Extra settings to customize objects on time of creation
+#[derive(Debug, Clone)]
+pub struct ObjectSettings {
+    /// Should it be affected by camera?
+    pub camera_effect: Option<std::sync::Arc<str>>,
+    /// Shader Settings
+    pub shader_settings: ShaderSettings,
+}
+impl Default for ObjectSettings {
+    fn default() -> Self {
+        Self {
+            camera_effect: Some("main".into()),
+            shader_settings: ShaderSettings::default(),
+        }
+    }
+}
+unsafe impl Send for ObjectSettings {}
+unsafe impl Sync for ObjectSettings {}
+
+/// A unified way to handle objects
+///
+/// This is a container for objects that is used to apply different operations on the objects at the same time.
+/// It can deref to the object hashmap itself when needed.
+pub struct ObjectStorage(std::collections::HashMap<String, Object>);
+impl ObjectStorage {
+    /// Creates a new object storage
+    pub fn new() -> Self {
+        ObjectStorage(std::collections::HashMap::new())
+    }
+}
+impl Default for ObjectStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+unsafe impl Send for ObjectStorage {}
+unsafe impl Sync for ObjectStorage {}
+crate::macros::impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
+
+/// Instance buffer data that is sent to GPU
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct InstanceRaw {
+    /// The transformation matrix of the instance
+    pub model: uniform_type::Matrix,
+}
+
+/// Instance buffer data storage
+#[derive(Debug, Clone, Copy)]
+pub struct Instance {
+    /// The position of the instance
+    pub position: Vector3,
+    /// The rotation of the instance
+    pub rotation: Vector3,
+    /// The scale of the instance
+    pub scale: Vector3,
+}
+
+/// Defines how the rotation axis is
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RotateAxis {
+    #[doc(hidden)]
+    X,
+    #[doc(hidden)]
+    Y,
+    #[doc(hidden)]
+    Z,
+}
+unsafe impl Send for RotateAxis {}
+unsafe impl Sync for RotateAxis {}
+
+/// Defines how the rotation amount is
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RotateAmount {
+    #[doc(hidden)]
+    Radians(f32),
+    #[doc(hidden)]
+    Degrees(f32),
+}
+unsafe impl Send for RotateAmount {}
+unsafe impl Sync for RotateAmount {}
 
 impl Renderer {
     /// Creates a new object

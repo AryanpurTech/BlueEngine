@@ -4,13 +4,76 @@
  * The license is same as the one on the root.
 */
 
+use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
 use crate::{
-    CameraContainer, Projection,
-    prelude::{Camera, Renderer, Vector3, uniform_type::Matrix},
+    UniformBuffers,
+    prelude::{Renderer, Vector3, uniform_type::Matrix},
 };
 use winit::dpi::PhysicalSize;
 
-use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
+/// Container for the projection used by the camera
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum Projection {
+    /// Perspective projection
+    ///
+    /// This is the default project used by the video games and majority of graphics
+    Perspective {
+        /// The field of view
+        fov: f32,
+    },
+    /// Orthographic projection
+    ///
+    /// This projection gives you a 2D view of the scene
+    Orthographic {
+        /// The size of the view
+        zoom: f32,
+    },
+}
+
+/// Container for the camera feature. The settings here are needed for
+/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
+#[derive(Debug)]
+pub struct Camera {
+    /// The position of the camera in 3D space
+    pub position: Vector3,
+    /// The target at which the camera should be looking
+    pub target: Vector3,
+    /// The up vector of the camera. This defines the elevation of the camera
+    pub up: Vector3,
+    /// The resolution of the camera view
+    pub resolution: (f32, f32), //maybe this should be a Vector2i
+    /// The projection of the camera
+    pub projection: Projection,
+    /// The closest view of camera
+    pub near: f32,
+    /// The furthest view of camera
+    pub far: f32,
+    /// The final data that will be sent to GPU
+    pub view_data: nalgebra_glm::Mat4,
+    // For checking and rebuilding it's uniform buffer
+    pub(crate) changed: bool,
+    /// The uniform data of the camera to be sent to the gpu
+    pub uniform_data: UniformBuffers,
+    /// The position and target of the camera
+    pub(crate) add_position_and_target: bool,
+}
+unsafe impl Send for Camera {}
+unsafe impl Sync for Camera {}
+
+/// Container for Cameras
+///
+/// This allows for different objects have a different camera perspective.
+#[derive(Debug)]
+pub struct CameraContainer {
+    /// The list of cameras
+    // Arc<str> is used instead of String for performance
+    pub cameras: std::collections::HashMap<std::sync::Arc<str>, Camera>,
+}
+crate::macros::impl_deref_field!(
+    CameraContainer,
+    std::collections::HashMap<std::sync::Arc<str>, Camera>,
+    cameras
+);
 
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine

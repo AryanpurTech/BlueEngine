@@ -9,11 +9,86 @@ use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
     InstanceRaw, UnsignedIntType,
-    prelude::{
-        Pipeline, PipelineData, ShaderSettings, Shaders, StringBuffer, TextureData, TextureMode,
-        Textures, UniformBuffers, Vertex, VertexBuffers,
-    },
+    prelude::{ShaderSettings, Shaders, StringBuffer, Textures, UniformBuffers, Vertex},
 };
+
+/// Container for pipeline values. Each pipeline takes only 1 vertex shader,
+/// 1 fragment shader, 1 texture data, and optionally a vector of uniform data.
+#[derive(Debug)]
+pub struct Pipeline {
+    /// the shader buffer that's sent to the gpu
+    pub shader: PipelineData<crate::Shaders>,
+    /// The vertex buffer that's sent to the gpu. This includes indices as well
+    pub vertex_buffer: PipelineData<VertexBuffers>,
+    /// The texture that's sent to the gpu.
+    pub texture: PipelineData<crate::Textures>,
+    /// the Uniform buffers that are sent to the gpu
+    pub uniform: PipelineData<Option<crate::UniformBuffers>>,
+}
+unsafe impl Send for Pipeline {}
+unsafe impl Sync for Pipeline {}
+
+/// Container for pipeline data. Allows for sharing resources with other objects
+#[derive(Debug)]
+pub enum PipelineData<T> {
+    /// No data, just a reference to a buffer
+    Copy(String),
+    /// The actual data
+    Data(T),
+}
+
+/// Container for vertex and index buffer
+#[derive(Debug)]
+pub struct VertexBuffers {
+    /// An array of vertices. A vertex is a point in 3D space containing
+    /// an X, Y, and a Z coordinate between -1 and +1
+    pub vertex_buffer: wgpu::Buffer,
+    /// An array of indices. Indices are a way to reuse vertices,
+    /// this in turn helps greatly in reduction of amount of vertices needed to be sent to the GPU
+    pub index_buffer: wgpu::Buffer,
+    /// The length of the vertex buffer
+    pub length: u32,
+}
+unsafe impl Send for VertexBuffers {}
+unsafe impl Sync for VertexBuffers {}
+
+/// Defines how the texture data is
+#[derive(Debug, Clone)]
+pub enum TextureData {
+    /// the texture file bytes directly
+    Bytes(Vec<u8>),
+    /// the texture as a [`image::DynamicImage`]
+    Image(image::DynamicImage),
+    /// path to a texture file to load
+    Path(String),
+}
+unsafe impl Send for TextureData {}
+unsafe impl Sync for TextureData {}
+
+/// Defines how the borders of texture would look like
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TextureMode {
+    /// Expands the texture to fit the object
+    Clamp,
+    /// Repeats the texture instead of stretching
+    Repeat,
+    /// Repeats the texture, but mirrors it on edges
+    MirrorRepeat,
+}
+unsafe impl Send for TextureMode {}
+unsafe impl Sync for TextureMode {}
+
+/// This function helps in converting pixel value to the value that is between -1 and +1
+pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {
+    let mut result = value / max as f32;
+
+    if value == max as f32 {
+        result = 0.0;
+    } else if result < max as f32 / 2.0 {
+    }
+
+    if result > -1.0 { result } else { -1.0 }
+}
 
 impl crate::prelude::Renderer {
     /// Creates a new render pipeline. Could be thought of as like materials in game engines.

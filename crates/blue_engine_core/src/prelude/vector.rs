@@ -1,10 +1,29 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::{
-    RotateAmount, RotateAxis,
-    prelude::{Vector2, Vector3},
-};
-use bytemuck::Pod;
+use crate::{RotateAmount, RotateAxis};
+use bytemuck::{Pod, Zeroable};
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
+/// General purposes 3D vector
+pub struct Vector3 {
+    /// X coordinate in 3D space
+    pub x: f32,
+    /// Y coordinate in 3D space
+    pub y: f32,
+    /// Z coordinate in 3D space
+    pub z: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+#[repr(C)]
+/// General purposes 2D vector
+pub struct Vector2 {
+    /// X coordinate in 2D space
+    pub x: f32,
+    /// Y coordinate in 2D space
+    pub y: f32,
+}
 
 // Constructors
 impl Vector3 {

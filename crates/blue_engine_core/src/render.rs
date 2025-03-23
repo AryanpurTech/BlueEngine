@@ -2,9 +2,47 @@
 
 use crate::{
     CameraContainer, ObjectStorage, PipelineData,
-    prelude::{Renderer, ShaderSettings, TextureData, uniform_type},
+    prelude::{ShaderSettings, TextureData, uniform_type},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
+
+/// Main renderer class. this will contain all methods and data related to the renderer
+#[derive(Debug)]
+pub struct Renderer {
+    /// A [`wgpu::Surface`] represents a platform-specific surface
+    /// (e.g. a window) onto which rendered images may be presented.
+    pub surface: Option<wgpu::Surface<'static>>,
+    /// Context for all of the gpu objects
+    pub instance: wgpu::Instance,
+    /// Handle to a physical graphics and/or compute device.
+    #[allow(unused)]
+    pub adapter: wgpu::Adapter,
+    /// Open connection to a graphics and/or compute device.
+    pub device: wgpu::Device,
+    /// Handle to a command queue on a device.
+    pub queue: wgpu::Queue,
+    /// Describes a [`wgpu::Surface`]
+    pub config: wgpu::SurfaceConfiguration,
+    /// The size of the window
+    pub size: winit::dpi::PhysicalSize<u32>,
+    /// The texture bind group layout
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
+    /// The uniform bind group layout
+    pub default_uniform_bind_group_layout: wgpu::BindGroupLayout,
+    /// The depth buffer, used to render object depth
+    pub depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
+    /// The default data used within the renderer
+    pub default_data: Option<(crate::Textures, crate::Shaders, crate::UniformBuffers)>,
+    /// The camera used in the engine
+    pub camera: Option<crate::UniformBuffers>,
+    /// Background clear color
+    pub clear_color: wgpu::Color,
+    /// Scissor cut section of the screen to render to
+    /// (x, y, width, height)
+    pub scissor_rect: Option<(u32, u32, u32, u32)>,
+}
+unsafe impl Sync for Renderer {}
+unsafe impl Send for Renderer {}
 
 impl Renderer {
     /// Creates a new renderer.

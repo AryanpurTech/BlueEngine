@@ -34,6 +34,8 @@ pub use wgpu::RenderPassColorAttachment;
 pub use wgpu::RenderPassDescriptor;
 /// Surface Texture
 pub use wgpu::TextureView;
+/// Depth format
+pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
 /// Input helper
 pub use crate::utils::winit_input_helper::WinitInputHelper as InputHelper;
