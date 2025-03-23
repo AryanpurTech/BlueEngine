@@ -5,9 +5,9 @@
 */
 
 use blue_engine::{
+    Vector3,
     prelude::{Engine, ObjectSettings, ShaderSettings},
     primitive_shapes::square,
-    Vector3,
 };
 
 fn main() {

@@ -2,10 +2,9 @@
 pub mod imports;
 /// few commonly used uniform buffer structures
 pub mod uniform_buffer;
+use downcast::{Any, downcast};
 pub use imports::*;
 pub use uniform_buffer::*;
-
-use downcast::{Any, downcast};
 
 /// The uint type used for indices and more
 #[cfg(not(feature = "u32"))]
