@@ -505,6 +505,19 @@ impl ApplicationHandler for Engine {
     }
 }
 
+macro_rules! gen_window_component_functions {
+    ($fn_name:ident, $name:ident, $data_type:ty) => {
+        /// see [winit::window::Window::$fn_name]
+        pub fn $fn_name(&mut self, value: $data_type) {
+            if let Some(window) = self.window.as_mut() {
+                window.$fn_name(value);
+            } else {
+                self.default_attributes.$name = value;
+            }
+        }
+    };
+}
+
 impl Window {
     /// create a new window
     pub fn new(default_attributes: winit::window::WindowAttributes) -> Self {
@@ -523,23 +536,28 @@ impl Window {
     // ====================================================== WINDOW SETTERS ====================================================== //
     //MARK: SETTERS
 
-    /// see [winit::window::Window::set_min_inner_size]
-    pub fn set_min_inner_size(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_min_inner_size(value);
-        } else {
-            self.default_attributes.min_inner_size = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_max_inner_size]
-    pub fn set_max_inner_size(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_max_inner_size(value);
-        } else {
-            self.default_attributes.max_inner_size = value;
-        }
-    }
+    gen_window_component_functions!(set_min_inner_size, min_inner_size, Option<winit::dpi::Size>);
+    gen_window_component_functions!(set_max_inner_size, max_inner_size, Option<winit::dpi::Size>);
+    gen_window_component_functions!(set_resizable, resizable, bool);
+    gen_window_component_functions!(
+        set_enabled_buttons,
+        enabled_buttons,
+        winit::window::WindowButtons
+    );
+    gen_window_component_functions!(set_maximized, maximized, bool);
+    gen_window_component_functions!(set_visible, visible, bool);
+    gen_window_component_functions!(set_transparent, transparent, bool);
+    gen_window_component_functions!(set_blur, blur, bool);
+    gen_window_component_functions!(set_decorations, decorations, bool);
+    gen_window_component_functions!(set_window_icon, window_icon, Option<winit::window::Icon>);
+    gen_window_component_functions!(
+        set_resize_increments,
+        resize_increments,
+        Option<winit::dpi::Size>
+    );
+    gen_window_component_functions!(set_content_protected, content_protected, bool);
+    gen_window_component_functions!(set_window_level, window_level, winit::window::WindowLevel);
+    gen_window_component_functions!(set_cursor, cursor, winit::window::Cursor);
 
     /// see [winit::window::Window::set_outer_position]
     pub fn set_outer_position(&mut self, value: winit::dpi::Position) {
@@ -547,24 +565,6 @@ impl Window {
             window.set_outer_position(value);
         } else {
             self.default_attributes.position = Some(value);
-        }
-    }
-
-    /// see [winit::window::Window::set_resizable]
-    pub fn set_resizable(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_resizable(value);
-        } else {
-            self.default_attributes.resizable = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_enabled_buttons]
-    pub fn set_enabled_buttons(&mut self, value: winit::window::WindowButtons) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_enabled_buttons(value);
-        } else {
-            self.default_attributes.enabled_buttons = value;
         }
     }
 
@@ -577,102 +577,12 @@ impl Window {
         }
     }
 
-    /// see [winit::window::Window::set_maximized]
-    pub fn set_maximized(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_maximized(value);
-        } else {
-            self.default_attributes.maximized = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_visible]
-    pub fn set_visible(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_visible(value);
-        } else {
-            self.default_attributes.visible = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_transparent]
-    pub fn set_transparent(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_transparent(value);
-        } else {
-            self.default_attributes.transparent = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_blur]
-    pub fn set_blur(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_blur(value);
-        } else {
-            self.default_attributes.blur = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_decorations]
-    pub fn set_decorations(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_decorations(value);
-        } else {
-            self.default_attributes.decorations = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_window_icon]
-    pub fn set_window_icon(&mut self, value: Option<winit::window::Icon>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_window_icon(value);
-        } else {
-            self.default_attributes.window_icon = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_preferred_theme]
+    /// see [winit::window::Window::set_theme]
     pub fn set_preferred_theme(&mut self, value: Option<winit::window::Theme>) {
         if let Some(window) = self.window.as_mut() {
             window.set_theme(value);
         } else {
             self.default_attributes.preferred_theme = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_resize_increments]
-    pub fn set_resize_increments(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_resize_increments(value);
-        } else {
-            self.default_attributes.resize_increments = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_content_protected]
-    pub fn set_content_protected(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_content_protected(value);
-        } else {
-            self.default_attributes.content_protected = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_window_level]
-    pub fn set_window_level(&mut self, value: winit::window::WindowLevel) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_window_level(value);
-        } else {
-            self.default_attributes.window_level = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_cursor]
-    pub fn set_cursor(&mut self, value: winit::window::Cursor) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_cursor(value);
-        } else {
-            self.default_attributes.cursor = value;
         }
     }
 

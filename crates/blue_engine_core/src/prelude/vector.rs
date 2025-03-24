@@ -1,29 +1,45 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
-
 use crate::{RotateAmount, RotateAxis};
 use bytemuck::{Pod, Zeroable};
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
-#[repr(C)]
-/// General purposes 3D vector
-pub struct Vector3 {
-    /// X coordinate in 3D space
-    pub x: f32,
-    /// Y coordinate in 3D space
-    pub y: f32,
-    /// Z coordinate in 3D space
-    pub z: f32,
+#[crabtime::function]
+fn gen_vectors(parts: Vec<String>) {
+    fn part_builder<F>(parts: &Vec<String>, modification: F) -> String
+    where
+        F: Fn(&String) -> String,
+    {
+        parts.iter().map(modification).collect::<Vec<_>>().join("")
+    }
+
+    let parts_len = parts.len();
+    let struct_fields = part_builder(&parts, |part| format!("///\npub {part}: f32,"));
+
+    let fn_parameter = part_builder(&parts, |part| format!("{part}: f32,"));
+    let new_fn_parameter = part_builder(&parts, |part| format!("{part},"));
+    let new_fn = crabtime::quote! {
+        ///
+        pub const fn new({{fn_parameter}}) -> Self {
+            Self { {{new_fn_parameter}} }
+        }
+    };
+
+    crabtime::output! {
+        #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
+        #[repr(C)]
+        /// General purposes {{parts_len}}D vector
+        pub struct Vector{{parts_len}} {
+            {{struct_fields}}
+        }
+
+        impl Vector{{parts_len}} {
+            {{new_fn}}
+        }
+    }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Zeroable)]
-#[repr(C)]
-/// General purposes 2D vector
-pub struct Vector2 {
-    /// X coordinate in 2D space
-    pub x: f32,
-    /// Y coordinate in 2D space
-    pub y: f32,
-}
+gen_vectors!(["x", "y"]);
+gen_vectors!(["x", "y", "z"]);
+gen_vectors!(["x", "y", "z", "a"]);
 
 // Constructors
 impl Vector3 {
@@ -38,10 +54,6 @@ impl Vector3 {
     /// A vector with all components set to 0 except for the z component, which is set to 1.
     pub const UNIT_Z: Self = Self::new(0.0, 0.0, 1.0);
 
-    /// Create a new 3D position with the given coordinates
-    pub const fn new(x: f32, y: f32, z: f32) -> Self {
-        Self { x, y, z }
-    }
     /// Returns a vector with all components set to 0 except for the x component, which is set to 1.
     pub const fn x_axis() -> Self {
         Self::new(1.0, 0.0, 0.0)
@@ -578,10 +590,6 @@ impl Vector2 {
     /// A vector with all components set to 0 except for the y component, which is set to 1.
     pub const UNIT_Y: Self = Self::new(0.0, 1.0);
 
-    /// Create a new 2D position with the given coordinates
-    pub const fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
     /// Returns a vector with all components set to 0 except for the x component, which is set to 1.
     pub const fn x_axis() -> Self {
         Self::new(1.0, 0.0)
