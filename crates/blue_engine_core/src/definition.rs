@@ -9,7 +9,7 @@ use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
     InstanceRaw, UnsignedIntType,
-    prelude::{ShaderSettings, Shaders, StringBuffer, Textures, UniformBuffers, Vertex},
+    prelude::{Shaders, StringBuffer, Textures, UniformBuffers, Vertex},
 };
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader,
@@ -77,6 +77,77 @@ pub enum TextureMode {
 }
 unsafe impl Send for TextureMode {}
 unsafe impl Sync for TextureMode {}
+
+/// These definitions are taken from wgpu API docs
+#[derive(Debug, Clone, Copy)]
+pub struct ShaderSettings {
+    // ===== PRIMITIVE ===== //
+    /// The primitive topology used to interpret vertices
+    pub topology: crate::ShaderPrimitive,
+    /// When drawing strip topologies with indices, this is the
+    /// required format for the index buffer. This has no effect
+    /// on non-indexed or non-strip draws.
+    pub strip_index_format: Option<crate::IndexFormat>,
+    /// The face to consider the front for the purpose of
+    /// culling and stencil operations.
+    pub front_face: crate::FrontFace,
+    /// The face culling mode
+    pub cull_mode: Option<crate::CullMode>,
+    /// Controls the way each polygon is rasterized. Can be
+    /// either `Fill` (default), `Line` or `Point`
+    ///
+    /// Setting this to something other than `Fill` requires
+    /// `NON_FILL_POLYGON_MODE` feature to be enabled
+    pub polygon_mode: crate::PolygonMode,
+    /// If set to true, the polygon depth is clamped to 0-1
+    /// range instead of being clipped.
+    ///
+    /// Enabling this requires the `DEPTH_CLAMPING` feature
+    /// to be enabled
+    pub clamp_depth: bool,
+    /// If set to true, the primitives are rendered with
+    /// conservative overestimation. I.e. any rastered
+    /// pixel touched by it is filled. Only valid for PolygonMode::Fill!
+    ///
+    /// Enabling this requires `CONSERVATIVE_RASTERIZATION`
+    /// features to be enabled.
+    pub conservative: bool,
+    // ===== Multisample ===== //
+    /// The number of samples calculated per pixel (for MSAA).
+    /// For non-multisampled textures, this should be `1`
+    pub count: u32,
+    /// Bitmask that restricts the samples of a pixel modified
+    /// by this pipeline. All samples can be enabled using the
+    /// value `!0`
+    pub mask: u64,
+    /// When enabled, produces another sample mask per pixel
+    /// based on the alpha output value, that is ANDead with the
+    /// sample_mask and the primitive coverage to restrict the
+    /// set of samples affected by a primitive.
+
+    /// The implicit mask produced for alpha of zero is guaranteed
+    /// to be zero, and for alpha of one is guaranteed to be all
+    /// 1-s.
+    pub alpha_to_coverage_enabled: bool,
+}
+impl Default for ShaderSettings {
+    fn default() -> Self {
+        Self {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: Some(wgpu::Face::Back),
+            polygon_mode: wgpu::PolygonMode::Fill,
+            clamp_depth: false,
+            conservative: false,
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: true,
+        }
+    }
+}
+unsafe impl Send for ShaderSettings {}
+unsafe impl Sync for ShaderSettings {}
 
 /// This function helps in converting pixel value to the value that is between -1 and +1
 pub fn pixel_to_cartesian(value: f32, max: u32) -> f32 {

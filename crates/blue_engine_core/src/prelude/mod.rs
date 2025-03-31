@@ -7,13 +7,14 @@ pub use imports::*;
 pub mod primitive_shapes;
 pub use crate::camera::{Camera, CameraContainer, Projection};
 pub use crate::definition::{
-    Pipeline, PipelineData, TextureData, TextureMode, VertexBuffers, pixel_to_cartesian,
+    Pipeline, PipelineData, ShaderSettings, TextureData, TextureMode, VertexBuffers,
+    pixel_to_cartesian,
 };
 pub use crate::objects::{
     Instance, InstanceRaw, Object, ObjectSettings, ObjectStorage, RotateAmount, RotateAxis,
 };
 pub use crate::render::Renderer;
-pub use crate::window::{ShaderSettings, Window, WindowDescriptor};
+pub use crate::window::{Window, WindowDescriptor};
 
 /// The uint type used for indices and more
 #[cfg(not(feature = "u32"))]
