@@ -5,8 +5,8 @@
 */
 
 use crate::{
-    CameraContainer, ObjectStorage, Window,
-    header::{Engine, Renderer, WindowDescriptor},
+    CameraContainer, ObjectStorage,
+    prelude::{Engine, Renderer},
 };
 
 use winit::{
@@ -15,6 +15,100 @@ use winit::{
     event_loop::EventLoop,
     window::WindowAttributes,
 };
+
+/// A wrapper for winit window to make it easier to use and more ergonomic.
+#[derive(Debug)]
+pub struct Window {
+    /// The winit window itself.
+    pub window: Option<std::sync::Arc<crate::winit::window::Window>>,
+    /// Default attributes of the window
+    pub default_attributes: winit::window::WindowAttributes,
+    /// Whether the engine should close.
+    pub should_close: bool,
+}
+crate::macros::impl_deref_field!(
+    Window,
+    Option<std::sync::Arc<crate::winit::window::Window>>,
+    window
+);
+
+/// Descriptor and settings for a window.
+#[derive(Debug, Clone)]
+pub struct WindowDescriptor {
+    /// The width of the window
+    pub width: u32,
+    /// The height of the window
+    pub height: u32,
+    /// The title of the window
+    pub title: &'static str,
+    /// Should the window contain the keys like minimize, maximize, or resize?
+    pub decorations: bool,
+    /// Should the window be resizable
+    pub resizable: bool,
+    /// Define how much power should the app ask for
+    pub power_preference: crate::PowerPreference,
+    /// The backend to use for the draw
+    pub backends: crate::Backends,
+    /// The features to be enabled on a backend
+    ///
+    /// read more at [wgpu::Features]
+    pub features: crate::wgpu::Features,
+    /// Controls how the events are processed
+    ///
+    /// read more at [winit::event_loop::ControlFlow]
+    pub control_flow: crate::winit::event_loop::ControlFlow,
+    /// The presentation mode of renderer for things like VSync
+    ///
+    /// read more at [wgpu::PresentMode]
+    pub present_mode: crate::wgpu::PresentMode,
+    /// Limits to be required based on the generation of the GPU and the API.
+    ///
+    /// read more at [wgpu::Limits]
+    pub limits: crate::wgpu::Limits,
+    /// The alpha mode which specifies how the alpha channel of
+    /// the textures should be handled during compositing.
+    pub alpha_mode: crate::wgpu::CompositeAlphaMode,
+    /// The desired frame latency.
+    ///
+    /// read more at [wgpu::SurfaceConfiguration::desired_maximum_frame_latency]
+    pub desired_maximum_frame_latency: u32,
+    /// How the memory should be utilized
+    ///
+    /// read more at [wgpu::MemoryHints]
+    pub memory_hints: crate::wgpu::MemoryHints,
+}
+impl std::default::Default for WindowDescriptor {
+    /// Will quickly create a window with default settings
+    fn default() -> Self {
+        let backends = crate::Backends::all();
+        Self {
+            width: 800,
+            height: 600,
+            title: "Blue Engine",
+            decorations: true,
+            resizable: true,
+            power_preference: crate::PowerPreference::LowPower,
+            backends,
+            features: if backends == wgpu::Backends::VULKAN {
+                wgpu::Features::POLYGON_MODE_LINE | wgpu::Features::POLYGON_MODE_POINT
+            } else if backends
+                .contains(wgpu::Backends::VULKAN | wgpu::Backends::METAL | wgpu::Backends::DX12)
+            {
+                wgpu::Features::POLYGON_MODE_LINE
+            } else {
+                wgpu::Features::empty()
+            },
+            control_flow: crate::winit::event_loop::ControlFlow::Poll,
+            present_mode: crate::wgpu::PresentMode::AutoNoVsync,
+            limits: crate::wgpu::Limits::default(),
+            alpha_mode: crate::wgpu::CompositeAlphaMode::Auto,
+            desired_maximum_frame_latency: 2,
+            memory_hints: crate::MemoryHints::Performance,
+        }
+    }
+}
+unsafe impl Send for WindowDescriptor {}
+unsafe impl Sync for WindowDescriptor {}
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
@@ -339,6 +433,19 @@ impl ApplicationHandler for Engine {
     }
 }
 
+macro_rules! gen_window_component_functions {
+    ($fn_name:ident, $name:ident, $data_type:ty) => {
+        /// see [winit::window::Window::$fn_name]
+        pub fn $fn_name(&mut self, value: $data_type) {
+            if let Some(window) = self.window.as_mut() {
+                window.$fn_name(value);
+            } else {
+                self.default_attributes.$name = value;
+            }
+        }
+    };
+}
+
 impl Window {
     /// create a new window
     pub fn new(default_attributes: winit::window::WindowAttributes) -> Self {
@@ -357,23 +464,28 @@ impl Window {
     // ====================================================== WINDOW SETTERS ====================================================== //
     //MARK: SETTERS
 
-    /// see [winit::window::Window::set_min_inner_size]
-    pub fn set_min_inner_size(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_min_inner_size(value);
-        } else {
-            self.default_attributes.min_inner_size = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_max_inner_size]
-    pub fn set_max_inner_size(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_max_inner_size(value);
-        } else {
-            self.default_attributes.max_inner_size = value;
-        }
-    }
+    gen_window_component_functions!(set_min_inner_size, min_inner_size, Option<winit::dpi::Size>);
+    gen_window_component_functions!(set_max_inner_size, max_inner_size, Option<winit::dpi::Size>);
+    gen_window_component_functions!(set_resizable, resizable, bool);
+    gen_window_component_functions!(
+        set_enabled_buttons,
+        enabled_buttons,
+        winit::window::WindowButtons
+    );
+    gen_window_component_functions!(set_maximized, maximized, bool);
+    gen_window_component_functions!(set_visible, visible, bool);
+    gen_window_component_functions!(set_transparent, transparent, bool);
+    gen_window_component_functions!(set_blur, blur, bool);
+    gen_window_component_functions!(set_decorations, decorations, bool);
+    gen_window_component_functions!(set_window_icon, window_icon, Option<winit::window::Icon>);
+    gen_window_component_functions!(
+        set_resize_increments,
+        resize_increments,
+        Option<winit::dpi::Size>
+    );
+    gen_window_component_functions!(set_content_protected, content_protected, bool);
+    gen_window_component_functions!(set_window_level, window_level, winit::window::WindowLevel);
+    gen_window_component_functions!(set_cursor, cursor, winit::window::Cursor);
 
     /// see [winit::window::Window::set_outer_position]
     pub fn set_outer_position(&mut self, value: winit::dpi::Position) {
@@ -381,24 +493,6 @@ impl Window {
             window.set_outer_position(value);
         } else {
             self.default_attributes.position = Some(value);
-        }
-    }
-
-    /// see [winit::window::Window::set_resizable]
-    pub fn set_resizable(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_resizable(value);
-        } else {
-            self.default_attributes.resizable = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_enabled_buttons]
-    pub fn set_enabled_buttons(&mut self, value: winit::window::WindowButtons) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_enabled_buttons(value);
-        } else {
-            self.default_attributes.enabled_buttons = value;
         }
     }
 
@@ -411,102 +505,12 @@ impl Window {
         }
     }
 
-    /// see [winit::window::Window::set_maximized]
-    pub fn set_maximized(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_maximized(value);
-        } else {
-            self.default_attributes.maximized = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_visible]
-    pub fn set_visible(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_visible(value);
-        } else {
-            self.default_attributes.visible = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_transparent]
-    pub fn set_transparent(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_transparent(value);
-        } else {
-            self.default_attributes.transparent = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_blur]
-    pub fn set_blur(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_blur(value);
-        } else {
-            self.default_attributes.blur = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_decorations]
-    pub fn set_decorations(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_decorations(value);
-        } else {
-            self.default_attributes.decorations = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_window_icon]
-    pub fn set_window_icon(&mut self, value: Option<winit::window::Icon>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_window_icon(value);
-        } else {
-            self.default_attributes.window_icon = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_preferred_theme]
+    /// see [winit::window::Window::set_theme]
     pub fn set_preferred_theme(&mut self, value: Option<winit::window::Theme>) {
         if let Some(window) = self.window.as_mut() {
             window.set_theme(value);
         } else {
             self.default_attributes.preferred_theme = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_resize_increments]
-    pub fn set_resize_increments(&mut self, value: Option<winit::dpi::Size>) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_resize_increments(value);
-        } else {
-            self.default_attributes.resize_increments = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_content_protected]
-    pub fn set_content_protected(&mut self, value: bool) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_content_protected(value);
-        } else {
-            self.default_attributes.content_protected = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_window_level]
-    pub fn set_window_level(&mut self, value: winit::window::WindowLevel) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_window_level(value);
-        } else {
-            self.default_attributes.window_level = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_cursor]
-    pub fn set_cursor(&mut self, value: winit::window::Cursor) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_cursor(value);
-        } else {
-            self.default_attributes.cursor = value;
         }
     }
 

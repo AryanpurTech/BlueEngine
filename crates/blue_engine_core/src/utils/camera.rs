@@ -4,19 +4,82 @@
  * The license is same as the one on the root.
 */
 
+use super::default_resources::OPENGL_TO_WGPU_MATRIX;
 use crate::{
-    header::{uniform_type::Matrix, Camera, Renderer, Vector3},
-    CameraContainer, Projection,
+    Matrix4, UniformBuffers,
+    prelude::{Renderer, Vector3},
 };
 use winit::dpi::PhysicalSize;
 
-use super::default_resources::{DEFAULT_MATRIX_4, OPENGL_TO_WGPU_MATRIX};
+/// Container for the projection used by the camera
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum Projection {
+    /// Perspective projection
+    ///
+    /// This is the default project used by the video games and majority of graphics
+    Perspective {
+        /// The field of view
+        fov: f32,
+    },
+    /// Orthographic projection
+    ///
+    /// This projection gives you a 2D view of the scene
+    Orthographic {
+        /// The size of the view
+        zoom: f32,
+    },
+}
+
+/// Container for the camera feature. The settings here are needed for
+/// algebra equations needed for camera vision and movement. Please leave it to the renderer to handle
+#[derive(Debug)]
+pub struct Camera {
+    /// The position of the camera in 3D space
+    pub position: Vector3,
+    /// The target at which the camera should be looking
+    pub target: Vector3,
+    /// The up vector of the camera. This defines the elevation of the camera
+    pub up: Vector3,
+    /// The resolution of the camera view
+    pub resolution: (f32, f32), //maybe this should be a Vector2i
+    /// The projection of the camera
+    pub projection: Projection,
+    /// The closest view of camera
+    pub near: f32,
+    /// The furthest view of camera
+    pub far: f32,
+    /// The final data that will be sent to GPU
+    pub view_data: Matrix4,
+    // For checking and rebuilding it's uniform buffer
+    pub(crate) changed: bool,
+    /// The uniform data of the camera to be sent to the gpu
+    pub uniform_data: UniformBuffers,
+    /// The position and target of the camera
+    pub(crate) add_position_and_target: bool,
+}
+unsafe impl Send for Camera {}
+unsafe impl Sync for Camera {}
+
+/// Container for Cameras
+///
+/// This allows for different objects have a different camera perspective.
+#[derive(Debug)]
+pub struct CameraContainer {
+    /// The list of cameras
+    // Arc<str> is used instead of String for performance
+    pub cameras: std::collections::HashMap<std::sync::Arc<str>, Camera>,
+}
+crate::macros::impl_deref_field!(
+    CameraContainer,
+    std::collections::HashMap<std::sync::Arc<str>, Camera>,
+    cameras
+);
 
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
     pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Self {
         let camera_uniform = renderer.build_uniform_buffer(&[
-            renderer.build_uniform_buffer_part("Camera Uniform", DEFAULT_MATRIX_4)
+            renderer.build_uniform_buffer_part("Camera Uniform", crate::Matrix4::IDENTITY)
         ]);
 
         let mut camera = Self {
@@ -29,7 +92,7 @@ impl Camera {
             },
             near: 0.1,
             far: 100.0,
-            view_data: DEFAULT_MATRIX_4.to_im(),
+            view_data: Matrix4::IDENTITY,
             changed: true,
             uniform_data: camera_uniform.0,
             add_position_and_target: false,
@@ -50,7 +113,7 @@ impl Camera {
     /// Updates the view uniform matrix that decides how camera works
     pub fn build_view_orthographic_matrix(&mut self) {
         let view = self.build_view_matrix();
-        let ortho = nalgebra_glm::ortho(
+        let ortho = Matrix4::orthographic_rh(
             0f32,
             self.resolution.0,
             0f32,
@@ -63,8 +126,8 @@ impl Camera {
     }
 
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
-    pub fn camera_uniform_buffer(&self) -> Matrix {
-        Matrix::from_im(self.view_data)
+    pub fn camera_uniform_buffer(&self) -> Matrix4 {
+        self.view_data
     }
 
     /// Sets the position of camera
@@ -141,25 +204,25 @@ impl Camera {
     }
 
     /// Builds a view matrix for camera projection
-    pub fn build_view_matrix(&self) -> nalgebra_glm::Mat4 {
-        nalgebra_glm::look_at_rh(
-            &self.position.into(),
-            &if self.add_position_and_target {
+    pub fn build_view_matrix(&self) -> Matrix4 {
+        Matrix4::look_at_rh(
+            self.position.into(),
+            if self.add_position_and_target {
                 (self.position + self.target).into()
             } else {
                 self.target.into()
             },
-            &self.up.into(),
+            self.up.into(),
         )
     }
 
     /// Builds a projection matrix for camera
-    pub fn build_projection_matrix(&self) -> nalgebra_glm::Mat4 {
+    pub fn build_projection_matrix(&self) -> Matrix4 {
         let aspect = self.resolution.0 / self.resolution.1;
 
         match self.projection {
             crate::Projection::Perspective { fov } => {
-                nalgebra_glm::perspective(aspect, fov, self.near, self.far)
+                Matrix4::perspective_rh(aspect, fov, self.near, self.far)
             }
             crate::Projection::Orthographic { zoom } => {
                 let width = zoom;
@@ -170,7 +233,7 @@ impl Camera {
                 let bottom = height * -0.5;
                 let top = height * 0.5;
 
-                nalgebra_glm::ortho(left, right, bottom, top, self.near, self.far)
+                Matrix4::orthographic_rh(left, right, bottom, top, self.near, self.far)
             }
         }
     }
@@ -199,9 +262,9 @@ impl CameraContainer {
         }
     }
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
-    pub fn camera_uniform_buffer(&self) -> Option<Matrix> {
+    pub fn camera_uniform_buffer(&self) -> Option<Matrix4> {
         if let Some(main_camera) = self.cameras.get("main") {
-            Some(Matrix::from_im(main_camera.view_data))
+            Some(main_camera.view_data)
         } else {
             None
         }
@@ -271,7 +334,7 @@ impl CameraContainer {
         }
     }
     /// Builds a view matrix for camera projection
-    pub fn build_view_matrix(&self) -> Option<nalgebra_glm::Mat4> {
+    pub fn build_view_matrix(&self) -> Option<Matrix4> {
         if let Some(main_camera) = self.cameras.get("main") {
             Some(main_camera.build_view_matrix())
         } else {
@@ -279,7 +342,7 @@ impl CameraContainer {
         }
     }
     /// Builds a projection matrix for camera
-    pub fn build_projection_matrix(&self) -> Option<nalgebra_glm::Mat4> {
+    pub fn build_projection_matrix(&self) -> Option<Matrix4> {
         if let Some(main_camera) = self.cameras.get("main") {
             Some(main_camera.build_projection_matrix())
         } else {

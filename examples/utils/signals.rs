@@ -5,7 +5,7 @@
 */
 
 use blue_engine::{
-    header::{Engine, ObjectSettings},
+    prelude::{Engine, ObjectSettings},
     primitive_shapes::triangle,
     Signal,
 };

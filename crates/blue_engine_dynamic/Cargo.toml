@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_dynamic"
-version = "0.6.5"
+version = "0.7.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
@@ -11,16 +11,14 @@ name = "blue_engine_dynamic"
 crate-type = ["dylib"]
 
 [features]
-default = ["debug", "u16"]
+default = ["debug"]
 debug = ["blue_engine_core/debug"]
 android = ["blue_engine_core/android"]
 android_native_activity = ["blue_engine_core/android_native_activity"]
 android_game_activity = ["blue_engine_core/android_game_activity"]
-# using u16 for indices and others
-u16 = ["blue_engine_core/u16"]
 # using u32 for indices and others
 u32 = ["blue_engine_core/u32"]
 
 [dependencies]
-blue_engine_core = { version = "0.6.5" }
+blue_engine_core = { version = "0.7.0" }
 # blue_engine_core = { path = "../blue_engine_core" }

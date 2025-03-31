@@ -1,23 +1,51 @@
-/*
- * Blue Engine by Elham Aryanpur
- *
- * The license is same as the one on the root.
-*/
-
 // ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
 
 use crate::{
     CameraContainer, ObjectStorage, PipelineData,
-    header::{Renderer, ShaderSettings, TextureData, uniform_type},
-    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
+    prelude::{ShaderSettings, TextureData},
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
+
+/// Main renderer class. this will contain all methods and data related to the renderer
+#[derive(Debug)]
+pub struct Renderer {
+    /// A [`wgpu::Surface`] represents a platform-specific surface
+    /// (e.g. a window) onto which rendered images may be presented.
+    pub surface: Option<wgpu::Surface<'static>>,
+    /// Context for all of the gpu objects
+    pub instance: wgpu::Instance,
+    /// Handle to a physical graphics and/or compute device.
+    #[allow(unused)]
+    pub adapter: wgpu::Adapter,
+    /// Open connection to a graphics and/or compute device.
+    pub device: wgpu::Device,
+    /// Handle to a command queue on a device.
+    pub queue: wgpu::Queue,
+    /// Describes a [`wgpu::Surface`]
+    pub config: wgpu::SurfaceConfiguration,
+    /// The size of the window
+    pub size: winit::dpi::PhysicalSize<u32>,
+    /// The texture bind group layout
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
+    /// The uniform bind group layout
+    pub default_uniform_bind_group_layout: wgpu::BindGroupLayout,
+    /// The depth buffer, used to render object depth
+    pub depth_buffer: (wgpu::Texture, wgpu::TextureView, wgpu::Sampler),
+    /// The default data used within the renderer
+    pub default_data: Option<(crate::Textures, crate::Shaders, crate::UniformBuffers)>,
+    /// The camera used in the engine
+    pub camera: Option<crate::UniformBuffers>,
+    /// Background clear color
+    pub clear_color: wgpu::Color,
+    /// Scissor cut section of the screen to render to
+    /// (x, y, width, height)
+    pub scissor_rect: Option<(u32, u32, u32, u32)>,
+}
+unsafe impl Sync for Renderer {}
+unsafe impl Send for Renderer {}
 
 impl Renderer {
     /// Creates a new renderer.
-    ///
-    /// # Arguments
-    /// * `window` - The window to create the renderer for.
-    /// * `power_preference` - The power preference to use.
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
         settings: crate::WindowDescriptor,
@@ -148,17 +176,12 @@ impl Renderer {
         if let Ok(default_texture) = self.build_texture(
             "Default Texture",
             TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::header::TextureMode::Clamp,
-            //crate::header::TextureFormat::PNG
+            crate::prelude::TextureMode::Clamp,
+            //crate::prelude::TextureFormat::PNG
         ) {
             let default_uniform = self.build_uniform_buffer(&vec![
-                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-                self.build_uniform_buffer_part(
-                    "Color",
-                    uniform_type::Array4 {
-                        data: DEFAULT_COLOR,
-                    },
-                ),
+                self.build_uniform_buffer_part("Transformation Matrix", crate::Matrix4::IDENTITY),
+                self.build_uniform_buffer_part("Color", DEFAULT_COLOR),
             ]);
 
             let default_shader = self.build_shader(
@@ -176,8 +199,6 @@ impl Renderer {
     }
 
     /// Resize the window.
-    /// # Arguments
-    /// * `new_size` - The new window size.
     pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         // check if new_size is non-zero
         if new_size.width != 0 && new_size.height != 0 {
@@ -196,10 +217,6 @@ impl Renderer {
     }
 
     /// Render the scene. Returns the command encoder, the texture view, and the surface texture.
-    ///
-    /// # Arguments
-    /// * `objects` - The object storage.
-    /// * `camera` - The camera.
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
@@ -303,7 +320,7 @@ impl Renderer {
                     render_pass.set_vertex_buffer(1, i.instance_buffer.slice(..));
                     render_pass.set_index_buffer(
                         vertex_buffer.index_buffer.slice(..),
-                        #[cfg(feature = "u16")]
+                        #[cfg(not(feature = "u32"))]
                         wgpu::IndexFormat::Uint16,
                         #[cfg(feature = "u32")]
                         wgpu::IndexFormat::Uint32,
@@ -331,10 +348,6 @@ impl Renderer {
     }
 
     /// Render the scene.
-    ///
-    /// # Arguments
-    /// * `encoder` - The command encoder.
-    /// * `frame` - The surface texture.
     pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -348,61 +361,34 @@ impl Renderer {
 }
 
 // =========================== Extract Pipeline Data ===========================
-// I couldn't make them into one function, so here they are, four of them
-
-/// Get the pipeline vertex buffer.
-fn get_pipeline_vertex_buffer<'a>(
-    data: &'a PipelineData<crate::VertexBuffers>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::VertexBuffers> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_vertex_buffer(&data.pipeline.vertex_buffer, objects)
-            } else {
-                None
+macro_rules! gen_pipeline {
+    ($function_name:ident, $buffer_type:ty, $buffer_field:ident) => {
+        fn $function_name<'a>(
+            data: &'a PipelineData<$buffer_type>,
+            objects: &'a ObjectStorage,
+        ) -> Option<&'a $buffer_type> {
+            match data {
+                PipelineData::Copy(object_id) => {
+                    let data = objects.get(object_id.as_str());
+                    if let Some(data) = data {
+                        $function_name(&data.pipeline.$buffer_field, objects)
+                    } else {
+                        None
+                    }
+                }
+                PipelineData::Data(data) => Some(data),
             }
         }
-        PipelineData::Data(data) => Some(data),
-    }
+    };
 }
 
-/// Get the pipeline shader.
-fn get_pipeline_shader<'a>(
-    data: &'a PipelineData<crate::Shaders>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::Shaders> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_shader(&data.pipeline.shader, objects)
-            } else {
-                None
-            }
-        }
-        PipelineData::Data(data) => Some(data),
-    }
-}
-
-/// Get the pipeline texture.
-fn get_pipeline_texture<'a>(
-    data: &'a PipelineData<crate::Textures>,
-    objects: &'a ObjectStorage,
-) -> Option<&'a crate::Textures> {
-    match data {
-        PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
-            if let Some(data) = data {
-                get_pipeline_texture(&data.pipeline.texture, objects)
-            } else {
-                None
-            }
-        }
-        PipelineData::Data(data) => Some(data),
-    }
-}
+gen_pipeline!(
+    get_pipeline_vertex_buffer,
+    crate::VertexBuffers,
+    vertex_buffer
+);
+gen_pipeline!(get_pipeline_shader, crate::Shaders, shader);
+gen_pipeline!(get_pipeline_texture, crate::Textures, texture);
 
 /// Get the pipeline uniform_buffer.
 fn get_pipeline_uniform_buffer<'a>(

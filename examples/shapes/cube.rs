@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{header::Engine, primitive_shapes::cube};
+use blue_engine::{prelude::Engine, primitive_shapes::cube};
 
 fn main() {
     let mut engine = Engine::new().expect("win");
