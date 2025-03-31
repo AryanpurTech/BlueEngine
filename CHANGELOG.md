@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2025-03-31
+
+### Bug Fixes
+
+- #92 and some cleanups ([0c2457f](https://github.com/AryanpurTech/BlueEngine/commit/0c2457f0c62a360b486bca230b7ea163ebfe1216))
+
+### Features
+
+- Starting to autogenerate the Vector types ([378e51d](https://github.com/AryanpurTech/BlueEngine/commit/378e51d1081b43abd1c32e1e1a5ed4a0e54dee85))
+
+### Miscellaneous Tasks
+
+- Included the utilities in the main repository ([42b93a9](https://github.com/AryanpurTech/BlueEngine/commit/42b93a95694752c81308fd4815a77199866ec279))
+- Finalized some documentation and cleanups ([7e35283](https://github.com/AryanpurTech/BlueEngine/commit/7e352837d2fc5ec79479be8234a01cbd89431521))
+- Moved from nalgebra to glam, and moved native Vector types to glam Vector ([cb43a08](https://github.com/AryanpurTech/BlueEngine/commit/cb43a08cab00cfa13fb70b4b5692a5cdbaef2a52))
+- Removed dev example ([5e11dca](https://github.com/AryanpurTech/BlueEngine/commit/5e11dcab46954df13ac3761e428316f565ba7f8a))
+- Moved structures from the header to their respective components ([0c2c941](https://github.com/AryanpurTech/BlueEngine/commit/0c2c941af2a436e215ad7eab9f122a731a9d506e))
+- Moved prelude, utils and primitive shapes to a cleaner format ([3f95a40](https://github.com/AryanpurTech/BlueEngine/commit/3f95a40f631782da72fa93533181091332fd5112))
+- Renamed header to prelude ([2e58c8d](https://github.com/AryanpurTech/BlueEngine/commit/2e58c8df62e4a89fc46e6936628579760f5fcab8))
+
 ## [0.6.5] - 2025-03-15
 
 ### Miscellaneous Tasks
