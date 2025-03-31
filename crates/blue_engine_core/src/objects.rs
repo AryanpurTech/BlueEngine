@@ -4,11 +4,10 @@
  * The license is same as the one on the root.
 */
 
-use crate::uniform_type::{Array4, Matrix};
-use crate::utils::default_resources::{DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE};
+use crate::utils::default_resources::{DEFAULT_SHADER, DEFAULT_TEXTURE};
 use crate::{
-    Pipeline, PipelineData, Renderer, ShaderSettings, StringBuffer, TextureData, Textures,
-    UnsignedIntType, Vector3, Vertex, glm, pixel_to_cartesian, uniform_type,
+    Matrix4, Pipeline, PipelineData, Quaternion, Renderer, ShaderSettings, StringBuffer,
+    TextureData, Textures, UnsignedIntType, Vector3, Vector4, Vertex, pixel_to_cartesian,
 };
 
 /// Objects make it easier to work with Blue Engine, it automates most of work needed for
@@ -35,22 +34,22 @@ pub struct Object {
     /// Dictates the position of your object in pixels
     pub position: Vector3,
     /// Dictates the rotation of your object
-    pub rotation: Vector3,
+    pub rotation: Quaternion,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub position_matrix: nalgebra_glm::Mat4,
+    pub position_matrix: Matrix4,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub scale_matrix: nalgebra_glm::Mat4,
+    pub scale_matrix: Matrix4,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub rotation_matrix: nalgebra_glm::Mat4,
+    pub rotation_quaternion: Quaternion,
     /// Transformation matrix, but inversed
-    pub inverse_transformation_matrix: crate::uniform_type::Matrix,
+    pub inverse_transformation_matrix: Matrix4,
     /// The main color of your object
-    pub color: crate::uniform_type::Array4,
+    pub color: Vector4,
     /// A struct making it easier to manipulate specific parts of shader
     pub shader_builder: crate::objects::ShaderBuilder,
     /// Shader settings
@@ -111,7 +110,7 @@ crate::macros::impl_deref!(ObjectStorage, std::collections::HashMap<String, Obje
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct InstanceRaw {
     /// The transformation matrix of the instance
-    pub model: uniform_type::Matrix,
+    pub model: Matrix4,
 }
 
 /// Instance buffer data storage
@@ -149,6 +148,8 @@ pub enum RotateAmount {
 unsafe impl Send for RotateAmount {}
 unsafe impl Sync for RotateAmount {}
 
+/// Defines full axes rotation information
+
 impl Renderer {
     /// Creates a new object
     ///
@@ -170,13 +171,8 @@ impl Renderer {
         let vertex_buffer = self.build_vertex_buffer(&vertices, &indices);
 
         let uniform = self.build_uniform_buffer(&vec![
-            self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-            self.build_uniform_buffer_part(
-                "Color",
-                crate::uniform_type::Array4 {
-                    data: crate::utils::default_resources::DEFAULT_COLOR,
-                },
-            ),
+            self.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
+            self.build_uniform_buffer_part("Color", crate::utils::default_resources::DEFAULT_COLOR),
         ]);
 
         let shader_source =
@@ -213,29 +209,25 @@ impl Renderer {
             instances: vec![instance],
             instance_buffer,
             uniform_layout: uniform.1,
-            size: Vector3::new(1f32, 1f32, 1f32),
-            position: Vector3::default(),
-            rotation: Vector3::new(0f32, 0f32, 0f32),
+            size: Vector3::ONE,
+            position: Vector3::ZERO,
+            rotation: Quaternion::IDENTITY,
             changed: false,
-            position_matrix: DEFAULT_MATRIX_4.to_im(),
-            scale_matrix: DEFAULT_MATRIX_4.to_im(),
-            rotation_matrix: DEFAULT_MATRIX_4.to_im(),
-            inverse_transformation_matrix: Matrix::from_im(nalgebra_glm::transpose(
-                &nalgebra_glm::inverse(&DEFAULT_MATRIX_4.to_im()),
+            position_matrix: Matrix4::IDENTITY,
+            scale_matrix: Matrix4::IDENTITY,
+            rotation_quaternion: Quaternion::IDENTITY,
+            inverse_transformation_matrix: Matrix4::transpose(&Matrix4::inverse(
+                &Matrix4::IDENTITY,
             )),
-            color: crate::uniform_type::Array4 {
-                data: crate::utils::default_resources::DEFAULT_COLOR,
-            },
+            color: crate::utils::default_resources::DEFAULT_COLOR,
             shader_builder: shader_source,
             shader_settings: settings.shader_settings,
             camera_effect: settings.camera_effect,
             uniform_buffers: vec![
-                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
+                self.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
                 self.build_uniform_buffer_part(
                     "Color",
-                    crate::uniform_type::Array4 {
-                        data: crate::utils::default_resources::DEFAULT_COLOR,
-                    },
+                    crate::utils::default_resources::DEFAULT_COLOR,
                 ),
             ],
             is_visible: true,
@@ -300,7 +292,7 @@ impl Object {
         self.size *= scale;
 
         let transformation_matrix = self.scale_matrix;
-        let result = nalgebra_glm::scale(&transformation_matrix, &scale.into());
+        let result = transformation_matrix * Matrix4::from_scale(scale);
         self.scale_matrix = result;
         self.inverse_matrices();
 
@@ -347,79 +339,13 @@ impl Object {
         self
     }
 
-    /// Rotates the object in the axis you specify
-    ///
-    /// THIS METHOD IS DEPRECATED, USE [crate::Object::set_rotation] or [crate::Object::rotate]
-    #[deprecated]
-    pub fn set_rotatation(&mut self, angle: f32, axis: RotateAxis) -> &mut Self {
-        let mut rotation_matrix = self.rotation_matrix;
-        let axis = match axis {
-            RotateAxis::X => {
-                self.rotation.x += angle;
-                Vector3::x_axis()
-            }
-            RotateAxis::Y => {
-                self.rotation.y += angle;
-                Vector3::y_axis()
-            }
-            RotateAxis::Z => {
-                self.rotation.z += angle;
-                Vector3::z_axis()
-            }
-        };
-
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, angle.to_radians(), &axis.into());
-        self.rotation_matrix = rotation_matrix;
-        self.inverse_matrices();
-
-        self.changed = true;
-        self
-    }
-
-    fn rotation_single_axis(angle: f32, axis_from: usize, axis_into: usize) -> nalgebra_glm::Mat4 {
-        //  angle.cos(), -angle.sin()
-        //  angle.sin(), angle.cos()
-        let mut result = nalgebra_glm::Mat4::identity();
-
-        result[(axis_from, axis_from)] = angle.cos() as f32;
-        result[(axis_from, axis_into)] = -angle.sin() as f32;
-        result[(axis_into, axis_from)] = angle.sin() as f32;
-        result[(axis_into, axis_into)] = angle.cos() as f32;
-
-        result
-    }
-    fn rotation_full(euler_angles: nalgebra_glm::Vec3) -> nalgebra_glm::Mat4 {
-        const X: usize = 0;
-        const Y: usize = 1;
-        const Z: usize = 2;
-
-        Self::rotation_single_axis(euler_angles[2], X, Y) * // Rotation around Z (rotation of X into Y)
-        Self::rotation_single_axis(euler_angles[1], Z, X) * // Rotation around Y (rotation of Z into X)
-        Self::rotation_single_axis(euler_angles[0], Y, Z) // Rotation around X (rotation of Y into Z)
-    }
-
     /// Sets the rotation of the object in the axis you specify
-    pub fn set_rotation(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
-        let amount_radians = match amount {
-            RotateAmount::Radians(amount) => amount,
-            RotateAmount::Degrees(amount) => amount.to_radians(),
-        };
-        match axis {
-            RotateAxis::X => {
-                self.rotation.x = amount_radians;
-                Vector3::x_axis()
-            }
-            RotateAxis::Y => {
-                self.rotation.y = amount_radians;
-                Vector3::y_axis()
-            }
-            RotateAxis::Z => {
-                self.rotation.z = amount_radians;
-                Vector3::z_axis()
-            }
-        };
-
-        self.rotation_matrix = Self::rotation_full(self.rotation.into());
+    ///
+    /// This function does NOT normalize the rotation.
+    pub fn set_rotation(&mut self, rotation: Vector3) -> &mut Self {
+        self.rotation_quaternion = Quaternion::from_rotation_x(rotation.x)
+            * Quaternion::from_rotation_y(rotation.y)
+            * Quaternion::from_rotation_z(rotation.z);
         self.inverse_matrices();
 
         self.changed = true;
@@ -428,29 +354,27 @@ impl Object {
 
     /// Rotates the object in the axis you specify
     pub fn rotate(&mut self, amount: RotateAmount, axis: RotateAxis) -> &mut Self {
-        let mut rotation_matrix = self.rotation_matrix;
-
         let amount_radians = match amount {
             RotateAmount::Radians(amount) => amount,
             RotateAmount::Degrees(amount) => amount.to_radians(),
         };
+
         let axis = match axis {
             RotateAxis::X => {
                 self.rotation.x += amount_radians;
-                Vector3::x_axis()
+                Quaternion::from_rotation_x(amount_radians)
             }
             RotateAxis::Y => {
                 self.rotation.y += amount_radians;
-                Vector3::y_axis()
+                Quaternion::from_rotation_y(amount_radians)
             }
             RotateAxis::Z => {
                 self.rotation.z += amount_radians;
-                Vector3::z_axis()
+                Quaternion::from_rotation_z(amount_radians)
             }
         };
 
-        rotation_matrix = nalgebra_glm::rotate(&rotation_matrix, amount_radians, &axis.into());
-        self.rotation_matrix = rotation_matrix;
+        self.rotation_quaternion *= axis;
         self.inverse_matrices();
 
         self.changed = true;
@@ -460,10 +384,7 @@ impl Object {
     /// Moves the object by the amount you specify in the axis you specify
     pub fn set_translation(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         self.position -= new_pos.into();
-
-        let mut position_matrix = self.position_matrix;
-        position_matrix = nalgebra_glm::translate(&position_matrix, &self.position.into());
-        self.position_matrix = position_matrix;
+        self.position_matrix *= Matrix4::from_translation(self.position);
 
         self.inverse_matrices();
         self.changed = true;
@@ -495,17 +416,17 @@ impl Object {
         //     0.0,  0.0,  0.0,  1.0;
         // ]
 
-        self.position_matrix = DEFAULT_MATRIX_4.to_im();
-        self.position_matrix[(0, 3)] = self.position[0];
-        self.position_matrix[(1, 3)] = self.position[1];
-        self.position_matrix[(2, 3)] = self.position[2];
+        self.position_matrix = Matrix4 {
+            x_axis: Vector4::new(1f32, 0f32, 0f32, self.position[0]),
+            y_axis: Vector4::new(0f32, 1f32, 0f32, self.position[1]),
+            z_axis: Vector4::new(0f32, 0f32, 1f32, self.position[2]),
+            w_axis: Vector4::new(0f32, 0f32, 0f32, 1f32),
+        };
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
     pub fn set_color(&mut self, red: f32, green: f32, blue: f32, alpha: f32) -> &mut Self {
-        self.color = Array4 {
-            data: [red, green, blue, alpha],
-        };
+        self.color = Vector4::new(red, green, blue, alpha);
         self.changed = true;
         self
     }
@@ -541,10 +462,11 @@ impl Object {
 
     /// build an inverse of the transformation matrix to be sent to the gpu for lighting and other things.
     pub fn inverse_matrices(&mut self) {
-        self.inverse_transformation_matrix =
-            Matrix::from_im(nalgebra_glm::transpose(&nalgebra_glm::inverse(
-                &(self.position_matrix * self.rotation_matrix * self.scale_matrix),
-            )));
+        self.inverse_transformation_matrix = Matrix4::transpose(&Matrix4::inverse(
+            &(self.position_matrix
+                * Matrix4::from_quat(self.rotation_quaternion)
+                * self.scale_matrix),
+        ));
     }
 
     /// Update and apply changes done to an object
@@ -620,9 +542,7 @@ impl Object {
     pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            uniform_type::Matrix::from_im(
-                self.position_matrix * self.rotation_matrix * self.scale_matrix,
-            ),
+            self.position_matrix * Matrix4::from_quat(self.rotation_quaternion) * self.scale_matrix,
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
 
@@ -639,9 +559,7 @@ impl Object {
     ) -> crate::UniformBuffers {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            uniform_type::Matrix::from_im(
-                self.position_matrix * self.rotation_matrix * self.scale_matrix,
-            ),
+            self.position_matrix * Matrix4::from_quat(self.rotation_quaternion) * self.scale_matrix,
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
 
@@ -796,12 +714,15 @@ impl Instance {
 
     /// Gathers all information and builds a Raw Instance to be sent to GPU
     pub fn to_raw(&self) -> InstanceRaw {
-        let position_matrix = glm::translate(&DEFAULT_MATRIX_4.to_im(), &self.position.into());
-        let rotation_matrix =
-            nalgebra_glm::rotate(&DEFAULT_MATRIX_4.to_im(), 0f32, &self.rotation.into());
-        let scale_matrix = glm::scale(&DEFAULT_MATRIX_4.to_im(), &self.scale.into());
+        let position_matrix = Matrix4::IDENTITY * Matrix4::from_translation(self.position);
+        let rotation_matrix = Matrix4::from_quat(
+            Quaternion::from_rotation_x(self.rotation.x)
+                * Quaternion::from_rotation_y(self.rotation.y)
+                * Quaternion::from_rotation_z(self.rotation.z),
+        );
+        let scale_matrix = Matrix4::IDENTITY * Matrix4::from_scale(self.scale);
         InstanceRaw {
-            model: Matrix::from_im(position_matrix * rotation_matrix * scale_matrix),
+            model: position_matrix * rotation_matrix * scale_matrix,
         }
     }
 

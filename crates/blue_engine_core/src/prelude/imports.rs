@@ -1,72 +1,50 @@
-/// Shaders are programs that runs on the GPU
-pub type Shaders = wgpu::RenderPipeline;
-/// Uniform Buffers are small amount of data that are sent from CPU to GPU
-pub type UniformBuffers = wgpu::BindGroup;
-/// Textures are image data that are sent to GPU to be set to a surface
-pub type Textures = wgpu::BindGroup;
-/// Primitive type the input mesh is composed of.
-pub type ShaderPrimitive = wgpu::PrimitiveTopology;
-/// Format of indices used with pipeline.
-pub type IndexFormat = wgpu::IndexFormat;
-/// Vertex winding order which classifies the "front" face of a triangle.
-pub type FrontFace = wgpu::FrontFace;
-/// Face of a vertex.
-pub type CullMode = wgpu::Face;
-/// Type of drawing mode for polygons
-pub type PolygonMode = wgpu::PolygonMode;
-/// Power Preference when choosing a physical adapter.
-pub type PowerPreference = wgpu::PowerPreference;
+pub use downcast;
+pub use image;
+pub use wgpu;
+pub use winit;
 
-/// Pod trait for custom uniform buffer structure
-pub use bytemuck::Pod;
-/// Zeroable trait for custom uniform buffer structure
-pub use bytemuck::Zeroable;
-
-/// Backends
 pub use wgpu::Backends;
-/// Encoder from wgpu
 pub use wgpu::CommandEncoder;
 pub use wgpu::LoadOp;
-/// Memory hints
 pub use wgpu::MemoryHints;
 pub use wgpu::Operations;
 pub use wgpu::RenderPassColorAttachment;
 pub use wgpu::RenderPassDescriptor;
-/// Surface Texture
 pub use wgpu::TextureView;
-/// Depth format
-pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+
+pub use winit::dpi::*;
+pub use winit::event::DeviceEvent;
+pub use winit::event::ElementState;
+pub use winit::event::Event;
+pub use winit::event::KeyEvent;
+pub use winit::event::MouseButton;
+pub use winit::event::WindowEvent;
+pub use winit::event_loop::EventLoop;
+pub use winit::keyboard::Key;
+pub use winit::keyboard::KeyCode;
+pub use winit::window::Fullscreen;
+
+// Math types
+pub type Vector2 = glam::Vec2;
+pub type Vector3 = glam::Vec3;
+pub type Vector4 = glam::Vec4;
+pub type Matrix2 = glam::Mat2;
+pub type Matrix3 = glam::Mat3;
+pub type Matrix4 = glam::Mat4;
+pub type Quaternion = glam::Quat;
 
 /// Input helper
 pub use crate::utils::winit_input_helper::WinitInputHelper as InputHelper;
-/// all of downcast
-pub use downcast;
-/// all of image
-pub use image;
-/// all of nalgebra_glm
-pub use nalgebra_glm as glm;
-/// all of wgpu
-pub use wgpu;
-/// all of winit
-pub use winit;
-/// WindowSize
-pub use winit::dpi::*;
-/// Device Events
-pub use winit::event::DeviceEvent;
-/// Element State
-pub use winit::event::ElementState;
-/// Winit Events
-pub use winit::event::Event;
-/// Keyboard input identifier
-pub use winit::event::KeyEvent;
-/// The mouse button identifier
-pub use winit::event::MouseButton;
-/// WindowEvents
-pub use winit::event::WindowEvent;
-/// Event Loop
-pub use winit::event_loop::EventLoop;
-/// Keyboard keys identifier
-pub use winit::keyboard::Key;
-pub use winit::keyboard::KeyCode;
-/// Fullscreen enum
-pub use winit::window::Fullscreen;
+pub use bytemuck::Pod;
+pub use bytemuck::Zeroable;
+
+pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+pub type Shaders = wgpu::RenderPipeline;
+pub type UniformBuffers = wgpu::BindGroup;
+pub type Textures = wgpu::BindGroup;
+pub type ShaderPrimitive = wgpu::PrimitiveTopology;
+pub type IndexFormat = wgpu::IndexFormat;
+pub type FrontFace = wgpu::FrontFace;
+pub type CullMode = wgpu::Face;
+pub type PolygonMode = wgpu::PolygonMode;
+pub type PowerPreference = wgpu::PowerPreference;

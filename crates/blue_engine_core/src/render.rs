@@ -2,8 +2,8 @@
 
 use crate::{
     CameraContainer, ObjectStorage, PipelineData,
-    prelude::{ShaderSettings, TextureData, uniform_type},
-    utils::default_resources::{DEFAULT_COLOR, DEFAULT_MATRIX_4, DEFAULT_SHADER, DEFAULT_TEXTURE},
+    prelude::{ShaderSettings, TextureData},
+    utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
 
 /// Main renderer class. this will contain all methods and data related to the renderer
@@ -180,13 +180,8 @@ impl Renderer {
             //crate::prelude::TextureFormat::PNG
         ) {
             let default_uniform = self.build_uniform_buffer(&vec![
-                self.build_uniform_buffer_part("Transformation Matrix", DEFAULT_MATRIX_4),
-                self.build_uniform_buffer_part(
-                    "Color",
-                    uniform_type::Array4 {
-                        data: DEFAULT_COLOR,
-                    },
-                ),
+                self.build_uniform_buffer_part("Transformation Matrix", crate::Matrix4::IDENTITY),
+                self.build_uniform_buffer_part("Color", DEFAULT_COLOR),
             ]);
 
             let default_shader = self.build_shader(

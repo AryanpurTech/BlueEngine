@@ -25,7 +25,6 @@ winit = { version = "0.30", features = ["rwh_06"] }
 wgpu = { version = "24.0.3" }
 bytemuck = { version = "1.16", features = ["derive"] }
 downcast = "0.11"
-nalgebra-glm = "0.19"
 thiserror = "2.0"
 crabtime = "1.1.1"
 
@@ -34,6 +33,7 @@ env_logger = { version = "0.11", optional = true }
 # android
 log = { version = "0.4", optional = true }
 android_logger = { version = "0.15.0", optional = true }
+glam = { version = "0.30.1", features = ["bytemuck", "serde"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wgpu = { version = "24.0.3", features = ["webgl"] }

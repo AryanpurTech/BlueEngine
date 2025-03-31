@@ -36,24 +36,13 @@ pub const DEFAULT_TEXTURE: &[u8] = &[
 ];
 
 /// The default color used for each object
-pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 0.0];
-
-/// A default matrix 4x4 used in the engine
-pub const DEFAULT_MATRIX_4: crate::prelude::uniform_type::Matrix =
-    crate::prelude::uniform_type::Matrix {
-        data: [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ],
-    };
+pub const DEFAULT_COLOR: crate::Vector4 = crate::Vector4::new(1.0, 1.0, 1.0, 1.0);
 
 /// A transformation matrix used to convert opengl projections to wgpu
 #[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: nalgebra_glm::Mat4 = nalgebra_glm::Mat4::new(
-    1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.5,
-    0.0, 0.0, 0.0, 1.0,
-);
+pub const OPENGL_TO_WGPU_MATRIX: crate::Matrix4 = crate::Matrix4 {
+    x_axis: crate::Vector4::new(1.0, 0.0, 0.0, 0.0),
+    y_axis: crate::Vector4::new(0.0, 1.0, 0.0, 0.0),
+    z_axis: crate::Vector4::new(0.0, 0.0, 0.5, 0.5),
+    w_axis: crate::Vector4::new(0.0, 0.0, 0.0, 1.0),
+};

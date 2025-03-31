@@ -2,14 +2,9 @@ use downcast::{Any, downcast};
 /// re-exports from dependencies that are useful
 pub mod imports;
 pub use imports::*;
-/// few commonly used uniform buffer structures
-pub mod uniform_buffer;
-pub use uniform_buffer::*;
 /// contains definition for some 2D and 3D shapes. They are basic shapes and
 /// can be used as examples of how to create your own content.
 pub mod primitive_shapes;
-/// contains definition for 2D and 3D vectors.
-pub mod vector;
 pub use crate::camera::{Camera, CameraContainer, Projection};
 pub use crate::definition::{
     Pipeline, PipelineData, TextureData, TextureMode, VertexBuffers, pixel_to_cartesian,
@@ -19,7 +14,6 @@ pub use crate::objects::{
 };
 pub use crate::render::Renderer;
 pub use crate::window::{ShaderSettings, Window, WindowDescriptor};
-pub use vector::{Vector2, Vector3};
 
 /// The uint type used for indices and more
 #[cfg(not(feature = "u32"))]
@@ -73,11 +67,11 @@ pub mod macros {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     /// Contains position data for the vertex in 3D space
-    pub position: Vector3,
+    pub position: [f32; 3],
     /// Contains uv position data for the vertex
-    pub uv: Vector2,
+    pub uv: [f32; 2],
     /// Contains the normal face of the vertex
-    pub normal: Vector3,
+    pub normal: [f32; 3],
 }
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
