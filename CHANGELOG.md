@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2025-04-01
+
+### Bug Fixes
+
+- The camera target being inaccurately set ([5062995](https://github.com/AryanpurTech/BlueEngine/commit/5062995f72e7479a7055131826ab4427647936fc))
+- Camera aspect ratio fix ([09302c7](https://github.com/AryanpurTech/BlueEngine/commit/09302c7a58be3ccb3ea7d9784a62af51fcecfd69))
+
+### Miscellaneous Tasks
+
+- Updated version numbers ([d49b531](https://github.com/AryanpurTech/BlueEngine/commit/d49b5312c6fa21eadef4d3acef8bbbc1e5753525))
+
 ## [0.7.0] - 2025-03-31
 
 ### Bug Fixes
