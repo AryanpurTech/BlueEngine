@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_utilities"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2024"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "Utilities for Blue Engine"
@@ -23,7 +23,7 @@ debug = ["blue_engine/debug"]
 
 [dependencies]
 # blue_engine = { path = "../Blue Engine", default-features = false }
-blue_engine = { version = "0.7.0" }
+blue_engine = { version = "0.7.1" }
 eyre = "0.6.12"
 
 # Animation
