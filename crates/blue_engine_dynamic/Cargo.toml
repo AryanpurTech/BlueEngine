@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_dynamic"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"

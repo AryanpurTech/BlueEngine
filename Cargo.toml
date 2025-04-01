@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "General-Purpose, Easy-to-use, Fast, and Portable graphics engine"
@@ -33,12 +33,12 @@ android_game_activity = [
 u32 = ["blue_engine_core?/u32", "blue_engine_dynamic?/u32"]
 
 [dependencies]
-# blue_engine_core = { version = "0.7.0", optional = true }
-blue_engine_core = { path = "crates/blue_engine_core", optional = true }
+blue_engine_core = { version = "0.7.1", optional = true }
+# blue_engine_core = { path = "crates/blue_engine_core", optional = true }
 
 # Wasm does not support dynamic linking.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-blue_engine_dynamic = { version = "0.7.0", optional = true }
+blue_engine_dynamic = { version = "0.7.1", optional = true }
 # blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
 
 # ========== EXAMPLES ========== #
