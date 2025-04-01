@@ -3,8 +3,6 @@ use blue_engine::{CameraContainer, InputHelper, ObjectStorage, Vector3, winit};
 
 impl FlyCamera {
     pub fn new(camera: &mut CameraContainer) -> Self {
-        camera.add_position_and_target(true);
-
         Self {
             camera_right: Self::update_vertices(camera),
             yaw: -90f32,
@@ -117,6 +115,7 @@ impl blue_engine::Signal for FlyCamera {
                 + (camera.get("main").unwrap().target * camera_speed);
 
             camera.set_position([result.x, result.y, result.z]);
+            camera.set_target([result.x, result.y, result.z]);
         }
 
         // S
@@ -125,6 +124,7 @@ impl blue_engine::Signal for FlyCamera {
                 - (camera.get("main").unwrap().target * camera_speed);
 
             camera.set_position([result.x, result.y, result.z]);
+            camera.set_target([result.x, result.y, result.z]);
         }
         // A
         if input.key_held(blue_engine::KeyCode::KeyA) {
@@ -133,6 +133,7 @@ impl blue_engine::Signal for FlyCamera {
             let result = camera_pos - (self.camera_right * camera_speed);
 
             camera.set_position([result.x, result.y, result.z]);
+            camera.set_target([result.x, result.y, result.z]);
         }
         // D
         if input.key_held(blue_engine::KeyCode::KeyD) {
@@ -141,6 +142,7 @@ impl blue_engine::Signal for FlyCamera {
             let result = camera_pos + (self.camera_right * camera_speed);
 
             camera.set_position([result.x, result.y, result.z]);
+            camera.set_target([result.x, result.y, result.z]);
         }
     }
 }

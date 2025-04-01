@@ -6,7 +6,7 @@
 
 use super::default_resources::OPENGL_TO_WGPU_MATRIX;
 use crate::{
-    Matrix4, UniformBuffers,
+    Matrix4, UniformBuffers, Vector2,
     prelude::{Renderer, Vector3},
 };
 use winit::dpi::PhysicalSize;
@@ -41,7 +41,7 @@ pub struct Camera {
     /// The up vector of the camera. This defines the elevation of the camera
     pub up: Vector3,
     /// The resolution of the camera view
-    pub resolution: (f32, f32), //maybe this should be a Vector2i
+    pub resolution: Vector2,
     /// The projection of the camera
     pub projection: Projection,
     /// The closest view of camera
@@ -54,8 +54,6 @@ pub struct Camera {
     pub(crate) changed: bool,
     /// The uniform data of the camera to be sent to the gpu
     pub uniform_data: UniformBuffers,
-    /// The position and target of the camera
-    pub(crate) add_position_and_target: bool,
 }
 unsafe impl Send for Camera {}
 unsafe impl Sync for Camera {}
@@ -84,9 +82,9 @@ impl Camera {
 
         let mut camera = Self {
             position: Vector3::new(0.0, 0.0, 3.0),
-            target: Vector3::new(0.0, 0.0, -1.0),
+            target: Vector3::new(0.0, 0.0, 0.0),
             up: Vector3::new(0.0, 1.0, 0.0),
-            resolution: (window_size.width as f32, window_size.height as f32),
+            resolution: Vector2::new(window_size.width as f32, window_size.height as f32),
             projection: crate::Projection::Perspective {
                 fov: 70f32 * (std::f32::consts::PI / 180f32),
             },
@@ -95,11 +93,37 @@ impl Camera {
             view_data: Matrix4::IDENTITY,
             changed: true,
             uniform_data: camera_uniform.0,
-            add_position_and_target: false,
         };
         camera.build_view_projection_matrix();
 
         camera
+    }
+
+    /// Builds a view matrix for camera projection
+    pub fn build_view_matrix(&self) -> Matrix4 {
+        Matrix4::look_at_rh(self.position, self.target, self.up)
+    }
+
+    /// Builds a projection matrix for camera
+    pub fn build_projection_matrix(&self) -> Matrix4 {
+        let aspect = self.resolution.x / self.resolution.y;
+
+        match self.projection {
+            crate::Projection::Perspective { fov } => {
+                Matrix4::perspective_rh(fov, aspect, self.near, self.far)
+            }
+            crate::Projection::Orthographic { zoom } => {
+                let width = zoom;
+                let height = width / aspect;
+
+                let left = width * -0.5;
+                let right = width * 0.5;
+                let bottom = height * -0.5;
+                let top = height * 0.5;
+
+                Matrix4::orthographic_rh(left, right, bottom, top, self.near, self.far)
+            }
+        }
     }
 
     /// Updates the view uniform matrix that decides how camera works
@@ -115,9 +139,9 @@ impl Camera {
         let view = self.build_view_matrix();
         let ortho = Matrix4::orthographic_rh(
             0f32,
-            self.resolution.0,
+            self.resolution.x,
             0f32,
-            self.resolution.1,
+            self.resolution.y,
             self.near,
             self.far,
         );
@@ -149,41 +173,6 @@ impl Camera {
             .0;
 
         updated_buffer
-    }
-
-    /// Builds a view matrix for camera projection
-    pub fn build_view_matrix(&self) -> Matrix4 {
-        Matrix4::look_at_rh(
-            self.position.into(),
-            if self.add_position_and_target {
-                (self.position + self.target).into()
-            } else {
-                self.target.into()
-            },
-            self.up.into(),
-        )
-    }
-
-    /// Builds a projection matrix for camera
-    pub fn build_projection_matrix(&self) -> Matrix4 {
-        let aspect = self.resolution.0 / self.resolution.1;
-
-        match self.projection {
-            crate::Projection::Perspective { fov } => {
-                Matrix4::perspective_rh(fov, aspect, self.near, self.far)
-            }
-            crate::Projection::Orthographic { zoom } => {
-                let width = zoom;
-                let height = width / aspect;
-
-                let left = width * -0.5;
-                let right = width * 0.5;
-                let bottom = height * -0.5;
-                let top = height * 0.5;
-
-                Matrix4::orthographic_rh(left, right, bottom, top, self.near, self.far)
-            }
-        }
     }
 
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
@@ -223,7 +212,7 @@ impl Camera {
 
     /// Sets the aspect ratio of the camera
     pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) {
-        self.resolution = (window_size.width as f32, window_size.height as f32);
+        self.resolution = Vector2::new(window_size.width as f32, window_size.height as f32);
         self.build_view_projection_matrix();
     }
 
@@ -231,11 +220,6 @@ impl Camera {
     pub fn set_projection(&mut self, projection: Projection) {
         self.projection = projection;
         self.build_view_projection_matrix();
-    }
-
-    /// Enables adding position and target for the view target
-    pub fn add_position_and_target(&mut self, enable: bool) {
-        self.add_position_and_target = enable;
     }
 }
 
@@ -309,12 +293,6 @@ impl CameraContainer {
     pub fn set_projection(&mut self, projection: Projection) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
             main_camera.set_projection(projection);
-        }
-    }
-    /// Enables adding position and target for the view target
-    pub fn add_position_and_target(&mut self, enable: bool) {
-        if let Some(main_camera) = self.cameras.get_mut("main") {
-            main_camera.add_position_and_target(enable);
         }
     }
     /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame
