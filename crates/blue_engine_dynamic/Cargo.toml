@@ -20,5 +20,5 @@ android_game_activity = ["blue_engine_core/android_game_activity"]
 u32 = ["blue_engine_core/u32"]
 
 [dependencies]
-blue_engine_core = { version = "0.7.0" }
+blue_engine_core = { version = "0.7.1" }
 # blue_engine_core = { path = "../blue_engine_core" }
