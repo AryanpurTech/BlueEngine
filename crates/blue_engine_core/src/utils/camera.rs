@@ -125,6 +125,67 @@ impl Camera {
         self.changed = true;
     }
 
+    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame
+    pub fn update_view_projection(&mut self, renderer: &mut Renderer) {
+        if self.changed {
+            let updated_buffer = renderer
+                .build_uniform_buffer(&[renderer
+                    .build_uniform_buffer_part("Camera Uniform", self.camera_uniform_buffer())])
+                .0;
+            self.uniform_data = updated_buffer;
+            self.changed = false;
+        }
+    }
+
+    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame, and returns the bindgroup
+    pub fn update_view_projection_and_return(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> crate::UniformBuffers {
+        let updated_buffer = renderer
+            .build_uniform_buffer(&[
+                renderer.build_uniform_buffer_part("Camera Uniform", self.camera_uniform_buffer())
+            ])
+            .0;
+
+        updated_buffer
+    }
+
+    /// Builds a view matrix for camera projection
+    pub fn build_view_matrix(&self) -> Matrix4 {
+        Matrix4::look_at_rh(
+            self.position.into(),
+            if self.add_position_and_target {
+                (self.position + self.target).into()
+            } else {
+                self.target.into()
+            },
+            self.up.into(),
+        )
+    }
+
+    /// Builds a projection matrix for camera
+    pub fn build_projection_matrix(&self) -> Matrix4 {
+        let aspect = self.resolution.0 / self.resolution.1;
+
+        match self.projection {
+            crate::Projection::Perspective { fov } => {
+                Matrix4::perspective_rh(fov, aspect, self.near, self.far)
+            }
+            crate::Projection::Orthographic { zoom } => {
+                let width = zoom;
+                let height = width / aspect;
+
+                let left = width * -0.5;
+                let right = width * 0.5;
+                let bottom = height * -0.5;
+                let top = height * 0.5;
+
+                Matrix4::orthographic_rh(left, right, bottom, top, self.near, self.far)
+            }
+        }
+    }
+
     /// Returns a matrix uniform buffer from camera data that can be sent to GPU
     pub fn camera_uniform_buffer(&self) -> Matrix4 {
         self.view_data
@@ -175,67 +236,6 @@ impl Camera {
     /// Enables adding position and target for the view target
     pub fn add_position_and_target(&mut self, enable: bool) {
         self.add_position_and_target = enable;
-    }
-
-    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame
-    pub fn update_view_projection(&mut self, renderer: &mut Renderer) {
-        if self.changed {
-            let updated_buffer = renderer
-                .build_uniform_buffer(&[renderer
-                    .build_uniform_buffer_part("Camera Uniform", self.camera_uniform_buffer())])
-                .0;
-            self.uniform_data = updated_buffer;
-            self.changed = false;
-        }
-    }
-
-    /// This builds a uniform buffer data from camera view data that is sent to the GPU in next frame, and returns the bindgroup
-    pub fn update_view_projection_and_return(
-        &mut self,
-        renderer: &mut Renderer,
-    ) -> crate::UniformBuffers {
-        let updated_buffer = renderer
-            .build_uniform_buffer(&[
-                renderer.build_uniform_buffer_part("Camera Uniform", self.camera_uniform_buffer())
-            ])
-            .0;
-
-        updated_buffer
-    }
-
-    /// Builds a view matrix for camera projection
-    pub fn build_view_matrix(&self) -> Matrix4 {
-        Matrix4::look_at_rh(
-            self.position.into(),
-            if self.add_position_and_target {
-                (self.position + self.target).into()
-            } else {
-                self.target.into()
-            },
-            self.up.into(),
-        )
-    }
-
-    /// Builds a projection matrix for camera
-    pub fn build_projection_matrix(&self) -> Matrix4 {
-        let aspect = self.resolution.0 / self.resolution.1;
-
-        match self.projection {
-            crate::Projection::Perspective { fov } => {
-                Matrix4::perspective_rh(aspect, fov, self.near, self.far)
-            }
-            crate::Projection::Orthographic { zoom } => {
-                let width = zoom;
-                let height = width / aspect;
-
-                let left = width * -0.5;
-                let right = width * 0.5;
-                let bottom = height * -0.5;
-                let top = height * 0.5;
-
-                Matrix4::orthographic_rh(left, right, bottom, top, self.near, self.far)
-            }
-        }
     }
 }
 
