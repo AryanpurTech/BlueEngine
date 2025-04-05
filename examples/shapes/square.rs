@@ -7,11 +7,14 @@
 */
 
 use blue_engine::{
-    StringBuffer,
+    Object, StringBuffer,
     prelude::{Engine, ObjectSettings, Vertex},
 };
 
-pub fn square(name: impl StringBuffer, engine: &mut Engine) {
+pub fn square(
+    name: impl StringBuffer,
+    engine: &mut Engine,
+) -> Result<(), blue_engine::error::Error> {
     let vertices = vec![
         Vertex {
             position: [1.0, 1.0, 0.0],
@@ -35,24 +38,29 @@ pub fn square(name: impl StringBuffer, engine: &mut Engine) {
         },
     ];
 
-    engine.objects.new_object(
-        name,
-        vertices,
-        vec![2, 1, 0, 2, 0, 3],
-        ObjectSettings {
-            camera_effect: None,
-            ..Default::default()
-        },
-        &mut engine.renderer,
+    engine.objects.insert(
+        name.as_string(),
+        Object::new(
+            name,
+            vertices,
+            vec![2, 1, 0, 2, 0, 3],
+            ObjectSettings {
+                camera_effect: None,
+                ..Default::default()
+            },
+            &mut engine.renderer,
+        )?,
     );
+
+    Ok(())
 }
 
-fn main() {
-    let mut engine = Engine::new().expect("win");
+fn main() -> Result<(), blue_engine::error::Error> {
+    let mut engine = Engine::new()?;
 
-    square("Square", &mut engine);
+    square("Square", &mut engine)?;
 
-    engine
-        .update_loop(move |_, _, _, _, _, _| {})
-        .expect("Error during update loop");
+    engine.update_loop(move |_, _, _, _, _, _| {})?;
+
+    Ok(())
 }

@@ -7,7 +7,7 @@
 use crate::utils::default_resources::{DEFAULT_SHADER, DEFAULT_TEXTURE};
 use crate::{
     Matrix4, Pipeline, PipelineData, Quaternion, Renderer, ShaderSettings, StringBuffer,
-    TextureData, Textures, UnsignedIntType, Vector3, Vector4, Vertex, pixel_to_cartesian,
+    TextureData, TextureMode, Textures, UnsignedIntType, Vector3, Vector4, Vertex,
 };
 
 /// Objects make it easier to work with Blue Engine, it automates most of work needed for
@@ -34,7 +34,7 @@ pub struct Object {
     /// Dictates the position of your object in pixels
     pub position: Vector3,
     /// Dictates the rotation of your object
-    pub rotation: Quaternion,
+    pub rotation: Vector3,
     // flags the object to be updated until next frame
     pub(crate) changed: bool,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
@@ -150,94 +150,9 @@ unsafe impl Sync for RotateAmount {}
 
 /// Defines full axes rotation information
 
-impl Renderer {
-    /// Creates a new object
-    ///
-    /// Is used to define a new object and add it to the storage. This offers full customizability
-    /// and a framework for in-engine shapes to be developed.
-    ///
-    /// # Arguments
-    /// * `name` - The name of the object.
-    /// * `vertices` - A list of vertices for the object to draw with
-    /// * `indices` - A list of indices that references the vertices, defining draw order
-    /// * `settings` - The settings of the object
-    pub fn build_object(
-        &mut self,
-        name: impl StringBuffer,
-        vertices: Vec<Vertex>,
-        indices: Vec<UnsignedIntType>,
-        settings: ObjectSettings,
-    ) -> Result<Object, crate::error::Error> {
-        let vertex_buffer = self.build_vertex_buffer(&vertices, &indices);
-
-        let uniform = self.build_uniform_buffer(&vec![
-            self.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
-            self.build_uniform_buffer_part("Color", crate::utils::default_resources::DEFAULT_COLOR),
-        ]);
-
-        let shader_source =
-            ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect.clone());
-
-        let shader = self.build_shader(
-            name.as_str(),
-            shader_source.shader.clone(),
-            Some(&uniform.1),
-            settings.shader_settings,
-        );
-
-        let texture = self.build_texture(
-            "Default Texture",
-            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
-            crate::prelude::TextureMode::Clamp,
-            //crate::prelude::TextureFormat::PNG
-        )?;
-
-        let instance = Instance::new([0f32, 0f32, 0f32], [0f32, 0f32, 0f32], [1f32, 1f32, 1f32]);
-
-        let instance_buffer = self.build_instance(vec![instance.to_raw()]);
-
-        Ok(Object {
-            name: name.as_arc(),
-            vertices,
-            indices,
-            pipeline: Pipeline {
-                vertex_buffer: PipelineData::Data(vertex_buffer),
-                shader: PipelineData::Data(shader),
-                texture: PipelineData::Data(texture),
-                uniform: PipelineData::Data(Some(uniform.0)),
-            },
-            instances: vec![instance],
-            instance_buffer,
-            uniform_layout: uniform.1,
-            size: Vector3::ONE,
-            position: Vector3::ZERO,
-            rotation: Quaternion::IDENTITY,
-            changed: false,
-            position_matrix: Matrix4::IDENTITY,
-            scale_matrix: Matrix4::IDENTITY,
-            rotation_quaternion: Quaternion::IDENTITY,
-            inverse_transformation_matrix: Matrix4::transpose(&Matrix4::inverse(
-                &Matrix4::IDENTITY,
-            )),
-            color: crate::utils::default_resources::DEFAULT_COLOR,
-            shader_builder: shader_source,
-            shader_settings: settings.shader_settings,
-            camera_effect: settings.camera_effect,
-            uniform_buffers: vec![
-                self.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
-                self.build_uniform_buffer_part(
-                    "Color",
-                    crate::utils::default_resources::DEFAULT_COLOR,
-                ),
-            ],
-            is_visible: true,
-            render_order: 0,
-        })
-    }
-}
-
 impl ObjectStorage {
     /// Creates a new object
+    #[deprecated]
     pub fn new_object(
         &mut self,
         name: impl StringBuffer,
@@ -246,8 +161,10 @@ impl ObjectStorage {
         settings: ObjectSettings,
         renderer: &mut Renderer,
     ) {
-        match renderer.build_object(name.clone(), vertices, indices, settings) {
-            Ok(object) => self.add_object(name.clone(), object),
+        match Object::new(name.clone(), vertices, indices, settings, renderer) {
+            Ok(object) => {
+                self.insert(name.as_string(), object);
+            }
             Err(e) => {
                 eprintln!("Could not create a new Object: {e:#?}");
             }
@@ -255,6 +172,7 @@ impl ObjectStorage {
     }
 
     /// Adds an object to the storage
+    #[deprecated]
     pub fn add_object(&mut self, key: impl StringBuffer, object: Object) {
         fn add_object_inner(object_storage: &mut ObjectStorage, key: String, object: Object) {
             object_storage.insert(key, object);
@@ -263,6 +181,7 @@ impl ObjectStorage {
     }
 
     /// Allows for safe update of objects
+    #[deprecated]
     pub fn update_object<T: Fn(&mut Object)>(&mut self, key: impl StringBuffer, callback: T) {
         fn update_object_inner<T: Fn(&mut Object)>(
             object_storage: &mut ObjectStorage,
@@ -279,6 +198,83 @@ impl ObjectStorage {
 }
 
 impl Object {
+    /// Creates a new object
+    ///
+    /// Is used to define a new object and add it to the storage. This offers full customizability
+    /// and a framework for in-engine shapes to be developed.
+    pub fn new(
+        name: impl StringBuffer,
+        vertices: Vec<Vertex>,
+        indices: Vec<UnsignedIntType>,
+        settings: ObjectSettings,
+        renderer: &mut Renderer,
+    ) -> Result<Object, crate::error::Error> {
+        let vertex_buffer = renderer.build_vertex_buffer(&vertices, &indices);
+
+        let uniform = renderer.build_uniform_buffer(&vec![
+            renderer.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
+            renderer
+                .build_uniform_buffer_part("Color", crate::utils::default_resources::DEFAULT_COLOR),
+        ]);
+
+        let shader_source =
+            ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect.clone());
+        let shader = renderer.build_shader(
+            name.as_str(),
+            shader_source.shader.clone(),
+            Some(&uniform.1),
+            settings.shader_settings,
+        );
+
+        let texture = renderer.build_texture(
+            "Default Texture",
+            TextureData::Bytes(DEFAULT_TEXTURE.to_vec()),
+            crate::prelude::TextureMode::Clamp,
+            //crate::prelude::TextureFormat::PNG
+        )?;
+
+        let instance = Instance::default();
+        let instance_buffer = renderer.build_instance(vec![instance.build()]);
+
+        Ok(Object {
+            name: name.as_arc(),
+            vertices,
+            indices,
+            pipeline: Pipeline {
+                vertex_buffer: PipelineData::Data(vertex_buffer),
+                shader: PipelineData::Data(shader),
+                texture: PipelineData::Data(texture),
+                uniform: PipelineData::Data(Some(uniform.0)),
+            },
+            instances: vec![instance],
+            instance_buffer,
+            uniform_layout: uniform.1,
+            size: Vector3::ONE,
+            position: Vector3::ZERO,
+            rotation: Vector3::ZERO,
+            changed: false,
+            position_matrix: Matrix4::IDENTITY,
+            scale_matrix: Matrix4::IDENTITY,
+            rotation_quaternion: Quaternion::IDENTITY,
+            inverse_transformation_matrix: Matrix4::transpose(&Matrix4::inverse(
+                &Matrix4::IDENTITY,
+            )),
+            color: crate::utils::default_resources::DEFAULT_COLOR,
+            shader_builder: shader_source,
+            shader_settings: settings.shader_settings,
+            camera_effect: settings.camera_effect,
+            uniform_buffers: vec![
+                renderer.build_uniform_buffer_part("Transformation Matrix", Matrix4::IDENTITY),
+                renderer.build_uniform_buffer_part(
+                    "Color",
+                    crate::utils::default_resources::DEFAULT_COLOR,
+                ),
+            ],
+            is_visible: true,
+            render_order: 0,
+        })
+    }
+
     /// Sets the name of the object
     pub fn set_name(&mut self, name: impl StringBuffer) -> &mut Self {
         self.name = name.as_arc();
@@ -301,48 +297,21 @@ impl Object {
     }
 
     /// Resizes an object in pixels which are relative to the window
-    pub fn resize(
-        &mut self,
-        width: f32,
-        height: f32,
-        depth: f32,
-        window_size: winit::dpi::PhysicalSize<u32>,
-    ) -> &mut Self {
-        let difference_in_width = if self.size.x != 0.0 && width != 0.0 {
-            let a = pixel_to_cartesian(width, window_size.width);
-            let b = pixel_to_cartesian(self.size.x, window_size.width);
-            if a != 0f32 && b != 0f32 { a / b } else { b }
-        } else {
-            0.0
-        };
+    pub fn resize(&mut self, size: impl Into<Vector3>) -> &mut Self {
+        let size = size.into();
+        self.size = size;
+        self.scale_matrix = Matrix4::IDENTITY;
 
-        let difference_in_height = if self.size.y != 0.0 && height != 0.0 {
-            let a = pixel_to_cartesian(height, window_size.height);
-            let b = pixel_to_cartesian(self.size.y, window_size.height);
-            if a != 0f32 && b != 0f32 { a / b } else { b }
-        } else {
-            0.0
-        };
-        let difference_in_depth = if self.size.z != 0.0 && depth != 0.0 {
-            let a = pixel_to_cartesian(depth, window_size.width);
-            let b = pixel_to_cartesian(self.size.z, window_size.width);
-            if a != 0f32 && b != 0f32 { a / b } else { b }
-        } else {
-            0.0
-        };
-
-        self.set_scale(Vector3::new(
-            difference_in_width,
-            difference_in_height,
-            difference_in_depth,
-        ));
+        self.set_scale(size);
         self
     }
 
     /// Sets the rotation of the object in the axis you specify
     ///
     /// This function does NOT normalize the rotation.
-    pub fn set_rotation(&mut self, rotation: Vector3) -> &mut Self {
+    pub fn set_rotation(&mut self, rotation: impl Into<Vector3>) -> &mut Self {
+        let rotation = rotation.into();
+        self.rotation = rotation;
         self.rotation_quaternion = Quaternion::from_rotation_x(rotation.x)
             * Quaternion::from_rotation_y(rotation.y)
             * Quaternion::from_rotation_z(rotation.z);
@@ -382,6 +351,7 @@ impl Object {
     }
 
     /// Moves the object by the amount you specify in the axis you specify
+    #[deprecated]
     pub fn set_translation(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         self.position -= new_pos.into();
         self.position_matrix *= Matrix4::from_translation(self.position);
@@ -391,23 +361,24 @@ impl Object {
         self
     }
 
+    /// Moves the object by the amount you specify in the axis you specify
+    pub fn translate(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
+        self.position -= new_pos.into();
+        self.position_matrix *= Matrix4::from_translation(self.position);
+
+        self.inverse_matrices();
+        self.changed = true;
+        self
+    }
+    /// Moves the object by the amount you specify in the axis you specify
+
     /// Sets the position of the object in 3D space relative to the window
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
-
-        self.position.x = new_pos.x;
-        self.position.y = new_pos.y;
-        self.position.z = new_pos.z;
+        self.position = new_pos;
 
         // self.set_translation((self.position - new_pos) * -1f32);
-        self.update_position_matrix();
-        self.inverse_matrices();
-        self.changed = true;
 
-        self
-    }
-
-    fn update_position_matrix(&mut self) {
         // If there was actual `nalgebra`, it could be just:
         // nalgebra::matrix![
         //     1.0,  0.0,  0.0,  shift[0];
@@ -422,6 +393,11 @@ impl Object {
             z_axis: Vector4::new(0f32, 0f32, 1f32, self.position[2]),
             w_axis: Vector4::new(0f32, 0f32, 0f32, 1f32),
         };
+
+        self.inverse_matrices();
+        self.changed = true;
+
+        self
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
@@ -441,7 +417,21 @@ impl Object {
     }
 
     /// Replaces the object's texture with provided one
-    pub fn set_texture(&mut self, texture: Textures) -> &mut Self {
+    ///
+    /// This function previously served the role of [crate::Object::set_texture_raw]
+    pub fn set_texture(
+        &mut self,
+        name: impl StringBuffer,
+        texture_data: TextureData,
+        texture_mode: TextureMode,
+        renderer: &mut Renderer,
+    ) -> Result<&mut Self, crate::error::Error> {
+        let texture = renderer.build_texture(name, texture_data, texture_mode)?;
+        Ok(self.set_texture_raw(texture))
+    }
+
+    /// Replaces the object's texture with provided one
+    pub fn set_texture_raw(&mut self, texture: Textures) -> &mut Self {
         self.pipeline.texture = PipelineData::Data(texture);
         self.changed = true;
 
@@ -577,7 +567,7 @@ impl Object {
         let instance_data = self
             .instances
             .iter()
-            .map(Instance::to_raw)
+            .map(Instance::build)
             .collect::<Vec<_>>();
         let instance_buffer = renderer.build_instance(instance_data);
         self.instance_buffer = instance_buffer;
@@ -588,7 +578,7 @@ impl Object {
         let instance_data = self
             .instances
             .iter()
-            .map(Instance::to_raw)
+            .map(Instance::build)
             .collect::<Vec<_>>();
         let instance_buffer = renderer.build_instance(instance_data.clone());
         let instance_buffer2 = renderer.build_instance(instance_data);
@@ -700,6 +690,7 @@ impl ShaderBuilder {
 
 impl Instance {
     /// Creates a new instance
+    #[deprecated]
     pub fn new(
         position: impl Into<Vector3>,
         rotation: impl Into<Vector3>,
@@ -713,7 +704,7 @@ impl Instance {
     }
 
     /// Gathers all information and builds a Raw Instance to be sent to GPU
-    pub fn to_raw(&self) -> InstanceRaw {
+    pub fn build(&self) -> InstanceRaw {
         let position_matrix = Matrix4::IDENTITY * Matrix4::from_translation(self.position);
         let rotation_matrix = Matrix4::from_quat(
             Quaternion::from_rotation_x(self.rotation.x)
@@ -741,17 +732,15 @@ impl Instance {
         self.scale = scale.into();
     }
 }
-
 impl Default for Instance {
     fn default() -> Self {
         Self {
-            position: Vector3::default(),
-            rotation: Vector3::default(),
-            scale: Vector3::new(1.0, 1.0, 1.0),
+            position: Vector3::ZERO,
+            rotation: Vector3::ZERO,
+            scale: Vector3::ONE,
         }
     }
 }
-
 impl InstanceRaw {
     /// Instance's layout description
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {

@@ -5,11 +5,11 @@
 */
 
 // imports needed
-use blue_engine::{primitive_shapes::square, Engine, ObjectSettings, Vector3};
+use blue_engine::{Engine, ObjectSettings, Vector3, primitive_shapes::square};
 
-fn main() {
+fn main() -> Result<(), blue_engine::error::Error> {
     // initialize the engine
-    let mut engine = Engine::new().expect("couldn't initialize engine");
+    let mut engine = Engine::new()?;
 
     // make the first layer
     square(
@@ -17,7 +17,7 @@ fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    );
+    )?;
 
     // make the second layer
     square(
@@ -25,7 +25,7 @@ fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    );
+    )?;
 
     // Get layer 1 object
     engine
@@ -46,21 +46,21 @@ fn main() {
         .set_render_order(1); // set render order to 1st
 
     // get a timer for order change
-    let start = std::time::SystemTime::now();
+    let start = std::time::Instant::now();
 
     // start the update loop
-    engine
-        .update_loop(move |_, _, object_storage, _, _, _| {
-            // get the target layer to change order of
-            let target = object_storage.get_mut("layer1").unwrap();
+    engine.update_loop(move |_, _, object_storage, _, _, _| {
+        // get the target layer to change order of
+        let target = object_storage.get_mut("layer1").unwrap();
 
-            // on ever 2 seconds change order
-            if start.elapsed().unwrap().as_secs() % 2 == 0 {
-                target.set_render_order(2);
-            } else {
-                // change back to default
-                target.set_render_order(0);
-            }
-        })
-        .expect("Error during update loop");
+        // on ever 2 seconds change order
+        if start.elapsed().as_secs() % 2 == 0 {
+            target.set_render_order(2);
+        } else {
+            // change back to default
+            target.set_render_order(0);
+        }
+    })?;
+
+    Ok(())
 }

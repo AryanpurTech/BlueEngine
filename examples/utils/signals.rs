@@ -5,9 +5,9 @@
 */
 
 use blue_engine::{
+    Signal,
     prelude::{Engine, ObjectSettings},
     primitive_shapes::triangle,
-    Signal,
 };
 
 /// An example plugin with custom fields and operations
@@ -48,9 +48,9 @@ impl Signal for MyPlugin {
     }
 }
 
-pub fn main() {
+pub fn main() -> Result<(), blue_engine::error::Error> {
     // initialize the engine
-    let mut engine = Engine::new().expect("win");
+    let mut engine = Engine::new()?;
 
     // add your objects and anything else you need
     triangle(
@@ -58,7 +58,7 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    );
+    )?;
 
     // initialize your plugin
     let mut myplugin = MyPlugin::new();
@@ -69,7 +69,7 @@ pub fn main() {
     engine.signals.add_signal("my plugin", Box::new(myplugin));
 
     // thats it, the engine will now run it on every frame or wherever you requested.
-    engine
-        .update_loop(move |_, _, _, _, _, _| {})
-        .expect("Error during update loop");
+    engine.update_loop(move |_, _, _, _, _, _| {})?;
+
+    Ok(())
 }

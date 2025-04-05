@@ -9,9 +9,9 @@ use blue_engine::{
     primitive_shapes::square,
 };
 
-fn main() {
+fn main() -> Result<(), blue_engine::error::Error> {
     // Create the engine
-    let mut engine = Engine::new().expect("win");
+    let mut engine = Engine::new()?;
 
     // create a square
     square(
@@ -29,16 +29,16 @@ fn main() {
         },
         &mut engine.renderer,
         &mut engine.objects,
-    );
+    )?;
 
     let radius = 2f32;
     let start = std::time::Instant::now();
 
-    engine
-        .update_loop(move |_, _, _, _, camera, _| {
-            let camx = start.elapsed().as_secs_f32().sin() * radius;
-            let camz = start.elapsed().as_secs_f32().cos() * radius;
-            camera.set_position([camx, 0.0, camz]);
-        })
-        .expect("Error during update loop");
+    engine.update_loop(move |_, _, _, _, camera, _| {
+        let camx = start.elapsed().as_secs_f32().sin() * radius;
+        let camz = start.elapsed().as_secs_f32().cos() * radius;
+        camera.set_position([camx, 0.0, camz]);
+    })?;
+
+    Ok(())
 }
