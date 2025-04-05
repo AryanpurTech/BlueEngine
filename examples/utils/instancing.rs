@@ -7,14 +7,14 @@
 */
 
 use blue_engine::{
+    Instance, Vector3,
     prelude::{Engine, ObjectSettings},
     primitive_shapes::triangle,
-    Instance, Vector3,
 };
 
-pub fn main() {
+pub fn main() -> Result<(), blue_engine::error::Error> {
     // start the engine
-    let mut engine = Engine::new().expect("window not created");
+    let mut engine = Engine::new()?;
 
     // create a triangle
     triangle(
@@ -22,36 +22,42 @@ pub fn main() {
         ObjectSettings::default(),
         &mut engine.renderer,
         &mut engine.objects,
-    );
+    )?;
 
     // update the triangle
-    engine.objects.update_object("Triangle", |object| {
-        // set the position of the main triangle
-        object.set_position(Vector3::new(0f32, 0f32, -3f32));
+    let shape = engine
+        .objects
+        .get_mut("Triangle")
+        .expect("Couldn't get the triangle");
 
-        // a function to make instance creation easier
-        let create_instance = |x: f32, y: f32, z: f32| {
-            Instance::new([x, y, z], [0f32, 0f32, 0f32], [1f32, 1f32, 1f32])
-        };
+    // set the position of the main triangle
+    shape.set_position(Vector3::new(0f32, 0f32, -3f32));
 
-        // add an instance
-        object.add_instance(create_instance(2f32, 1f32, -2f32));
-        object.add_instance(create_instance(2f32, -1f32, -2f32));
-        object.add_instance(create_instance(-2f32, 1f32, -2f32));
-        object.add_instance(create_instance(-2f32, -1f32, -2f32));
+    // add an instance
+    shape.add_instance(Instance {
+        position: Vector3::new(2f32, 1f32, -2f32),
+        ..Default::default()
+    });
+    shape.add_instance(Instance {
+        position: Vector3::new(2f32, -1f32, -2f32),
+        ..Default::default()
+    });
+    shape.add_instance(Instance {
+        position: Vector3::new(-2f32, 1f32, -2f32),
+        ..Default::default()
+    });
+    shape.add_instance(Instance {
+        position: Vector3::new(-2f32, -1f32, -2f32),
+        ..Default::default()
     });
 
     // we manually update the instance buffer before the next frame starts
     // this is due to the object updates happening after every frame, hence
     // for the first frame, we need to update it ourselves.
-    engine
-        .objects
-        .get_mut("Triangle")
-        .expect("Couldn't get the triangle")
-        .update_instance_buffer(&mut engine.renderer);
+    shape.update_instance_buffer(&mut engine.renderer);
 
     // run the loop as normal
-    engine
-        .update_loop(move |_, _, _, _, _, _| {})
-        .expect("Error during update loop");
+    engine.update_loop(move |_, _, _, _, _, _| {})?;
+
+    Ok(())
 }
