@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_core"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
@@ -17,7 +17,7 @@ android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
 # using u32 for indices and others
 u32 = []
-
+# in case you need faster math
 glam_fast_math = ["glam/fast-math"]
 
 [dependencies]

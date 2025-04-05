@@ -39,7 +39,7 @@ pub struct Object {
     pub(crate) changed: bool,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
-    pub position_matrix: Matrix4,
+    pub translation_matrix: Matrix4,
     /// Transformation matrices helps to apply changes to your object, including position, orientation, ...
     /// Best choice is to let the Object system handle it
     pub scale_matrix: Matrix4,
@@ -104,25 +104,6 @@ impl Default for ObjectStorage {
 unsafe impl Send for ObjectStorage {}
 unsafe impl Sync for ObjectStorage {}
 crate::macros::impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
-
-/// Instance buffer data that is sent to GPU
-#[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct InstanceRaw {
-    /// The transformation matrix of the instance
-    pub model: Matrix4,
-}
-
-/// Instance buffer data storage
-#[derive(Debug, Clone, Copy)]
-pub struct Instance {
-    /// The position of the instance
-    pub position: Vector3,
-    /// The rotation of the instance
-    pub rotation: Vector3,
-    /// The scale of the instance
-    pub scale: Vector3,
-}
 
 /// Defines how the rotation axis is
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -253,7 +234,7 @@ impl Object {
             position: Vector3::ZERO,
             rotation: Vector3::ZERO,
             changed: false,
-            position_matrix: Matrix4::IDENTITY,
+            translation_matrix: Matrix4::IDENTITY,
             scale_matrix: Matrix4::IDENTITY,
             rotation_quaternion: Quaternion::IDENTITY,
             inverse_transformation_matrix: Matrix4::transpose(&Matrix4::inverse(
@@ -274,6 +255,8 @@ impl Object {
             render_order: 0,
         })
     }
+
+    // MARK: TRANSFORM
 
     /// Sets the name of the object
     pub fn set_name(&mut self, name: impl StringBuffer) -> &mut Self {
@@ -302,8 +285,7 @@ impl Object {
         self.size = size;
         self.scale_matrix = Matrix4::IDENTITY;
 
-        self.set_scale(size);
-        self
+        self.set_scale(size)
     }
 
     /// Sets the rotation of the object in the axis you specify
@@ -354,7 +336,7 @@ impl Object {
     #[deprecated]
     pub fn set_translation(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         self.position -= new_pos.into();
-        self.position_matrix *= Matrix4::from_translation(self.position);
+        self.translation_matrix *= Matrix4::from_translation(self.position);
 
         self.inverse_matrices();
         self.changed = true;
@@ -364,7 +346,7 @@ impl Object {
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         self.position -= new_pos.into();
-        self.position_matrix *= Matrix4::from_translation(self.position);
+        self.translation_matrix *= Matrix4::from_translation(self.position);
 
         self.inverse_matrices();
         self.changed = true;
@@ -376,28 +358,9 @@ impl Object {
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
         self.position = new_pos;
+        self.translation_matrix = Matrix4::IDENTITY;
 
-        // self.set_translation((self.position - new_pos) * -1f32);
-
-        // If there was actual `nalgebra`, it could be just:
-        // nalgebra::matrix![
-        //     1.0,  0.0,  0.0,  shift[0];
-        //     0.0,  1.0,  0.0,  shift[1];
-        //     0.0,  0.0,  1.0,  shift[2];
-        //     0.0,  0.0,  0.0,  1.0;
-        // ]
-
-        self.position_matrix = Matrix4 {
-            x_axis: Vector4::new(1f32, 0f32, 0f32, self.position[0]),
-            y_axis: Vector4::new(0f32, 1f32, 0f32, self.position[1]),
-            z_axis: Vector4::new(0f32, 0f32, 1f32, self.position[2]),
-            w_axis: Vector4::new(0f32, 0f32, 0f32, 1f32),
-        };
-
-        self.inverse_matrices();
-        self.changed = true;
-
-        self
+        self.translate(new_pos)
     }
 
     /// Changes the color of the object. If textures exist, the color of textures will change
@@ -453,12 +416,15 @@ impl Object {
     /// build an inverse of the transformation matrix to be sent to the gpu for lighting and other things.
     pub fn inverse_matrices(&mut self) {
         self.inverse_transformation_matrix = Matrix4::transpose(&Matrix4::inverse(
-            &(self.position_matrix
+            &(self.translation_matrix
                 * Matrix4::from_quat(self.rotation_quaternion)
                 * self.scale_matrix),
         ));
     }
-
+}
+// MARK: UPDATE
+// ============================= FOR UPDATING THE PIPELINE =============================
+impl Object {
     /// Update and apply changes done to an object
     pub fn update(&mut self, renderer: &mut Renderer) {
         self.update_vertex_buffer(renderer);
@@ -528,33 +494,38 @@ impl Object {
         updated_shader2
     }
 
-    /// Update and apply changes done to the uniform buffer
-    pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) {
+    fn update_uniform_buffer_inner(
+        &mut self,
+        renderer: &mut Renderer,
+    ) -> (crate::UniformBuffers, wgpu::BindGroupLayout) {
         self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
             "Transformation Matrix",
-            self.position_matrix * Matrix4::from_quat(self.rotation_quaternion) * self.scale_matrix,
+            self.translation_matrix
+                * Matrix4::from_quat(self.rotation_quaternion)
+                * self.scale_matrix,
         );
         self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
 
         let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers);
+
+        updated_buffer
+    }
+
+    /// Update and apply changes done to the uniform buffer
+    pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) {
+        let updated_buffer = self.update_uniform_buffer_inner(renderer);
 
         self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
     }
 
-    /// Returns the buffer with ownership
+    /// Update and apply changes done to the uniform buffer and returns it
     pub fn update_uniform_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
     ) -> crate::UniformBuffers {
-        self.uniform_buffers[0] = renderer.build_uniform_buffer_part(
-            "Transformation Matrix",
-            self.position_matrix * Matrix4::from_quat(self.rotation_quaternion) * self.scale_matrix,
-        );
-        self.uniform_buffers[1] = renderer.build_uniform_buffer_part("Color", self.color);
-
-        let updated_buffer = renderer.build_uniform_buffer(&self.uniform_buffers);
-        let updated_buffer2 = renderer.build_uniform_buffer(&self.uniform_buffers);
+        let updated_buffer = self.update_uniform_buffer_inner(renderer);
+        let updated_buffer2 = updated_buffer.clone();
 
         self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
@@ -586,8 +557,10 @@ impl Object {
         self.instance_buffer = instance_buffer;
         instance_buffer2
     }
-
-    // ============================= FOR COPY OF PIPELINES =============================
+}
+// MARK: REFERENCE
+// ============================= FOR COPY OF PIPELINES =============================
+impl Object {
     /// References another object's vertices
     pub fn reference_vertices(&mut self, object_id: impl StringBuffer) -> &mut Self {
         self.pipeline.vertex_buffer = PipelineData::Copy(object_id.as_string());
@@ -620,6 +593,8 @@ impl Object {
         self
     }
 }
+
+// MARK: SHADER CONFIG
 
 /// Configuration type for ShaderBuilder
 pub type ShaderConfigs = Vec<(String, Box<dyn Fn(Option<std::sync::Arc<str>>) -> String>)>;
@@ -686,6 +661,27 @@ impl ShaderBuilder {
             self.shader = self.shader.replace(&i.0, &i.1(self.camera_effect.clone()));
         }
     }
+}
+
+// MARK: Instance
+
+/// Instance buffer data that is sent to GPU
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct InstanceRaw {
+    /// The transformation matrix of the instance
+    pub model: Matrix4,
+}
+
+/// Instance buffer data storage
+#[derive(Debug, Clone, Copy)]
+pub struct Instance {
+    /// The position of the instance
+    pub position: Vector3,
+    /// The rotation of the instance
+    pub rotation: Vector3,
+    /// The scale of the instance
+    pub scale: Vector3,
 }
 
 impl Instance {
