@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2025-04-05
+
+### Bug Fixes
+
+- Object transformations ([e433121](https://github.com/AryanpurTech/BlueEngine/commit/e433121c79efb86c32273e549b3a6cce8e7329e3))
+- Transformations and function updates in the Object ([88e2f86](https://github.com/AryanpurTech/BlueEngine/commit/88e2f86807031eda92c637504d64c262162a204d))
+
+### Features
+
+- Added README to the inner crates ([15f20cf](https://github.com/AryanpurTech/BlueEngine/commit/15f20cf03f82bcc7fcc718c94ab4ba0d4313f27c))
+- Speedup with object update and return ([43bcc79](https://github.com/AryanpurTech/BlueEngine/commit/43bcc796a518507abfbbe5eed5570a8d47f66c18))
+
+### Miscellaneous Tasks
+
+- Updated the README ([d762d76](https://github.com/AryanpurTech/BlueEngine/commit/d762d76e93924af7965d80b6cdd916b9a3e647df))
+- Updated versions in the crates ([cc710d2](https://github.com/AryanpurTech/BlueEngine/commit/cc710d23966b995e42b7189eb3867a1b6ef11cf2))
+- Split the object code into readable chunks ([34c03b8](https://github.com/AryanpurTech/BlueEngine/commit/34c03b8666e8c08cc66442ccb3bad525f3b5a4dc))
+- Updated the utilities crate ([40157cc](https://github.com/AryanpurTech/BlueEngine/commit/40157cc550ef7a5c44d2dccadbe7da15c4cbc244))
+
 ## [0.7.1] - 2025-04-01
 
 ### Bug Fixes
