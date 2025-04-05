@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "blue_engine"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "blue_engine_core 0.8.0",
  "blue_engine_dynamic",
