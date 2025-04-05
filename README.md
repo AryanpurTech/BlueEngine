@@ -9,7 +9,7 @@ Make sure to use latest Rust version, as the engine is always kept up to date.
 
 ## About
 
-Blue Engine is a general-purpose, easy-to-use, extendable, and portable graphics engine written in rust. The engine can run on many popular back-end APIs including Vulkan, D3D-12, GL-ES 3, and Metal as well as Windows, Linux, Mobile, and OSX to ensure cross-platform compatibility.
+Blue Engine is a general-purpose, easy-to-use, extendable, and portable graphics engine written in rust. The engine can run on many popular back-end APIs including Vulkan, D3D-12, GL-ES, and Metal as well as Windows, Linux, Mobile, and OSX to ensure cross-platform compatibility.
 
 Hello World:
 
@@ -19,26 +19,27 @@ use blue_engine::{
     primitive_shapes::triangle
 };
 
-fn main() {
+fn main() -> Result<(), blue_engine::error::Error> {
     // initialize the engine
-    let mut engine = Engine::new().expect("engine couldn't be initialized");
+    let mut engine = Engine::new()?;
 
     // create a triangle
-    triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
+    triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
 
     // run the engine
     engine
-        .update_loop(move |_, _, _, _, _, _| {})
-        .expect("Error during update loop");
+        .update_loop(move |_, _, _, _, _, _| {})?;
+
+    Ok(())
 }
 ```
 
-- [WIP] [Guide](https://aryanpurtech.github.io/BlueEngineDocs/)
+- [WIP] [Guide](https://docs.rs/blue_engine/latest/blue_engine/)
 
 - Check out the [examples](https://github.com/AryanpurTech/BlueEngine/tree/master/examples) folder to get a sense of how things are done
 
-- Check out the [utilities library](https://github.com/AryanpurTech/BlueEngineUtilities) for extra functionality with the engine
+- Check out the [utilities library](https://crates.io/crates/blue_engine_utilities) for extra functionality with the engine
 
 _the credits to the image on top: NotPB_
 
-_the development might seem slow sometimes, its due to multiple repositories being handled and due to my education taking a large chunk of my time. The project isn't dead, just slow._
+_The project isn't dead, just the development might seem slow sometimes._

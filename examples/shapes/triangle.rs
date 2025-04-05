@@ -11,17 +11,16 @@ use blue_engine::{
     primitive_shapes::triangle,
 };
 
-pub fn main() -> Result<(), blue_engine::error::Error> {
+fn main() -> Result<(), blue_engine::error::Error> {
+    // initialize the engine
     let mut engine = Engine::new()?;
 
-    triangle(
-        "Triangle",
-        ObjectSettings::default(),
-        &mut engine.renderer,
-        &mut engine.objects,
-    )?;
+    // create a triangle
+    triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    // run the engine
+    engine
+        .update_loop(move |_, _, _, _, _, _| {})?;
 
     Ok(())
 }
