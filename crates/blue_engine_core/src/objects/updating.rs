@@ -23,52 +23,48 @@ impl Object {
         (vertex_buffer, uniform_buffer, shader)
     }
 
+    fn update_vertex_buffer_inner(&mut self, renderer: &mut Renderer) -> crate::VertexBuffers {
+        renderer.build_vertex_buffer(&self.vertices, &self.indices)
+    }
     /// Update and apply changes done to the vertex buffer
     pub fn update_vertex_buffer(&mut self, renderer: &mut Renderer) {
-        let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices);
+        let updated_buffer = self.update_vertex_buffer_inner(renderer);
         self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
     }
-
     /// Returns the buffer with ownership
     pub fn update_vertex_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
     ) -> crate::VertexBuffers {
-        let updated_buffer = renderer.build_vertex_buffer(&self.vertices, &self.indices);
-        let updated_buffer_2 = renderer.build_vertex_buffer(&self.vertices, &self.indices);
-        self.pipeline.vertex_buffer = PipelineData::Data(updated_buffer);
+        let updated_buffer = self.update_vertex_buffer_inner(renderer);
+        self.pipeline.vertex_buffer = PipelineData::Data(crate::VertexBuffers {
+            vertex_buffer: updated_buffer.vertex_buffer.clone(),
+            index_buffer: updated_buffer.index_buffer.clone(),
+            length: updated_buffer.length,
+        });
 
-        updated_buffer_2
+        updated_buffer
     }
 
+    fn update_shader_inner(&mut self, renderer: &mut Renderer) -> crate::Shaders {
+        renderer.build_shader(
+            self.name.as_ref(),
+            self.shader_builder.shader.clone(),
+            Some(&self.uniform_layout),
+            self.shader_settings,
+        )
+    }
     /// Update and apply changes done to the shader
     pub fn update_shader(&mut self, renderer: &mut Renderer) {
-        let updated_shader = renderer.build_shader(
-            self.name.as_ref(),
-            self.shader_builder.shader.clone(),
-            Some(&self.uniform_layout),
-            self.shader_settings,
-        );
+        let updated_shader = self.update_shader_inner(renderer);
         self.pipeline.shader = PipelineData::Data(updated_shader);
     }
-
     /// Returns the buffer with ownership
     pub fn update_shader_and_return(&mut self, renderer: &mut Renderer) -> crate::Shaders {
-        let updated_shader = renderer.build_shader(
-            self.name.as_ref(),
-            self.shader_builder.shader.clone(),
-            Some(&self.uniform_layout),
-            self.shader_settings,
-        );
-        let updated_shader2 = renderer.build_shader(
-            self.name.as_ref(),
-            self.shader_builder.shader.clone(),
-            Some(&self.uniform_layout),
-            self.shader_settings,
-        );
-        self.pipeline.shader = PipelineData::Data(updated_shader);
+        let updated_shader = self.update_shader_inner(renderer);
+        self.pipeline.shader = PipelineData::Data(updated_shader.clone());
 
-        updated_shader2
+        updated_shader
     }
 
     fn update_uniform_buffer_inner(
@@ -87,7 +83,6 @@ impl Object {
 
         updated_buffer
     }
-
     /// Update and apply changes done to the uniform buffer
     pub fn update_uniform_buffer(&mut self, renderer: &mut Renderer) {
         let updated_buffer = self.update_uniform_buffer_inner(renderer);
@@ -95,43 +90,38 @@ impl Object {
         self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
     }
-
     /// Update and apply changes done to the uniform buffer and returns it
     pub fn update_uniform_buffer_and_return(
         &mut self,
         renderer: &mut Renderer,
     ) -> crate::UniformBuffers {
         let updated_buffer = self.update_uniform_buffer_inner(renderer);
-        let updated_buffer2 = updated_buffer.clone();
+        let updated_buffer2 = updated_buffer.0.clone();
 
         self.pipeline.uniform = PipelineData::Data(Some(updated_buffer.0));
         self.uniform_layout = updated_buffer.1;
 
-        updated_buffer2.0
+        updated_buffer2
     }
 
+    fn update_instance_buffer_inner(&mut self, renderer: &mut Renderer) -> wgpu::Buffer {
+        let instance_data = self
+            .instances
+            .iter()
+            .map(Instance::build)
+            .collect::<Vec<_>>();
+        renderer.build_instance(instance_data)
+    }
     /// Updates the instance buffer
     pub fn update_instance_buffer(&mut self, renderer: &mut Renderer) {
-        let instance_data = self
-            .instances
-            .iter()
-            .map(Instance::build)
-            .collect::<Vec<_>>();
-        let instance_buffer = renderer.build_instance(instance_data);
+        let instance_buffer = self.update_instance_buffer_inner(renderer);
         self.instance_buffer = instance_buffer;
     }
-
     /// Returns the buffer with ownership
     pub fn update_instance_buffer_and_return(&mut self, renderer: &mut Renderer) -> wgpu::Buffer {
-        let instance_data = self
-            .instances
-            .iter()
-            .map(Instance::build)
-            .collect::<Vec<_>>();
-        let instance_buffer = renderer.build_instance(instance_data.clone());
-        let instance_buffer2 = renderer.build_instance(instance_data);
+        let instance_buffer = self.update_instance_buffer_inner(renderer);
+        self.instance_buffer = instance_buffer.clone();
 
-        self.instance_buffer = instance_buffer;
-        instance_buffer2
+        instance_buffer
     }
 }
