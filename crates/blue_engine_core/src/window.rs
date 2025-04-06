@@ -378,7 +378,7 @@ impl ApplicationHandler for Engine {
                 }
 
                 if let Some(window_ref) = window.as_ref() {
-                    if let Ok(Some((mut encoder, view, frame))) =
+                    if let Ok(Some((mut encoder, view, frame, headless_output))) =
                         renderer.pre_render(objects, window_ref.inner_size(), camera)
                     {
                         if let Some(update_function) = update_loop {
@@ -413,7 +413,7 @@ impl ApplicationHandler for Engine {
                             }
                         });
 
-                        renderer.render(encoder, frame);
+                        renderer.render(encoder, frame, headless_output);
                     }
                 }
 

@@ -265,7 +265,6 @@ impl crate::prelude::Renderer {
         name: impl StringBuffer,
         texture_data: TextureData,
         texture_mode: TextureMode,
-        //texture_format: TextureFormat,
     ) -> Result<Textures, crate::error::Error> {
         let mode: wgpu::AddressMode = match texture_mode {
             TextureMode::Clamp => wgpu::AddressMode::Repeat,
@@ -293,7 +292,7 @@ impl crate::prelude::Renderer {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            format: self.config.format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING
                 | wgpu::TextureUsages::COPY_DST
                 | wgpu::TextureUsages::COPY_SRC

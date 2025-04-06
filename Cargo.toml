@@ -39,8 +39,9 @@ glam_fast_math = [
 ]
 
 [dependencies]
-blue_engine_core = { version = "0.8.0", optional = true }
-# blue_engine_core = { path = "crates/blue_engine_core", optional = true }
+# blue_engine_core = { version = "0.8.0", optional = true }
+blue_engine_core = { path = "crates/blue_engine_core", optional = true }
+
 
 # Wasm does not support dynamic linking.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

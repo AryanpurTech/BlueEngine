@@ -1,5 +1,3 @@
-// ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
-
 use crate::{
     CameraContainer, ObjectStorage, PipelineData,
     prelude::{ShaderSettings, TextureData},
@@ -40,6 +38,8 @@ pub struct Renderer {
     /// Scissor cut section of the screen to render to
     /// (x, y, width, height)
     pub scissor_rect: Option<(u32, u32, u32, u32)>,
+    /// The texture data that holds data for the headless mode
+    pub headless_texture_data: Vec<u8>,
 }
 unsafe impl Sync for Renderer {}
 unsafe impl Send for Renderer {}
@@ -162,6 +162,10 @@ impl Renderer {
                     camera: None,
                     clear_color: wgpu::Color::BLACK,
                     scissor_rect: None,
+
+                    headless_texture_data: Vec::<u8>::with_capacity(
+                        (size.width * size.height) as usize * 4,
+                    ),
                 };
 
                 renderer.build_default_data();
@@ -208,10 +212,8 @@ impl Renderer {
             #[cfg(not(target_os = "android"))]
             if let Some(surface) = self.surface.as_ref() {
                 surface.configure(&self.device, &self.config);
-                {
-                    self.depth_buffer =
-                        Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
-                }
+                self.depth_buffer =
+                    Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
             }
         }
     }
@@ -227,6 +229,7 @@ impl Renderer {
             wgpu::CommandEncoder,
             wgpu::TextureView,
             wgpu::SurfaceTexture,
+            Option<wgpu::Buffer>,
         )>,
         wgpu::SurfaceError,
     > {
@@ -242,15 +245,44 @@ impl Renderer {
             return Ok(None);
         };
 
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
+
+        #[cfg(feature = "headless")]
+        let render_target = self.device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width: self.config.width,
+                height: self.config.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.config.format,
+            usage: wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            label: None,
+            view_formats: &[self.config.format],
+        });
+
+        // ? There might be a way to enable both headless and normal rendering,
+        // ? However the cost of it can increase a lot
+        #[cfg(feature = "headless")]
+        let view = render_target.create_view(&wgpu::TextureViewDescriptor::default());
+        #[cfg(not(feature = "headless"))]
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        #[cfg(feature = "headless")]
+        let headless_output_staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: self.headless_texture_data.capacity() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render pass"),
@@ -294,6 +326,7 @@ impl Renderer {
         }
 
         // sort the object list in descending render order
+        // ! There needs to be a better way for this, to not iterate twice
         let mut object_list: Vec<_> = objects.iter().collect();
         object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
 
@@ -344,13 +377,72 @@ impl Renderer {
         }
         drop(render_pass);
 
-        Ok(Some((encoder, view, frame)))
+        #[cfg(feature = "headless")]
+        encoder.copy_texture_to_buffer(
+            wgpu::TexelCopyTextureInfo {
+                texture: &render_target,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::TexelCopyBufferInfo {
+                buffer: &headless_output_staging_buffer,
+                layout: wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    // This needs to be a multiple of 256. Normally we would need to pad
+                    // it but we here know it will work out anyways.
+                    bytes_per_row: Some(self.config.width * 4),
+                    rows_per_image: Some(self.config.height),
+                },
+            },
+            wgpu::Extent3d {
+                width: self.config.width,
+                height: self.config.height,
+                depth_or_array_layers: 1,
+            },
+        );
+
+        Ok(Some((
+            encoder,
+            view,
+            frame,
+            #[cfg(feature = "headless")]
+            Some(headless_output_staging_buffer),
+            #[cfg(not(feature = "headless"))]
+            None,
+        )))
     }
 
     /// Render the scene.
-    pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
+    pub(crate) fn render(
+        &mut self,
+        encoder: wgpu::CommandEncoder,
+        frame: wgpu::SurfaceTexture,
+        headless: Option<wgpu::Buffer>,
+    ) {
         // submit will accept anything that implements IntoIter
-        self.queue.submit(std::iter::once(encoder.finish()));
+        self.queue.submit(Some(encoder.finish()));
+
+        #[cfg(feature = "headless")]
+        {
+            #[allow(clippy::expect_used)]
+            let output_staging_buffer =
+                headless.expect("Error unpacking headless content. This should not error!");
+
+            pollster::block_on(async {
+                let buffer_slice = output_staging_buffer.slice(..);
+                let (sender, receiver) = flume::bounded(1);
+                buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+                self.device.poll(wgpu::Maintain::wait());
+                receiver.recv_async().await.unwrap().unwrap();
+                {
+                    let view = buffer_slice.get_mapped_range();
+                    self.headless_texture_data.extend_from_slice(&view[..]);
+                }
+                output_staging_buffer.unmap();
+            });
+        }
+
         frame.present();
     }
 
@@ -381,6 +473,22 @@ macro_rules! gen_pipeline {
         }
     };
 }
+
+// pub fn output_image_native(image_data: Vec<u8>, texture_dims: (usize, usize), path: String) {
+//     let mut png_data = Vec::<u8>::with_capacity(image_data.len());
+//     let mut encoder = png::Encoder::new(
+//         std::io::Cursor::new(&mut png_data),
+//         texture_dims.0 as u32,
+//         texture_dims.1 as u32,
+//     );
+//     encoder.set_color(png::ColorType::Rgba);
+//     let mut png_writer = encoder.write_header().unwrap();
+//     png_writer.write_image_data(&image_data[..]).unwrap();
+//     png_writer.finish().unwrap();
+
+//     let mut file = std::fs::File::create(&path).unwrap();
+//     file.write_all(&png_data[..]).unwrap();
+// }
 
 gen_pipeline!(
     get_pipeline_vertex_buffer,
