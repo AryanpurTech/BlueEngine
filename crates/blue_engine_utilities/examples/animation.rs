@@ -1,5 +1,5 @@
 #[cfg(feature = "animation")]
-use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube};
+use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube, ObjectSettings};
 #[cfg(feature = "animation")]
 use blue_engine_utilities::{AnimationKeyframe, animation::Animation};
 
@@ -14,7 +14,7 @@ fn main() -> eyre::Result<()> {
         })?;
 
         // make a cube
-        cube("cube", &mut engine.renderer, &mut engine.objects)?;
+        cube("cube", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
 
         // initialize an animation sequence
         let mut animation = Animation::new("cube");
