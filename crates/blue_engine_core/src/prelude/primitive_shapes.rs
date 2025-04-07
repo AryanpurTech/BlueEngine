@@ -138,6 +138,7 @@ pub fn rectangle(
 /// Creates a 3D cube
 pub fn cube(
     name: impl StringBuffer,
+    settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
@@ -281,7 +282,7 @@ pub fn cube(
                 16, 17, 18, 18, 19, 16, // front
                 20, 21, 22, 22, 23, 20, // back
             ],
-            ObjectSettings::default(),
+            settings,
             renderer,
         )?,
     );
