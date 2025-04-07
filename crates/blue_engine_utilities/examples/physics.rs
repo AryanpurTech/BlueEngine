@@ -8,6 +8,7 @@
 use blue_engine::{
     Engine, WindowDescriptor,
     primitive_shapes::{cube, uv_sphere},
+    ObjectSettings,
 };
 #[cfg(feature = "physics")]
 use blue_engine_utilities::{FlyCamera, physics::Physics, raycast::Raycast};
@@ -27,7 +28,7 @@ fn main() -> eyre::Result<()> {
         let mut physics = Physics::new();
         let fly_camera = FlyCamera::new(&mut engine.camera);
 
-        cube("floor", &mut engine.renderer, &mut engine.objects);
+        cube("floor", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
         engine
             .objects
             .get_mut("floor")

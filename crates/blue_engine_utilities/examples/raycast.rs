@@ -1,5 +1,5 @@
 #[cfg(feature = "physics")]
-use blue_engine::{Engine, WindowDescriptor, imports::glm, primitive_shapes::cube};
+use blue_engine::{Engine, WindowDescriptor, imports::glm, primitive_shapes::cube, ObjectSettings};
 #[cfg(feature = "physics")]
 use blue_engine_utilities::{FlyCamera, raycast::Raycast};
 
@@ -13,9 +13,9 @@ fn main() -> eyre::Result<()> {
             ..Default::default()
         })?;
 
-        cube("cube1", &mut engine.renderer, &mut engine.objects);
-        cube("cube2", &mut engine.renderer, &mut engine.objects);
-        cube("cube3", &mut engine.renderer, &mut engine.objects);
+        cube("cube1", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
+        cube("cube2", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
+        cube("cube3", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
 
         engine
             .objects
@@ -52,7 +52,7 @@ fn main() -> eyre::Result<()> {
 
             //if input.mouse_pressed(0) {
             let _raycast_pos = raycast.get_current_ray();
-            //cube("cube5", renderer, objects);
+            //cube("cube5", ObjectSettings::default(), renderer, objects);
             //obj.position(raycast_pos.x, raycast_pos.y, raycast_pos.z);
             //}
             //println!("{:?}", raycast_pos);
