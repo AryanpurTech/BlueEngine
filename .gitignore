@@ -4,6 +4,5 @@ target
 tools
 res
 resources/*.png
-crates/blue_engine_core/Cargo.lock
 **dev**
 crates/blue_engine_utilities/resources
