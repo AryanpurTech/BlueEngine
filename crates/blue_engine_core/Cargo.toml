@@ -10,7 +10,7 @@ license = "Apache-2.0"
 name = "blue_engine_core"
 
 [features]
-default = ["debug", "headless"]
+default = ["debug"]
 debug = ["dep:env_logger"]
 headless = ["dep:flume"]
 android = ["dep:log", "dep:android_logger"]

@@ -14,7 +14,7 @@ pub use crate::objects::{
     Instance, InstanceRaw, Object, ObjectSettings, ObjectStorage, RotateAmount, RotateAxis,
 };
 pub use crate::render::Renderer;
-pub use crate::window::{Window, WindowDescriptor};
+pub use crate::window::{EngineSettings, Window};
 
 /// The uint type used for indices and more
 #[cfg(not(feature = "u32"))]
@@ -114,13 +114,13 @@ unsafe impl Sync for Vertex {}
 ///
 /// To start using the Blue Engine, you can start by creating a new Engine like follows:
 /// ```
-/// use blue_engine::prelude::{Engine, WindowDescriptor};
+/// use blue_engine::prelude::{Engine, EngineSettings};
 ///
 /// fn main() {
 ///     let engine = Engine::new().expect("Couldn't create the engine");
 /// }
 /// ```
-/// The WindowDescriptor simply holds what features you would like for your window.
+/// The EngineSettings simply holds what features you would like for your window.
 /// If you are reading this on later version of
 /// the engine, you might be able to even run the engine in headless mode
 /// meaning there would not be a need for a window and the
@@ -184,7 +184,7 @@ pub struct Engine {
     /// input events
     ///
     /// #### USED INTERNALLY
-    pub input_events: crate::utils::winit_input_helper::WinitInputHelper,
+    pub(crate) input_events: crate::utils::winit_input_helper::WinitInputHelper,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}

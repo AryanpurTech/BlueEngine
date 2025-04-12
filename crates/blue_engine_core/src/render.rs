@@ -48,7 +48,7 @@ impl Renderer {
     /// Creates a new renderer.
     pub(crate) async fn new(
         size: winit::dpi::PhysicalSize<u32>,
-        settings: crate::WindowDescriptor,
+        settings: crate::EngineSettings,
     ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -277,6 +277,12 @@ impl Renderer {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         #[cfg(feature = "headless")]
+        {
+            self.headless_texture_data =
+                Vec::<u8>::with_capacity((self.config.width * self.config.height) as usize * 4)
+        };
+
+        #[cfg(feature = "headless")]
         let headless_output_staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: self.headless_texture_data.capacity() as u64,
@@ -418,7 +424,7 @@ impl Renderer {
         &mut self,
         encoder: wgpu::CommandEncoder,
         frame: wgpu::SurfaceTexture,
-        headless: Option<wgpu::Buffer>,
+        _headless: Option<wgpu::Buffer>,
     ) {
         // submit will accept anything that implements IntoIter
         self.queue.submit(Some(encoder.finish()));
@@ -427,7 +433,7 @@ impl Renderer {
         {
             #[allow(clippy::expect_used)]
             let output_staging_buffer =
-                headless.expect("Error unpacking headless content. This should not error!");
+                _headless.expect("Error unpacking headless content. This should not error!");
 
             pollster::block_on(async {
                 let buffer_slice = output_staging_buffer.slice(..);

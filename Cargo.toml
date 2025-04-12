@@ -20,6 +20,7 @@ default = ["debug", "dep:blue_engine_core"]
 dynamic_link = ["dep:blue_engine_dynamic"]
 
 debug = ["blue_engine_core?/debug", "blue_engine_dynamic?/debug"]
+headless = ["blue_engine_core?/headless", "blue_engine_dynamic?/headless"]
 android = ["blue_engine_core?/android", "blue_engine_dynamic?/android"]
 android_native_activity = [
     "blue_engine_core?/android_native_activity",
@@ -42,11 +43,10 @@ glam_fast_math = [
 # blue_engine_core = { version = "0.8.0", optional = true }
 blue_engine_core = { path = "crates/blue_engine_core", optional = true }
 
-
 # Wasm does not support dynamic linking.
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-blue_engine_dynamic = { version = "0.8.0", optional = true }
-# blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
+# blue_engine_dynamic = { version = "0.8.0", optional = true }
+blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
 
 # ========== EXAMPLES ========== #
 

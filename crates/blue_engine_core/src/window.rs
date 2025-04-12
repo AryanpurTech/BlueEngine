@@ -34,7 +34,7 @@ crate::macros::impl_deref_field!(
 
 /// Descriptor and settings for a window.
 #[derive(Debug, Clone)]
-pub struct WindowDescriptor {
+pub struct EngineSettings {
     /// The width of the window
     pub width: u32,
     /// The height of the window
@@ -77,7 +77,7 @@ pub struct WindowDescriptor {
     /// read more at [wgpu::MemoryHints]
     pub memory_hints: crate::wgpu::MemoryHints,
 }
-impl std::default::Default for WindowDescriptor {
+impl std::default::Default for EngineSettings {
     /// Will quickly create a window with default settings
     fn default() -> Self {
         let backends = crate::Backends::all();
@@ -107,21 +107,21 @@ impl std::default::Default for WindowDescriptor {
         }
     }
 }
-unsafe impl Send for WindowDescriptor {}
-unsafe impl Sync for WindowDescriptor {}
+unsafe impl Send for EngineSettings {}
+unsafe impl Sync for EngineSettings {}
 
 impl Engine {
     /// Creates a new window in current thread using default settings.
     pub fn new() -> Result<Self, crate::error::Error> {
         Self::new_inner(
-            WindowDescriptor::default(),
+            EngineSettings::default(),
             #[cfg(target_os = "android")]
             None,
         )
     }
 
     /// Creates a new window in current thread using provided settings.
-    pub fn new_config(settings: WindowDescriptor) -> Result<Self, crate::error::Error> {
+    pub fn new_config(settings: EngineSettings) -> Result<Self, crate::error::Error> {
         Self::new_inner(
             settings,
             #[cfg(target_os = "android")]
@@ -132,7 +132,7 @@ impl Engine {
     /// Creates a new window for android
     #[cfg(target_os = "android")]
     pub fn new_android(
-        settings: WindowDescriptor,
+        settings: EngineSettings,
         app: winit::platform::android::activity::AndroidApp,
     ) -> Result<Self, crate::error::Error> {
         Self::new_inner(settings, Some(app))
@@ -141,7 +141,7 @@ impl Engine {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
     pub(crate) fn new_inner(
-        settings: WindowDescriptor,
+        settings: EngineSettings,
         #[cfg(target_os = "android")] android_app: Option<
             winit::platform::android::activity::AndroidApp,
         >,

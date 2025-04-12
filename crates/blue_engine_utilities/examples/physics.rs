@@ -6,7 +6,7 @@
 
 #[cfg(feature = "physics")]
 use blue_engine::{
-    Engine, WindowDescriptor,
+    Engine, EngineSettings,
     primitive_shapes::{cube, uv_sphere},
 };
 #[cfg(feature = "physics")]
@@ -17,7 +17,7 @@ use rapier3d::prelude::*;
 fn main() -> eyre::Result<()> {
     #[cfg(feature = "physics")]
     {
-        let mut engine = Engine::new_config(WindowDescriptor {
+        let mut engine = Engine::new_config(EngineSettings {
             width: 1500,
             height: 1000,
             title: "Fly Camera",

@@ -1,12 +1,12 @@
 #[cfg(feature = "physics")]
-use blue_engine::{Engine, WindowDescriptor, imports::glm, primitive_shapes::cube};
+use blue_engine::{Engine, EngineSettings, imports::glm, primitive_shapes::cube};
 #[cfg(feature = "physics")]
 use blue_engine_utilities::{FlyCamera, raycast::Raycast};
 
 fn main() -> eyre::Result<()> {
     #[cfg(feature = "physics")]
     {
-        let mut engine = Engine::new_config(WindowDescriptor {
+        let mut engine = Engine::new_config(EngineSettings {
             width: 1000,
             height: 1000,
             title: "Raycast",

@@ -1,8 +1,8 @@
-use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube};
+use blue_engine::{Engine, EngineSettings, primitive_shapes::cube};
 use blue_engine_utilities::FlyCamera;
 
 fn main() -> eyre::Result<()> {
-    let mut engine = Engine::new_config(WindowDescriptor {
+    let mut engine = Engine::new_config(EngineSettings {
         width: 1500,
         height: 1000,
         title: "Fly Camera",
