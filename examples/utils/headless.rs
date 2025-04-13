@@ -51,14 +51,15 @@ fn main() -> Result<(), blue_engine::error::Error> {
     )?;
 
     // let instant = std::time::Instant::now();
-    engine.update_loop(move |engine| {
+    engine.update_loop(move |_engine| {
+        #[cfg(feature = "headless")]
         output_image_native(
-            engine.renderer.headless_texture_data.clone(),
+            _engine.renderer.headless_texture_data.clone(),
             (
                 // since we do not have a window, the width and
                 // height is taken from the configuration of the renderer
-                engine.renderer.config.width as usize,
-                engine.renderer.config.height as usize,
+                _engine.renderer.config.width as usize,
+                _engine.renderer.config.height as usize,
             ),
             "img.png",
         );

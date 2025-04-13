@@ -39,6 +39,7 @@ pub struct Renderer {
     /// (x, y, width, height)
     pub scissor_rect: Option<(u32, u32, u32, u32)>,
     /// The texture data that holds data for the headless mode
+    #[cfg(feature = "headless")]
     pub headless_texture_data: Vec<u8>,
 }
 unsafe impl Sync for Renderer {}
@@ -163,6 +164,7 @@ impl Renderer {
                     clear_color: wgpu::Color::BLACK,
                     scissor_rect: None,
 
+                    #[cfg(feature = "headless")]
                     headless_texture_data: Vec::<u8>::with_capacity((size.0 * size.1) as usize * 4),
                 };
 
