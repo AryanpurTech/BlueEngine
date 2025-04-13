@@ -8,6 +8,7 @@ pub enum Error {
     // ===== WINIT
     /// Errors that occur throughout the update_loop
     #[error("An error occurred with the update loop: {0}")]
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     UpdateLoopError(#[from] winit::error::EventLoopError),
 
     // ===== WGPU

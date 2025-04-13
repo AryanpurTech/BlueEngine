@@ -1,5 +1,5 @@
 use crate::{
-    CameraContainer, ObjectStorage, PipelineData,
+    CameraContainer, ObjectStorage, PipelineData, WindowSize,
     prelude::{ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
@@ -22,7 +22,7 @@ pub struct Renderer {
     /// Describes a [`wgpu::Surface`]
     pub config: wgpu::SurfaceConfiguration,
     /// The size of the window
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub size: WindowSize,
     /// The texture bind group layout
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
     /// The uniform bind group layout
@@ -47,7 +47,7 @@ unsafe impl Send for Renderer {}
 impl Renderer {
     /// Creates a new renderer.
     pub(crate) async fn new(
-        size: winit::dpi::PhysicalSize<u32>,
+        size: WindowSize,
         settings: crate::EngineSettings,
     ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
@@ -88,11 +88,11 @@ impl Renderer {
                     #[cfg(target_os = "android")]
                     width: 1080,
                     #[cfg(not(feature = "android"))]
-                    width: size.width,
+                    width: size.0,
                     #[cfg(target_os = "android")]
                     height: 2300,
                     #[cfg(not(target_os = "android"))]
-                    height: size.height,
+                    height: size.1,
                     #[cfg(target_os = "android")]
                     present_mode: wgpu::PresentMode::Mailbox,
                     #[cfg(not(target_os = "android"))]
@@ -163,9 +163,7 @@ impl Renderer {
                     clear_color: wgpu::Color::BLACK,
                     scissor_rect: None,
 
-                    headless_texture_data: Vec::<u8>::with_capacity(
-                        (size.width * size.height) as usize * 4,
-                    ),
+                    headless_texture_data: Vec::<u8>::with_capacity((size.0 * size.1) as usize * 4),
                 };
 
                 renderer.build_default_data();
@@ -203,12 +201,13 @@ impl Renderer {
     }
 
     /// Resize the window.
-    pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    #[cfg(all(not(feature = "headless"), feature = "window"))]
+    pub(crate) fn resize(&mut self, new_size: WindowSize) {
         // check if new_size is non-zero
-        if new_size.width != 0 && new_size.height != 0 {
+        if new_size.0 != 0 && new_size.1 != 0 {
             self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
+            self.config.width = new_size.0;
+            self.config.height = new_size.1;
             #[cfg(not(target_os = "android"))]
             if let Some(surface) = self.surface.as_ref() {
                 surface.configure(&self.device, &self.config);
@@ -222,7 +221,7 @@ impl Renderer {
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
-        window_size: winit::dpi::PhysicalSize<u32>,
+        window_size: WindowSize,
         camera: &CameraContainer,
     ) -> Result<
         Option<(
@@ -314,8 +313,8 @@ impl Renderer {
 
         if let Some(scissor_rect) = self.scissor_rect {
             // check if scissor bounds are smaller than the window
-            if scissor_rect.0 + scissor_rect.2 < window_size.width
-                && scissor_rect.1 + scissor_rect.3 < window_size.height
+            if scissor_rect.0 + scissor_rect.2 < window_size.0
+                && scissor_rect.1 + scissor_rect.3 < window_size.1
             {
                 render_pass.set_scissor_rect(
                     scissor_rect.0,
@@ -435,18 +434,18 @@ impl Renderer {
             let output_staging_buffer =
                 _headless.expect("Error unpacking headless content. This should not error!");
 
-            pollster::block_on(async {
-                let buffer_slice = output_staging_buffer.slice(..);
-                let (sender, receiver) = flume::bounded(1);
-                buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
-                self.device.poll(wgpu::Maintain::wait());
-                receiver.recv_async().await.unwrap().unwrap();
-                {
-                    let view = buffer_slice.get_mapped_range();
-                    self.headless_texture_data.extend_from_slice(&view[..]);
-                }
-                output_staging_buffer.unmap();
-            });
+            // pollster::block_on(async {
+            //     let buffer_slice = output_staging_buffer.slice(..);
+            //     let (sender, receiver) = flume::bounded(1);
+            //     buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+            //     self.device.poll(wgpu::Maintain::wait());
+            //     receiver.recv_async().await.unwrap().unwrap();
+            //     {
+            //         let view = buffer_slice.get_mapped_range();
+            //         self.headless_texture_data.extend_from_slice(&view[..]);
+            //     }
+            //     output_staging_buffer.unmap();
+            // });
         }
 
         frame.present();

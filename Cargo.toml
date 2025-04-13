@@ -15,12 +15,17 @@ exclude = ["/examples", "/resources"]
 name = "blue_engine"
 
 [features]
-default = ["debug", "dep:blue_engine_core"]
-# Use the default engine
+default = ["debug", "static_link"]
+## use the static build of the engine
+static_link = ["dep:blue_engine_core"]
+## Use the dynamic build of the engine
 dynamic_link = ["dep:blue_engine_dynamic"]
-
+## Enables a window for rendering. This needs the `headless` feature to be disabled
+window = ["blue_engine_core?/window", "blue_engine_dynamic?/window"]
 debug = ["blue_engine_core?/debug", "blue_engine_dynamic?/debug"]
+## Enables rendering in headless mode, and without a window. Thus needs the `window` feature to be disabled
 headless = ["blue_engine_core?/headless", "blue_engine_dynamic?/headless"]
+## For android builds. This needs the `headless` feature to be disabled
 android = ["blue_engine_core?/android", "blue_engine_dynamic?/android"]
 android_native_activity = [
     "blue_engine_core?/android_native_activity",
@@ -30,10 +35,9 @@ android_game_activity = [
     "blue_engine_core?/android_game_activity",
     "blue_engine_dynamic?/android_game_activity",
 ]
-# using u32 for indices and others
+## using u32 for indices and others
 u32 = ["blue_engine_core?/u32", "blue_engine_dynamic?/u32"]
-
-# fast math
+## fast math
 glam_fast_math = [
     "blue_engine_core?/glam_fast_math",
     "blue_engine_dynamic?/glam_fast_math",

@@ -19,7 +19,7 @@ impl MyPlugin {
         Self { counter: 0 }
     }
 
-    fn increment(&mut self) {
+    fn _increment(&mut self) {
         self.counter += 1;
     }
 
@@ -31,14 +31,18 @@ impl MyPlugin {
 impl Signal for MyPlugin {
     fn frame(
         &mut self,
-        engine: &mut blue_engine_core::Engine,
+        _engine: &mut blue_engine_core::Engine,
         _encoder: &mut blue_engine_core::CommandEncoder,
         _view: &blue_engine_core::TextureView,
     ) {
         // operations that relate to the engine, and can call the
         // internal fields and functions you need.
-        if engine.simple_input.key_pressed(blue_engine::KeyCode::Enter) {
-            self.increment();
+        #[cfg(feature = "window")]
+        if _engine
+            .simple_input
+            .key_pressed(blue_engine::KeyCode::Enter)
+        {
+            self._increment();
             println!("New counter value: {}", self.counter);
         }
     }

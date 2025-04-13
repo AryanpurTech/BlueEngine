@@ -1,6 +1,8 @@
+#[cfg(all(feature = "window", not(feature = "headless")))]
+use crate::Window;
+use crate::{CameraContainer, ObjectStorage, Renderer, SignalStorage};
+#[cfg(all(feature = "window", not(feature = "headless")))]
 use winit::{event_loop::EventLoop, window::WindowAttributes};
-
-use crate::{CameraContainer, ObjectStorage, Renderer, SignalStorage, Window};
 
 /// Descriptor and settings for a window.
 #[derive(Debug, Clone)]
@@ -13,12 +15,15 @@ pub struct EngineSettings {
     pub title: &'static str,
     // winit
     /// Should the window contain the keys like minimize, maximize, or resize?
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub decorations: bool,
     /// Should the window be resizable
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub resizable: bool,
     /// Controls how the events are processed
     ///
     /// read more at [winit::event_loop::ControlFlow]
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub control_flow: crate::winit::event_loop::ControlFlow,
     // wgpu
     /// Define how much power should the app ask for
@@ -58,8 +63,11 @@ impl std::default::Default for EngineSettings {
             height: 600,
             title: "Blue Engine",
             // winit
+            #[cfg(all(feature = "window", not(feature = "headless")))]
             decorations: true,
+            #[cfg(all(feature = "window", not(feature = "headless")))]
             resizable: true,
+            #[cfg(all(feature = "window", not(feature = "headless")))]
             control_flow: crate::winit::event_loop::ControlFlow::Poll,
             // wgpu
             power_preference: crate::PowerPreference::LowPower,
@@ -127,11 +135,13 @@ pub struct Engine {
     /// The event_loop handles the events of the window and inputs.
     ///
     /// #### USED INTERNALLY
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub event_loop_control_flow: crate::winit::event_loop::ControlFlow,
     /// The window handles everything about window and inputs.
     /// This includes ability to modify window and listen toinput devices for changes.
     ///
     /// ### The window is not available before update_loop.
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub window: Window,
     /// The object system is a way to make it easier to work with the engine.
     /// Obviously you can work without it, but it's for those who
@@ -159,6 +169,7 @@ pub struct Engine {
     /// input events
     ///
     /// #### USED INTERNALLY
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     pub simple_input: crate::utils::winit_input_helper::WinitInputHelper,
 }
 unsafe impl Send for Engine {}
@@ -169,7 +180,7 @@ impl Engine {
     pub fn new() -> Result<Self, crate::error::Error> {
         Self::new_inner(
             EngineSettings::default(),
-            #[cfg(target_os = "android")]
+            #[cfg(all(target_os = "android", feature = "window", not(feature = "headless")))]
             None,
         )
     }
@@ -178,13 +189,13 @@ impl Engine {
     pub fn new_config(settings: EngineSettings) -> Result<Self, crate::error::Error> {
         Self::new_inner(
             settings,
-            #[cfg(target_os = "android")]
+            #[cfg(all(target_os = "android", feature = "window", not(feature = "headless")))]
             None,
         )
     }
 
     /// Creates a new window for android
-    #[cfg(target_os = "android")]
+    #[cfg(all(target_os = "android", feature = "window", not(feature = "headless")))]
     pub fn new_android(
         settings: EngineSettings,
         app: winit::platform::android::activity::AndroidApp,
@@ -196,24 +207,26 @@ impl Engine {
     #[allow(unreachable_code)]
     pub(crate) fn new_inner(
         settings: EngineSettings,
-        #[cfg(target_os = "android")] android_app: Option<
-            winit::platform::android::activity::AndroidApp,
-        >,
+        #[cfg(all(target_os = "android", feature = "window", not(feature = "headless")))]
+        android_app: Option<winit::platform::android::activity::AndroidApp>,
     ) -> Result<Self, crate::error::Error> {
         #[cfg(feature = "debug")]
         env_logger::init();
         // Dimensions of the window, as width and height
         // and then are set as a logical size that the window can accept
-        #[cfg(not(target_os = "android"))]
-        let dimension = winit::dpi::PhysicalSize {
-            width: settings.width,   // Which sets the width of the window
-            height: settings.height, // And sets the height of the window
-        };
+        let dimension = (settings.width, settings.height);
 
         // And we will create a new window and set all the options we stored
-        #[cfg(not(target_os = "android"))]
+        #[cfg(all(
+            not(target_os = "android"),
+            not(feature = "headless"),
+            feature = "window"
+        ))]
         let default_attributes = WindowAttributes::default()
-            .with_inner_size(dimension) // sets the width and height of window
+            .with_inner_size(winit::dpi::PhysicalSize {
+                width: settings.width,   // Which sets the width of the window
+                height: settings.height, // And sets the height of the window
+            }) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
             .with_decorations(settings.decorations) // sets if the window should have borders
             .with_resizable(settings.resizable); // sets the window to be resizable
@@ -223,14 +236,17 @@ impl Engine {
         let camera = CameraContainer::new(dimension, &mut renderer);
 
         Ok(Self {
+            #[cfg(all(not(feature = "headless"), feature = "window"))]
             window: Window::new(default_attributes),
+            #[cfg(all(not(feature = "headless"), feature = "window"))]
             event_loop_control_flow: settings.control_flow,
+            #[cfg(all(not(feature = "headless"), feature = "window"))]
+            simple_input: crate::utils::winit_input_helper::WinitInputHelper::new(),
             renderer,
             objects: ObjectStorage::new(),
             camera,
             signals: crate::SignalStorage::new(),
             update_loop: None,
-            simple_input: crate::utils::winit_input_helper::WinitInputHelper::new(),
         })
     }
 
@@ -248,7 +264,10 @@ impl Engine {
             &mut Engine,
         ),
     ) -> Result<(), crate::error::Error> {
-        self.update_loop = Some(Box::new(update_function));
+        #[cfg(all(not(feature = "headless"), feature = "window"))]
+        {
+            self.update_loop = Some(Box::new(update_function));
+        }
 
         // will create the main event loop of the window.
         // and will contain all the callbacks and button press
@@ -280,10 +299,56 @@ impl Engine {
             EventLoop::new()?
         };
 
-        #[cfg(not(target_os = "android"))]
+        #[cfg(all(
+            not(target_os = "android"),
+            not(feature = "headless"),
+            feature = "window"
+        ))]
         let event_loop = EventLoop::new()?;
+        #[cfg(all(not(feature = "headless"), feature = "window"))]
         event_loop.set_control_flow(self.event_loop_control_flow);
+        #[cfg(all(not(feature = "headless"), feature = "window"))]
         event_loop.run_app(self)?;
+
+        #[cfg(all(
+            not(target_os = "android"),
+            not(feature = "window"),
+            feature = "headless"
+        ))]
+        {
+            let mut events = std::mem::take(&mut self.signals.events);
+            events.iter_mut().for_each(|i| {
+                i.1.init(self);
+            });
+
+            let mut update_function = update_function;
+            loop {
+                if let Ok(Some((mut encoder, view, frame, headless_output))) =
+                    self.renderer.pre_render(
+                        &self.objects,
+                        (self.renderer.config.width, self.renderer.config.height),
+                        &self.camera,
+                    )
+                {
+                    update_function(self);
+
+                    events.iter_mut().for_each(|i| {
+                        i.1.frame(self, &mut encoder, &view);
+                    });
+
+                    for camera_value in self.camera.values_mut() {
+                        camera_value.update_view_projection(&mut self.renderer);
+                    }
+                    self.objects.iter_mut().for_each(|i| {
+                        if i.1.changed {
+                            i.1.update(&mut self.renderer);
+                        }
+                    });
+
+                    self.renderer.render(encoder, frame, headless_output);
+                }
+            }
+        }
 
         Ok(())
     }

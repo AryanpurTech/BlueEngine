@@ -2,6 +2,7 @@ pub use downcast;
 pub use glam;
 pub use image;
 pub use wgpu;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit;
 
 pub use wgpu::Backends;
@@ -13,16 +14,27 @@ pub use wgpu::RenderPassColorAttachment;
 pub use wgpu::RenderPassDescriptor;
 pub use wgpu::TextureView;
 
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::dpi::*;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::DeviceEvent;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::ElementState;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::Event;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::KeyEvent;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::MouseButton;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event::WindowEvent;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::event_loop::EventLoop;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::keyboard::Key;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::keyboard::KeyCode;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use winit::window::Fullscreen;
 
 // Math types
@@ -57,6 +69,7 @@ pub type Matrix4 = glam::Mat4;
 pub type Quaternion = glam::Quat;
 
 /// Input helper
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use crate::utils::winit_input_helper::WinitInputHelper as InputHelper;
 pub use bytemuck::Pod;
 pub use bytemuck::Zeroable;

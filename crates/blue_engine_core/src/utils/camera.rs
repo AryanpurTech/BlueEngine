@@ -6,10 +6,9 @@
 
 use super::default_resources::OPENGL_TO_WGPU_MATRIX;
 use crate::{
-    Matrix4, UniformBuffers, Vector2,
+    Matrix4, UniformBuffers, Vector2, WindowSize,
     prelude::{Renderer, Vector3},
 };
-use winit::dpi::PhysicalSize;
 
 /// Container for the projection used by the camera
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -75,7 +74,7 @@ crate::macros::impl_deref_field!(
 
 impl Camera {
     /// Creates a new camera. this should've been automatically done at the time of creating an engine
-    pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Self {
+    pub fn new(window_size: WindowSize, renderer: &mut Renderer) -> Self {
         let camera_uniform = renderer.build_uniform_buffer(&[
             renderer.build_uniform_buffer_part("Camera Uniform", crate::Matrix4::IDENTITY)
         ]);
@@ -84,7 +83,7 @@ impl Camera {
             position: Vector3::new(0.0, 0.0, 3.0),
             target: Vector3::new(0.0, 0.0, 0.0),
             up: Vector3::new(0.0, 1.0, 0.0),
-            resolution: Vector2::new(window_size.width as f32, window_size.height as f32),
+            resolution: Vector2::new(window_size.0 as f32, window_size.1 as f32),
             projection: crate::Projection::Perspective {
                 fov: 70f32 * (std::f32::consts::PI / 180f32),
             },
@@ -211,8 +210,8 @@ impl Camera {
     }
 
     /// Sets the aspect ratio of the camera
-    pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) {
-        self.resolution = Vector2::new(window_size.width as f32, window_size.height as f32);
+    pub fn set_resolution(&mut self, window_size: WindowSize) {
+        self.resolution = Vector2::new(window_size.0 as f32, window_size.1 as f32);
         self.build_view_projection_matrix();
     }
 
@@ -225,7 +224,7 @@ impl Camera {
 
 impl CameraContainer {
     /// Creates new CameraContainer with one main camera
-    pub fn new(window_size: PhysicalSize<u32>, renderer: &mut Renderer) -> Self {
+    pub fn new(window_size: WindowSize, renderer: &mut Renderer) -> Self {
         let mut cameras = std::collections::HashMap::new();
         let main_camera = Camera::new(window_size, renderer);
         cameras.insert("main".into(), main_camera);
@@ -284,7 +283,7 @@ impl CameraContainer {
         }
     }
     /// Sets the aspect ratio of the camera
-    pub fn set_resolution(&mut self, window_size: PhysicalSize<u32>) {
+    pub fn set_resolution(&mut self, window_size: WindowSize) {
         if let Some(main_camera) = self.cameras.get_mut("main") {
             main_camera.set_resolution(window_size);
         }

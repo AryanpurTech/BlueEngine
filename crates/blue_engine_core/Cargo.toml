@@ -10,19 +10,23 @@ license = "Apache-2.0"
 name = "blue_engine_core"
 
 [features]
-default = ["debug"]
+default = ["debug", "window"]
+## Enables a window for rendering. This needs the `headless` feature to be disabled
+window = ["dep:winit"]
 debug = ["dep:env_logger"]
+## Enables rendering in headless mode, and without a window. Thus needs the `window` feature to be disabled
 headless = ["dep:flume"]
+## For android builds. This needs the `headless` feature to be disabled
 android = ["dep:log", "dep:android_logger"]
 android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
-# using u32 for indices and others
+## using u32 for indices and others
 u32 = []
-# in case you need faster math
+## in case you need faster math
 glam_fast_math = ["glam/fast-math"]
 
 [dependencies]
-winit = { version = "0.30", features = ["rwh_06"] }
+winit = { version = "0.30", features = ["rwh_06"], optional = true }
 wgpu = { version = "24.0.3" }
 image = { version = "0.25" }
 pollster = "0.4"

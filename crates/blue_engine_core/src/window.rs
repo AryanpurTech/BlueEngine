@@ -129,6 +129,7 @@ impl ApplicationHandler for Engine {
                 std::process::exit(0);
             }
             WindowEvent::Resized(size) => {
+                let size = (size.width, size.height);
                 self.renderer.resize(size);
                 self.camera.set_resolution(size);
                 self.camera.update_view_projection(&mut self.renderer);
@@ -142,9 +143,10 @@ impl ApplicationHandler for Engine {
                 }
 
                 if let Some(window_ref) = self.window.as_ref() {
-                    if let Ok(Some((mut encoder, view, frame, headless_output))) = self
-                        .renderer
-                        .pre_render(&self.objects, window_ref.inner_size(), &self.camera)
+                    let size = window_ref.inner_size();
+                    let size = (size.width, size.height);
+                    if let Ok(Some((mut encoder, view, frame, headless_output))) =
+                        self.renderer.pre_render(&self.objects, size, &self.camera)
                     {
                         let mut update_function = self.update_loop.take();
                         if let Some(ref mut update_function) = update_function {

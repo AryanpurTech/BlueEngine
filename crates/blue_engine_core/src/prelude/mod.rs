@@ -15,6 +15,7 @@ pub use crate::objects::{
     Instance, InstanceRaw, Object, ObjectSettings, ObjectStorage, RotateAmount, RotateAxis,
 };
 pub use crate::render::Renderer;
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub use crate::window::Window;
 
 /// The uint type used for indices and more
@@ -112,10 +113,12 @@ pub trait Signal: Any {
 
     /// This is ran at the device events when available
     #[allow(clippy::too_many_arguments)]
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     fn device_events(&mut self, _engine: &mut crate::Engine, _events: &crate::DeviceEvent) {}
 
     /// This is ran at the window events when available
     #[allow(clippy::too_many_arguments)]
+    #[cfg(all(feature = "window", not(feature = "headless")))]
     fn window_events(&mut self, _engine: &mut crate::Engine, _events: &crate::WindowEvent) {}
 
     /// ran before the frame is rendered
@@ -174,3 +177,6 @@ impl StringBufferTrait for &str {
     }
 }
 impl StringBuffer for &str {}
+
+/// To hold the width and height of the engine frames
+pub type WindowSize = (u32, u32);

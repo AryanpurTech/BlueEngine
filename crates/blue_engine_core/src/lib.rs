@@ -23,6 +23,7 @@ pub mod render;
 pub mod utils;
 pub use utils::*;
 /// contains definition for creation of window and instance creation.
+#[cfg(all(feature = "window", not(feature = "headless")))]
 pub mod window;
 #[doc(inline)]
 pub use crate::prelude::*;
