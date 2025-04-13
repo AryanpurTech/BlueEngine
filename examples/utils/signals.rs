@@ -37,7 +37,7 @@ impl Signal for MyPlugin {
     ) {
         // operations that relate to the engine, and can call the
         // internal fields and functions you need.
-        if engine.input_events.key_pressed(blue_engine::KeyCode::Enter) {
+        if engine.simple_input.key_pressed(blue_engine::KeyCode::Enter) {
             self.increment();
             println!("New counter value: {}", self.counter);
         }

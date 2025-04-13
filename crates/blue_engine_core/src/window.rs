@@ -176,7 +176,7 @@ impl Engine {
             camera,
             signals: crate::SignalStorage::new(),
             update_loop: None,
-            input_events: crate::utils::winit_input_helper::WinitInputHelper::new(),
+            simple_input: crate::utils::winit_input_helper::WinitInputHelper::new(),
         })
     }
 
@@ -307,7 +307,7 @@ impl ApplicationHandler for Engine {
         _device_id: winit::event::DeviceId,
         event: DeviceEvent,
     ) {
-        self.input_events.process_device_event(&event);
+        self.simple_input.process_device_event(&event);
 
         let mut events = std::mem::take(&mut self.signals.events);
         events.iter_mut().for_each(|i| {
@@ -341,7 +341,7 @@ impl ApplicationHandler for Engine {
             //     renderer,
             //     window,
             //     objects,
-            //     input_events,
+            //     simple_input,
             //     signals,
             //     update_loop,
             //     ..
@@ -353,7 +353,7 @@ impl ApplicationHandler for Engine {
             }
 
             WindowEvent::RedrawRequested => {
-                self.input_events.end_step_time();
+                self.simple_input.end_step_time();
 
                 if self.window.should_close {
                     event_loop.exit();
@@ -397,10 +397,10 @@ impl ApplicationHandler for Engine {
             _ => {}
         }
 
-        self.input_events.process_window_event(&event);
+        self.simple_input.process_window_event(&event);
 
         if event == WindowEvent::RedrawRequested {
-            self.input_events.step();
+            self.simple_input.step();
         }
     }
 }

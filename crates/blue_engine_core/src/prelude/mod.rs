@@ -178,7 +178,7 @@ pub struct Engine {
     /// input events
     ///
     /// #### USED INTERNALLY
-    pub input_events: crate::utils::winit_input_helper::WinitInputHelper,
+    pub simple_input: crate::utils::winit_input_helper::WinitInputHelper,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}
