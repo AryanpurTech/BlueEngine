@@ -4,7 +4,7 @@
  * The license is same as the one on the root.
 */
 
-use blue_engine::{ObjectSettings, prelude::Engine, primitive_shapes::cube};
+use blue_engine::{prelude::Engine, primitive_shapes::cube, ObjectSettings};
 
 fn main() -> Result<(), blue_engine::error::Error> {
     let mut engine = Engine::new()?;
@@ -15,6 +15,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
         &mut engine.renderer,
         &mut engine.objects,
     )?;
+
     engine
         .objects
         .get_mut("Cube")

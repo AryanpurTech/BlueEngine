@@ -1,4 +1,4 @@
-use blue_engine::{Engine, EngineSettings, primitive_shapes::cube};
+use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube, ObjectSettings};
 use blue_engine_utilities::FlyCamera;
 
 fn main() -> eyre::Result<()> {
@@ -15,7 +15,7 @@ fn main() -> eyre::Result<()> {
         blue_engine::TextureData::Bytes(texture_data),
         blue_engine::TextureMode::Clamp,
     )?;
-    cube("floor", &mut engine.renderer, &mut engine.objects);
+    cube("floor", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
     engine
         .objects
         .get_mut("floor")
