@@ -50,7 +50,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
         .set_position([1.5f32, 0f32, 0f32])
         .reference_texture("main");
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

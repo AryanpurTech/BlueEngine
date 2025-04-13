@@ -191,12 +191,7 @@ impl Engine {
         update_function: impl 'static
         + FnMut(
             // Core
-            &mut Renderer,
-            &mut Window,
-            &mut ObjectStorage,
-            &crate::utils::winit_input_helper::WinitInputHelper,
-            &mut CameraContainer,
-            &mut crate::SignalStorage,
+            &mut Engine,
         ),
     ) -> Result<(), crate::error::Error> {
         self.update_loop = Some(Box::new(update_function));
@@ -242,22 +237,14 @@ impl Engine {
 
 impl ApplicationHandler for Engine {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let Self {
-            window,
-            renderer,
-            objects,
-            signals,
-            camera,
-            ..
-        } = self;
-
-        if window.is_none() {
-            if let Ok(new_window) = event_loop.create_window(window.default_attributes.clone()) {
+        if self.window.is_none() {
+            if let Ok(new_window) = event_loop.create_window(self.window.default_attributes.clone())
+            {
                 let new_window = std::sync::Arc::new(new_window);
 
-                if renderer.surface.is_none() {
-                    if let Ok(surface) = renderer.instance.create_surface(new_window.clone()) {
-                        let surface_capabilities = surface.get_capabilities(&renderer.adapter);
+                if self.renderer.surface.is_none() {
+                    if let Ok(surface) = self.renderer.instance.create_surface(new_window.clone()) {
+                        let surface_capabilities = surface.get_capabilities(&self.renderer.adapter);
                         let tex_format = surface_capabilities
                             .formats
                             .iter()
@@ -265,50 +252,52 @@ impl ApplicationHandler for Engine {
                             .find(|f| f.is_srgb())
                             .unwrap_or(surface_capabilities.formats[0]);
 
-                        renderer.config.format = tex_format;
-                        renderer.config.view_formats = vec![tex_format];
+                        self.renderer.config.format = tex_format;
+                        self.renderer.config.view_formats = vec![tex_format];
 
-                        surface.configure(&renderer.device, &renderer.config);
-                        renderer.depth_buffer = Renderer::build_depth_buffer(
+                        surface.configure(&self.renderer.device, &self.renderer.config);
+                        self.renderer.depth_buffer = Renderer::build_depth_buffer(
                             "Depth Buffer",
-                            &renderer.device,
-                            &renderer.config,
+                            &self.renderer.device,
+                            &self.renderer.config,
                         );
-                        renderer.surface = Some(surface);
+                        self.renderer.surface = Some(surface);
 
-                        renderer.build_default_data();
-                        objects.iter_mut().for_each(|i| {
-                            i.1.update(renderer);
+                        self.renderer.build_default_data();
+                        self.objects.iter_mut().for_each(|i| {
+                            i.1.update(&mut self.renderer);
                         });
                     }
                 }
 
-                new_window.set_min_inner_size(window.default_attributes.min_inner_size);
-                new_window.set_max_inner_size(window.default_attributes.max_inner_size);
-                if let Some(position) = window.default_attributes.position {
+                new_window.set_min_inner_size(self.window.default_attributes.min_inner_size);
+                new_window.set_max_inner_size(self.window.default_attributes.max_inner_size);
+                if let Some(position) = self.window.default_attributes.position {
                     new_window.set_outer_position(position);
                 }
-                new_window.set_resizable(window.default_attributes.resizable);
-                new_window.set_enabled_buttons(window.default_attributes.enabled_buttons);
-                new_window.set_title(window.default_attributes.title.as_str());
-                new_window.set_maximized(window.default_attributes.maximized);
-                new_window.set_visible(window.default_attributes.visible);
-                new_window.set_transparent(window.default_attributes.transparent);
-                new_window.set_blur(window.default_attributes.blur);
-                new_window.set_decorations(window.default_attributes.decorations);
-                new_window.set_window_icon(window.default_attributes.window_icon.clone());
-                new_window.set_theme(window.default_attributes.preferred_theme);
-                new_window.set_resize_increments(window.default_attributes.resize_increments);
-                new_window.set_window_level(window.default_attributes.window_level);
-                new_window.set_cursor(window.default_attributes.cursor.clone());
-                new_window.set_fullscreen(window.default_attributes.fullscreen.clone());
+                new_window.set_resizable(self.window.default_attributes.resizable);
+                new_window.set_enabled_buttons(self.window.default_attributes.enabled_buttons);
+                new_window.set_title(self.window.default_attributes.title.as_str());
+                new_window.set_maximized(self.window.default_attributes.maximized);
+                new_window.set_visible(self.window.default_attributes.visible);
+                new_window.set_transparent(self.window.default_attributes.transparent);
+                new_window.set_blur(self.window.default_attributes.blur);
+                new_window.set_decorations(self.window.default_attributes.decorations);
+                new_window.set_window_icon(self.window.default_attributes.window_icon.clone());
+                new_window.set_theme(self.window.default_attributes.preferred_theme);
+                new_window.set_resize_increments(self.window.default_attributes.resize_increments);
+                new_window.set_window_level(self.window.default_attributes.window_level);
+                new_window.set_cursor(self.window.default_attributes.cursor.clone());
+                new_window.set_fullscreen(self.window.default_attributes.fullscreen.clone());
 
-                window.window = Some(new_window);
+                self.window.window = Some(new_window);
             }
 
-            signals.events.iter_mut().for_each(|i| {
-                i.1.init(renderer, &self.window, objects, camera);
+            let mut events = std::mem::take(&mut self.signals.events);
+            events.iter_mut().for_each(|i| {
+                i.1.init(self);
             });
+            std::mem::swap(&mut self.signals.events, &mut events);
         }
     }
 
@@ -318,20 +307,13 @@ impl ApplicationHandler for Engine {
         _device_id: winit::event::DeviceId,
         event: DeviceEvent,
     ) {
-        let Self {
-            camera,
-            renderer,
-            window,
-            objects,
-            input_events,
-            signals,
-            ..
-        } = self;
+        self.input_events.process_device_event(&event);
 
-        input_events.process_device_event(&event);
-        signals.events.iter_mut().for_each(|i| {
-            i.1.device_events(renderer, window, objects, &event, input_events, camera);
+        let mut events = std::mem::take(&mut self.signals.events);
+        events.iter_mut().for_each(|i| {
+            i.1.device_events(self, &event);
         });
+        std::mem::swap(&mut self.signals.events, &mut events);
     }
 
     fn window_event(
@@ -340,20 +322,11 @@ impl ApplicationHandler for Engine {
         _window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let Self {
-            camera,
-            renderer,
-            window,
-            objects,
-            input_events,
-            signals,
-            update_loop,
-            ..
-        } = self;
-
-        signals.events.iter_mut().for_each(|i| {
-            i.1.window_events(renderer, window, objects, &event, input_events, camera);
+        let mut events = std::mem::take(&mut self.signals.events);
+        events.iter_mut().for_each(|i| {
+            i.1.window_events(self, &event);
         });
+        std::mem::swap(&mut self.signals.events, &mut events);
 
         let mut _device_event: winit::event::DeviceEvent =
             DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
@@ -363,72 +336,71 @@ impl ApplicationHandler for Engine {
                 event_loop.exit();
                 std::process::exit(0);
             }
-
+            // let Self {
+            //     camera,
+            //     renderer,
+            //     window,
+            //     objects,
+            //     input_events,
+            //     signals,
+            //     update_loop,
+            //     ..
+            // } = self;
             WindowEvent::Resized(size) => {
-                renderer.resize(size);
-                camera.set_resolution(size);
-                camera.update_view_projection(renderer);
+                self.renderer.resize(size);
+                self.camera.set_resolution(size);
+                self.camera.update_view_projection(&mut self.renderer);
             }
 
             WindowEvent::RedrawRequested => {
-                input_events.end_step_time();
+                self.input_events.end_step_time();
 
-                if window.should_close {
+                if self.window.should_close {
                     event_loop.exit();
                 }
 
-                if let Some(window_ref) = window.as_ref() {
-                    if let Ok(Some((mut encoder, view, frame, headless_output))) =
-                        renderer.pre_render(objects, window_ref.inner_size(), camera)
+                if let Some(window_ref) = self.window.as_ref() {
+                    if let Ok(Some((mut encoder, view, frame, headless_output))) = self
+                        .renderer
+                        .pre_render(&self.objects, window_ref.inner_size(), &self.camera)
                     {
-                        if let Some(update_function) = update_loop {
-                            update_function(
-                                renderer,
-                                window,
-                                objects,
-                                input_events,
-                                camera,
-                                signals,
-                            );
+                        let mut update_function = self.update_loop.take();
+                        if let Some(ref mut update_function) = update_function {
+                            update_function(self);
                         }
+                        self.update_loop = update_function;
 
-                        signals.events.iter_mut().for_each(|i| {
-                            i.1.frame(
-                                renderer,
-                                window,
-                                objects,
-                                camera,
-                                input_events,
-                                &mut encoder,
-                                &view,
-                            );
+                        let mut events = std::mem::take(&mut self.signals.events);
+                        events.iter_mut().for_each(|i| {
+                            i.1.frame(self, &mut encoder, &view);
                         });
+                        std::mem::swap(&mut self.signals.events, &mut events);
 
-                        for camera_value in camera.values_mut() {
-                            camera_value.update_view_projection(renderer);
+                        for camera_value in self.camera.values_mut() {
+                            camera_value.update_view_projection(&mut self.renderer);
                         }
-                        objects.iter_mut().for_each(|i| {
+                        self.objects.iter_mut().for_each(|i| {
                             if i.1.changed {
-                                i.1.update(renderer);
+                                i.1.update(&mut self.renderer);
                             }
                         });
 
-                        renderer.render(encoder, frame, headless_output);
+                        self.renderer.render(encoder, frame, headless_output);
                     }
                 }
 
                 _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
-                if let Some(window_inner) = &window.window {
+                if let Some(window_inner) = &self.window.window {
                     window_inner.request_redraw();
                 }
             }
             _ => {}
         }
 
-        input_events.process_window_event(&event);
+        self.input_events.process_window_event(&event);
 
         if event == WindowEvent::RedrawRequested {
-            input_events.step();
+            self.input_events.step();
         }
     }
 }

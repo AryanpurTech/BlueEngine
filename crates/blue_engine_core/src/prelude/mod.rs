@@ -165,18 +165,12 @@ pub struct Engine {
     /// holds the update_loop function
     ///
     /// #### USED INTERNALLY
-    #[allow(clippy::type_complexity)]
     pub update_loop: Option<
         Box<
             dyn 'static
                 + FnMut(
                     // Core
-                    &mut Renderer,
-                    &mut Window,
-                    &mut ObjectStorage,
-                    &crate::utils::winit_input_helper::WinitInputHelper,
-                    &mut CameraContainer,
-                    &mut crate::SignalStorage,
+                    &mut Engine,
                 ),
         >,
     >,
@@ -184,7 +178,7 @@ pub struct Engine {
     /// input events
     ///
     /// #### USED INTERNALLY
-    pub(crate) input_events: crate::utils::winit_input_helper::WinitInputHelper,
+    pub input_events: crate::utils::winit_input_helper::WinitInputHelper,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}
@@ -193,50 +187,21 @@ unsafe impl Sync for Engine {}
 pub trait Signal: Any {
     /// This is ran as soon as the engine is properly initialized and all components are ready
     #[allow(clippy::too_many_arguments)]
-    fn init(
-        &mut self,
-        _renderer: &mut crate::Renderer,
-        _window: &crate::Window,
-        _objects: &mut ObjectStorage,
-        _camera: &mut crate::CameraContainer,
-    ) {
-    }
+    fn init(&mut self, _engine: &mut crate::Engine) {}
 
     /// This is ran at the device events when available
     #[allow(clippy::too_many_arguments)]
-    fn device_events(
-        &mut self,
-        _renderer: &mut crate::Renderer,
-        _window: &crate::Window,
-        _objects: &mut ObjectStorage,
-        _events: &crate::DeviceEvent,
-        _input: &crate::InputHelper,
-        _camera: &mut crate::CameraContainer,
-    ) {
-    }
+    fn device_events(&mut self, _engine: &mut crate::Engine, _events: &crate::DeviceEvent) {}
 
     /// This is ran at the window events when available
     #[allow(clippy::too_many_arguments)]
-    fn window_events(
-        &mut self,
-        _renderer: &mut crate::Renderer,
-        _window: &crate::Window,
-        _objects: &mut ObjectStorage,
-        _events: &crate::WindowEvent,
-        _input: &crate::InputHelper,
-        _camera: &mut crate::CameraContainer,
-    ) {
-    }
+    fn window_events(&mut self, _engine: &mut crate::Engine, _events: &crate::WindowEvent) {}
 
     /// ran before the frame is rendered
     #[allow(clippy::too_many_arguments)]
     fn frame(
         &mut self,
-        _renderer: &mut crate::Renderer,
-        _window: &crate::Window,
-        _objects: &mut ObjectStorage,
-        _camera: &mut crate::CameraContainer,
-        _input: &crate::InputHelper,
+        _engine: &mut crate::Engine,
         _encoder: &mut crate::CommandEncoder,
         _view: &crate::TextureView,
     ) {

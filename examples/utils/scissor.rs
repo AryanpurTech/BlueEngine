@@ -21,7 +21,7 @@ pub fn main() -> Result<(), blue_engine::error::Error> {
     // set scissor rect
     engine.renderer.scissor_rect = Some((0, 0, 450, 350));
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

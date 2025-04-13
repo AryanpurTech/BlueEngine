@@ -25,7 +25,7 @@ pub fn main() -> Result<(), blue_engine::error::Error> {
         a: 1.0,
     };
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

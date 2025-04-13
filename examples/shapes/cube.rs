@@ -18,11 +18,11 @@ fn main() -> Result<(), blue_engine::error::Error> {
 
     let radius = 5f32;
     let start = std::time::Instant::now();
-    engine.update_loop(move |_, _, _, _, camera, _| {
+    engine.update_loop(move |engine| {
         let camx = start.elapsed().as_secs_f32().sin() * radius;
         let camy = start.elapsed().as_secs_f32().sin() * radius;
         let camz = start.elapsed().as_secs_f32().cos() * radius;
-        camera.set_position((camx, camy, camz));
+        engine.camera.set_position((camx, camy, camz));
     })?;
 
     Ok(())

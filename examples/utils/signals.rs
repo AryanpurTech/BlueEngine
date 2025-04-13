@@ -31,17 +31,13 @@ impl MyPlugin {
 impl Signal for MyPlugin {
     fn frame(
         &mut self,
-        _renderer: &mut blue_engine::Renderer,
-        _window: &blue_engine::Window,
-        _objects: &mut blue_engine::ObjectStorage,
-        _camera: &mut blue_engine::CameraContainer,
-        input: &blue_engine::InputHelper,
-        _encoder: &mut blue_engine::CommandEncoder,
-        _view: &blue_engine::TextureView,
+        engine: &mut blue_engine_core::Engine,
+        _encoder: &mut blue_engine_core::CommandEncoder,
+        _view: &blue_engine_core::TextureView,
     ) {
         // operations that relate to the engine, and can call the
         // internal fields and functions you need.
-        if input.key_pressed(blue_engine::KeyCode::Enter) {
+        if engine.input_events.key_pressed(blue_engine::KeyCode::Enter) {
             self.increment();
             println!("New counter value: {}", self.counter);
         }
@@ -69,7 +65,7 @@ pub fn main() -> Result<(), blue_engine::error::Error> {
     engine.signals.add_signal("my plugin", Box::new(myplugin));
 
     // thats it, the engine will now run it on every frame or wherever you requested.
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }
