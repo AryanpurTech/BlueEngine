@@ -138,6 +138,7 @@ pub fn rectangle(
 /// Creates a 3D cube
 pub fn cube(
     name: impl StringBuffer,
+    settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
@@ -281,7 +282,7 @@ pub fn cube(
                 16, 17, 18, 18, 19, 16, // front
                 20, 21, 22, 22, 23, 20, // back
             ],
-            ObjectSettings::default(),
+            settings,
             renderer,
         )?,
     );
@@ -297,6 +298,7 @@ pub fn cube(
 /// ```
 pub fn uv_sphere(
     name: impl StringBuffer,
+    settings: ObjectSettings,
     details: (usize, usize, f32),
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
@@ -348,7 +350,7 @@ pub fn uv_sphere(
 
     objects.insert(
         name.as_string(),
-        Object::new(name, vertices, indices, ObjectSettings::default(), renderer)?,
+        Object::new(name, vertices, indices, settings, renderer)?,
     );
 
     Ok(())
