@@ -4,7 +4,7 @@ update-changelog release_tag:
     git cliff --unreleased --tag {{release_tag}} --prepend CHANGELOG.md
 
 publish release_tag:
-    @cd crates/blue_engine_core && cargo publish
-    @cd crates/blue_engine_dynamic && cargo publish
+    @cd crates/blue_engine_core && cargo publish --allow-dirty
+    @cd crates/blue_engine_dynamic && cargo publish --allow-dirty
     @cargo publish --allow-dirty
     @just update-changelog {{release_tag}}
