@@ -101,6 +101,10 @@ path = "examples/utils/clear_color.rs"
 name = "signals"
 path = "examples/utils/signals.rs"
 
+[[example]]
+name = "headless"
+path = "examples/utils/headless.rs"
+
 # Development ONLY
 [[example]]
 name = "dev"
