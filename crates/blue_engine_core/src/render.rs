@@ -1,7 +1,5 @@
-// ? ADD VISIBILITY TAGS FOR DIFFERENT RENDER PASS TO USE AND RENDER ONLY THE OBJECTS THEY NEED
-
 use crate::{
-    CameraContainer, ObjectStorage, PipelineData,
+    CameraContainer, ObjectStorage, PipelineData, WindowSize,
     prelude::{ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
@@ -24,7 +22,7 @@ pub struct Renderer {
     /// Describes a [`wgpu::Surface`]
     pub config: wgpu::SurfaceConfiguration,
     /// The size of the window
-    pub size: winit::dpi::PhysicalSize<u32>,
+    pub size: WindowSize,
     /// The texture bind group layout
     pub texture_bind_group_layout: wgpu::BindGroupLayout,
     /// The uniform bind group layout
@@ -40,6 +38,9 @@ pub struct Renderer {
     /// Scissor cut section of the screen to render to
     /// (x, y, width, height)
     pub scissor_rect: Option<(u32, u32, u32, u32)>,
+    /// The texture data that holds data for the headless mode
+    #[cfg(feature = "headless")]
+    pub headless_texture_data: Vec<u8>,
 }
 unsafe impl Sync for Renderer {}
 unsafe impl Send for Renderer {}
@@ -47,8 +48,8 @@ unsafe impl Send for Renderer {}
 impl Renderer {
     /// Creates a new renderer.
     pub(crate) async fn new(
-        size: winit::dpi::PhysicalSize<u32>,
-        settings: crate::WindowDescriptor,
+        size: WindowSize,
+        settings: crate::EngineSettings,
     ) -> Result<Self, crate::error::Error> {
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -88,11 +89,11 @@ impl Renderer {
                     #[cfg(target_os = "android")]
                     width: 1080,
                     #[cfg(not(feature = "android"))]
-                    width: size.width,
+                    width: size.0,
                     #[cfg(target_os = "android")]
                     height: 2300,
                     #[cfg(not(target_os = "android"))]
-                    height: size.height,
+                    height: size.1,
                     #[cfg(target_os = "android")]
                     present_mode: wgpu::PresentMode::Mailbox,
                     #[cfg(not(target_os = "android"))]
@@ -162,6 +163,9 @@ impl Renderer {
                     camera: None,
                     clear_color: wgpu::Color::BLACK,
                     scissor_rect: None,
+
+                    #[cfg(feature = "headless")]
+                    headless_texture_data: Vec::<u8>::with_capacity((size.0 * size.1) as usize * 4),
                 };
 
                 renderer.build_default_data();
@@ -199,19 +203,18 @@ impl Renderer {
     }
 
     /// Resize the window.
-    pub(crate) fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    #[cfg(all(not(feature = "headless"), feature = "window"))]
+    pub(crate) fn resize(&mut self, new_size: WindowSize) {
         // check if new_size is non-zero
-        if new_size.width != 0 && new_size.height != 0 {
+        if new_size.0 != 0 && new_size.1 != 0 {
             self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
+            self.config.width = new_size.0;
+            self.config.height = new_size.1;
             #[cfg(not(target_os = "android"))]
             if let Some(surface) = self.surface.as_ref() {
                 surface.configure(&self.device, &self.config);
-                {
-                    self.depth_buffer =
-                        Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
-                }
+                self.depth_buffer =
+                    Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
             }
         }
     }
@@ -220,37 +223,68 @@ impl Renderer {
     pub(crate) fn pre_render(
         &mut self,
         objects: &ObjectStorage,
-        window_size: winit::dpi::PhysicalSize<u32>,
+        window_size: WindowSize,
         camera: &CameraContainer,
     ) -> Result<
         Option<(
             wgpu::CommandEncoder,
             wgpu::TextureView,
-            wgpu::SurfaceTexture,
+            Option<wgpu::SurfaceTexture>,
+            Option<(wgpu::Buffer, wgpu::Texture)>,
         )>,
         wgpu::SurfaceError,
     > {
+        #[cfg(not(feature = "headless"))]
         let surface = if let Some(ref surface) = self.surface {
             surface
         } else {
             return Ok(None);
         };
-
+        #[cfg(not(feature = "headless"))]
         let frame = if let Ok(frame) = surface.get_current_texture() {
             frame
         } else {
             return Ok(None);
         };
 
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
+
+        #[cfg(feature = "headless")]
+        let render_target = self.device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width: self.config.width,
+                height: self.config.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.config.format,
+            usage: wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            label: None,
+            view_formats: &[self.config.format],
+        });
+
+        // ? There might be a way to enable both headless and normal rendering,
+        // ? However the cost of it can increase a lot
+        #[cfg(feature = "headless")]
+        let view = render_target.create_view(&wgpu::TextureViewDescriptor::default());
+        #[cfg(not(feature = "headless"))]
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        #[cfg(feature = "headless")]
+        let headless_output_staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: self.headless_texture_data.capacity() as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render pass"),
@@ -276,8 +310,8 @@ impl Renderer {
 
         if let Some(scissor_rect) = self.scissor_rect {
             // check if scissor bounds are smaller than the window
-            if scissor_rect.0 + scissor_rect.2 < window_size.width
-                && scissor_rect.1 + scissor_rect.3 < window_size.height
+            if scissor_rect.0 + scissor_rect.2 < window_size.0
+                && scissor_rect.1 + scissor_rect.3 < window_size.1
             {
                 render_pass.set_scissor_rect(
                     scissor_rect.0,
@@ -294,7 +328,8 @@ impl Renderer {
         }
 
         // sort the object list in descending render order
-        let mut object_list: Vec<_> = objects.iter().collect();
+        // ! There needs to be a better way for this, to not iterate twice
+        let mut object_list = objects.iter().collect::<Vec<_>>();
         object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
 
         for (_, i) in object_list {
@@ -344,14 +379,84 @@ impl Renderer {
         }
         drop(render_pass);
 
-        Ok(Some((encoder, view, frame)))
+        Ok(Some((
+            encoder,
+            view,
+            #[cfg(feature = "headless")]
+            None,
+            #[cfg(not(feature = "headless"))]
+            Some(frame),
+            #[cfg(feature = "headless")]
+            Some((headless_output_staging_buffer, render_target)),
+            #[cfg(not(feature = "headless"))]
+            None,
+        )))
     }
 
     /// Render the scene.
-    pub(crate) fn render(&mut self, encoder: wgpu::CommandEncoder, frame: wgpu::SurfaceTexture) {
-        // submit will accept anything that implements IntoIter
-        self.queue.submit(std::iter::once(encoder.finish()));
-        frame.present();
+    pub(crate) fn render(
+        &mut self,
+        encoder: wgpu::CommandEncoder,
+        _frame: Option<wgpu::SurfaceTexture>,
+        _headless: Option<(wgpu::Buffer, wgpu::Texture)>,
+    ) {
+        #[cfg(feature = "headless")]
+        {
+            #[allow(clippy::expect_used)]
+            let (output_staging_buffer, render_target) =
+                _headless.expect("Error unpacking headless content. This should not error!");
+
+            let mut encoder = encoder;
+
+            #[cfg(feature = "headless")]
+            encoder.copy_texture_to_buffer(
+                wgpu::TexelCopyTextureInfo {
+                    texture: &render_target,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                wgpu::TexelCopyBufferInfo {
+                    buffer: &output_staging_buffer,
+                    layout: wgpu::TexelCopyBufferLayout {
+                        offset: 0,
+                        // This needs to be a multiple of 256. Normally we would need to pad
+                        // it but we here know it will work out anyways.
+                        bytes_per_row: Some(self.config.width * 4),
+                        rows_per_image: Some(self.config.height),
+                    },
+                },
+                wgpu::Extent3d {
+                    width: self.config.width,
+                    height: self.config.height,
+                    depth_or_array_layers: 1,
+                },
+            );
+
+            // submit will accept anything that implements IntoIter
+            self.queue.submit(Some(encoder.finish()));
+
+            pollster::block_on(async {
+                let buffer_slice = output_staging_buffer.slice(..);
+                let (sender, receiver) = flume::bounded(1);
+                buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+                self.device.poll(wgpu::Maintain::wait());
+                receiver.recv_async().await.unwrap().unwrap();
+                {
+                    let view = buffer_slice.get_mapped_range();
+                    self.headless_texture_data.extend_from_slice(&view[..]);
+                }
+                output_staging_buffer.unmap();
+            });
+        }
+
+        #[cfg(not(feature = "headless"))]
+        if let Some(frame) = _frame {
+            // submit will accept anything that implements IntoIter
+            self.queue.submit(Some(encoder.finish()));
+
+            frame.present();
+        }
     }
 
     /// Sets the background color

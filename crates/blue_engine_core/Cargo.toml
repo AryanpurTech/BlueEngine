@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_core"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
@@ -11,25 +11,31 @@ name = "blue_engine_core"
 
 [features]
 default = ["debug"]
+## Enables a window for rendering. This needs the `headless` feature to be disabled
+window = ["dep:winit"]
 debug = ["dep:env_logger"]
+## Enables rendering in headless mode, and without a window. Thus needs the `window` feature to be disabled
+headless = ["dep:flume"]
+## For android builds. This needs the `headless` feature to be disabled
 android = ["dep:log", "dep:android_logger"]
 android_native_activity = ["winit/android-native-activity"]
 android_game_activity = ["winit/android-game-activity"]
-# using u32 for indices and others
+## using u32 for indices and others
 u32 = []
-# in case you need faster math
+## in case you need faster math
 glam_fast_math = ["glam/fast-math"]
 
 [dependencies]
-winit = { version = "0.30", features = ["rwh_06"] }
+winit = { version = "0.30", features = ["rwh_06"], optional = true }
 wgpu = { version = "24.0.3" }
 image = { version = "0.25" }
 pollster = "0.4"
-bytemuck = { version = "1.16", features = ["derive"] }
+bytemuck = { version = "1.22.0", features = ["derive"] }
 downcast = "0.11"
 thiserror = "2.0"
 env_logger = { version = "0.11", optional = true }
 glam = { version = "0.30.1", features = ["bytemuck", "serde"] }
+flume = { version = "0.11.1", optional = true }
 
 # android
 log = { version = "0.4", optional = true }

@@ -6,7 +6,7 @@ use blue_engine_utilities::{AnimationKeyframe, animation::Animation};
 fn main() -> eyre::Result<()> {
     #[cfg(feature = "animation")]
     {
-        let mut engine = Engine::new_config(WindowDescriptor {
+        let mut engine = Engine::new_config(EngineSettings {
             width: 1280,
             height: 720,
             title: "Animation test",

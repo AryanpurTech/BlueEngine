@@ -16,11 +16,15 @@ fn main() -> Result<(), blue_engine::error::Error> {
     let mut engine = Engine::new()?;
 
     // create a triangle
-    triangle("my triangle", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
+    triangle(
+        "my triangle",
+        ObjectSettings::default(),
+        &mut engine.renderer,
+        &mut engine.objects,
+    )?;
 
     // run the engine
-    engine
-        .update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

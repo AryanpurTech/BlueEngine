@@ -60,7 +60,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
 
     square("Square", &mut engine)?;
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

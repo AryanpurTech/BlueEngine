@@ -57,7 +57,7 @@ pub fn main() -> Result<(), blue_engine::error::Error> {
     shape.update_instance_buffer(&mut engine.renderer);
 
     // run the loop as normal
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

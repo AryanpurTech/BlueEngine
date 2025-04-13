@@ -1,12 +1,12 @@
 #[cfg(feature = "gltf")]
-use blue_engine::{Engine, WindowDescriptor};
+use blue_engine::{Engine, EngineSettings};
 #[cfg(feature = "gltf")]
 use blue_engine_utilities::{FlyCamera, model_load::load_gltf};
 
 fn main() -> eyre::Result<()> {
     #[cfg(feature = "gltf")]
     {
-        let mut engine = Engine::new_config(WindowDescriptor {
+        let mut engine = Engine::new_config(EngineSettings {
             width: 1280,
             height: 720,
             title: "Model test",

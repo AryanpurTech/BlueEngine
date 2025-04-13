@@ -24,7 +24,7 @@ pub fn main() -> Result<(), blue_engine::error::Error> {
         &mut engine.objects,
     )?;
 
-    engine.update_loop(move |_, _, _, _, _, _| {})?;
+    engine.update_loop(move |_| {})?;
 
     Ok(())
 }

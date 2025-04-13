@@ -9,7 +9,13 @@ use blue_engine::{prelude::Engine, primitive_shapes::cube, ObjectSettings};
 fn main() -> Result<(), blue_engine::error::Error> {
     let mut engine = Engine::new()?;
 
-    cube("Cube", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
+    cube(
+        "Cube",
+        ObjectSettings::default(),
+        &mut engine.renderer,
+        &mut engine.objects,
+    )?;
+
     engine
         .objects
         .get_mut("Cube")
@@ -18,11 +24,11 @@ fn main() -> Result<(), blue_engine::error::Error> {
 
     let radius = 5f32;
     let start = std::time::Instant::now();
-    engine.update_loop(move |_, _, _, _, camera, _| {
+    engine.update_loop(move |engine| {
         let camx = start.elapsed().as_secs_f32().sin() * radius;
         let camy = start.elapsed().as_secs_f32().sin() * radius;
         let camz = start.elapsed().as_secs_f32().cos() * radius;
-        camera.set_position((camx, camy, camz));
+        engine.camera.set_position((camx, camy, camz));
     })?;
 
     Ok(())

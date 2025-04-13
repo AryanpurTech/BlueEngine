@@ -45,7 +45,7 @@ project.
 ## Older hardware
 
 The engine uses WGPU under the hood for rendering. WGPU by nature is designed for modern hardware, so if you have or want to
-target older hardware, you might need to add a couple more things to WindowDescriptor during Engine::new_config:
+target older hardware, you might need to add a couple more things to EngineSettings during Engine::new_config:
 
 1. set a backend that targets your older hardware, such as GL using the backends field: `backend: blue_engine::wgpu::Backends::GL`
 2. experiement with the limits field, which describes what features you need. `limits: blue_engine::wgpu::Limits::default()`. there

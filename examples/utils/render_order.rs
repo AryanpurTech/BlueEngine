@@ -49,9 +49,9 @@ fn main() -> Result<(), blue_engine::error::Error> {
     let start = std::time::Instant::now();
 
     // start the update loop
-    engine.update_loop(move |_, _, object_storage, _, _, _| {
+    engine.update_loop(move |engine| {
         // get the target layer to change order of
-        let target = object_storage.get_mut("layer1").unwrap();
+        let target = engine.objects.get_mut("layer1").unwrap();
 
         // on ever 2 seconds change order
         if start.elapsed().as_secs() % 2 == 0 {

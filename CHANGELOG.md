@@ -1,6 +1,35 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
+
+---
+## [0.9.0](https://github.com/AryanpurTech/BlueEngine/compare/v0.8.0..0.9.0) - 2025-04-13
+
+### Bug Fixes
+
+- #107 - ([daa2233](https://github.com/AryanpurTech/BlueEngine/commit/daa223316b000586bba898f68b0e9a8332bdd24c))
+- camera issues with the headless mode - ([dcbe5a8](https://github.com/AryanpurTech/BlueEngine/commit/dcbe5a85f6b277db1fdb125a62840862662530dc))
+
+### Features
+
+- **(api)** updated the signals and runtime api - ([e8b6baa](https://github.com/AryanpurTech/BlueEngine/commit/e8b6baae45ca21f2df898e70fbbe4a62ec335036))
+- **(api)** [**breaking**] updated the signals and runtime api - ([e8b6baa](https://github.com/AryanpurTech/BlueEngine/commit/e8b6baae45ca21f2df898e70fbbe4a62ec335036))
+- **(api)** [**breaking**] updated the signals and runtime api - ([e8b6baa](https://github.com/AryanpurTech/BlueEngine/commit/e8b6baae45ca21f2df898e70fbbe4a62ec335036))
+- initial version for headless mode - ([834bedd](https://github.com/AryanpurTech/BlueEngine/commit/834bedd7d5d3ca115f82d9e92bd83780214775fe))
+- winit and windowing is now a dependency instead of hard coded within the engine. - ([daa2233](https://github.com/AryanpurTech/BlueEngine/commit/daa223316b000586bba898f68b0e9a8332bdd24c))
+- headless feature is now fully available with it's own runtime - ([088e9fe](https://github.com/AryanpurTech/BlueEngine/commit/088e9fe8653d01ca9755bba7259b4c906fc1d8a0))
+- [**breaking**] headless feature is now fully available with it's own runtime - ([088e9fe](https://github.com/AryanpurTech/BlueEngine/commit/088e9fe8653d01ca9755bba7259b4c906fc1d8a0))
+- added a headless mode example - ([f39ad24](https://github.com/AryanpurTech/BlueEngine/commit/f39ad24c80fa4c8d2106d3e8fc2d859504613747))
+
+### Miscellaneous Chores
+
+- updated utilities version - ([10cd06f](https://github.com/AryanpurTech/BlueEngine/commit/10cd06f9891e4c8219d9346fad3c7964758959b4))
+- [**breaking**] `WindowDescriptor` is now called `EngineSettings` - ([8a93cd8](https://github.com/AryanpurTech/BlueEngine/commit/8a93cd848b3ac0b06c929826674f05fdbc120815))
+- updated lock dependencies - ([2fb1a23](https://github.com/AryanpurTech/BlueEngine/commit/2fb1a23172b281ae924768a547d06487466e02c3))
+- [**breaking**] renamed `engine.input_events` into `engine.simple_input` to convey the meaning clearly - ([9f5beb5](https://github.com/AryanpurTech/BlueEngine/commit/9f5beb5c82d3caa73f3dd0136416b30ce114a1a1))
+- moved the engine definitions into its own file - ([5511e6a](https://github.com/AryanpurTech/BlueEngine/commit/5511e6af7e1f5038551f0c340f84abb6093b5bef))
+- added ObjectSettings parameter to the 3D primitve shapes - ([9a0ad36](https://github.com/AryanpurTech/BlueEngine/commit/9a0ad36923f7b8eff58e01f7cfe2bc4284a42d3e))
+- updated versions - ([feb169f](https://github.com/AryanpurTech/BlueEngine/commit/feb169f7968de9b578b8a41ea156fbbc72029e3c))
 
 ## [0.8.0] - 2025-04-05
 
