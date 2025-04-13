@@ -10,7 +10,7 @@ license = "Apache-2.0"
 name = "blue_engine_core"
 
 [features]
-default = ["debug", "window"]
+default = ["debug"]
 ## Enables a window for rendering. This needs the `headless` feature to be disabled
 window = ["dep:winit"]
 debug = ["dep:env_logger"]

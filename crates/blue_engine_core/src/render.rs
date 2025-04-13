@@ -227,17 +227,18 @@ impl Renderer {
         Option<(
             wgpu::CommandEncoder,
             wgpu::TextureView,
-            wgpu::SurfaceTexture,
-            Option<wgpu::Buffer>,
+            Option<wgpu::SurfaceTexture>,
+            Option<(wgpu::Buffer, wgpu::Texture)>,
         )>,
         wgpu::SurfaceError,
     > {
+        #[cfg(not(feature = "headless"))]
         let surface = if let Some(ref surface) = self.surface {
             surface
         } else {
             return Ok(None);
         };
-
+        #[cfg(not(feature = "headless"))]
         let frame = if let Ok(frame) = surface.get_current_texture() {
             frame
         } else {
@@ -274,12 +275,6 @@ impl Renderer {
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-
-        #[cfg(feature = "headless")]
-        {
-            self.headless_texture_data =
-                Vec::<u8>::with_capacity((self.config.width * self.config.height) as usize * 4)
-        };
 
         #[cfg(feature = "headless")]
         let headless_output_staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
@@ -332,7 +327,7 @@ impl Renderer {
 
         // sort the object list in descending render order
         // ! There needs to be a better way for this, to not iterate twice
-        let mut object_list: Vec<_> = objects.iter().collect();
+        let mut object_list = objects.iter().collect::<Vec<_>>();
         object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
 
         for (_, i) in object_list {
@@ -382,37 +377,15 @@ impl Renderer {
         }
         drop(render_pass);
 
-        #[cfg(feature = "headless")]
-        encoder.copy_texture_to_buffer(
-            wgpu::TexelCopyTextureInfo {
-                texture: &render_target,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            wgpu::TexelCopyBufferInfo {
-                buffer: &headless_output_staging_buffer,
-                layout: wgpu::TexelCopyBufferLayout {
-                    offset: 0,
-                    // This needs to be a multiple of 256. Normally we would need to pad
-                    // it but we here know it will work out anyways.
-                    bytes_per_row: Some(self.config.width * 4),
-                    rows_per_image: Some(self.config.height),
-                },
-            },
-            wgpu::Extent3d {
-                width: self.config.width,
-                height: self.config.height,
-                depth_or_array_layers: 1,
-            },
-        );
-
         Ok(Some((
             encoder,
             view,
-            frame,
             #[cfg(feature = "headless")]
-            Some(headless_output_staging_buffer),
+            None,
+            #[cfg(not(feature = "headless"))]
+            Some(frame),
+            #[cfg(feature = "headless")]
+            Some((headless_output_staging_buffer, render_target)),
             #[cfg(not(feature = "headless"))]
             None,
         )))
@@ -422,33 +395,66 @@ impl Renderer {
     pub(crate) fn render(
         &mut self,
         encoder: wgpu::CommandEncoder,
-        frame: wgpu::SurfaceTexture,
-        _headless: Option<wgpu::Buffer>,
+        _frame: Option<wgpu::SurfaceTexture>,
+        _headless: Option<(wgpu::Buffer, wgpu::Texture)>,
     ) {
-        // submit will accept anything that implements IntoIter
-        self.queue.submit(Some(encoder.finish()));
-
         #[cfg(feature = "headless")]
         {
             #[allow(clippy::expect_used)]
-            let output_staging_buffer =
+            let (output_staging_buffer, render_target) =
                 _headless.expect("Error unpacking headless content. This should not error!");
 
-            // pollster::block_on(async {
-            //     let buffer_slice = output_staging_buffer.slice(..);
-            //     let (sender, receiver) = flume::bounded(1);
-            //     buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
-            //     self.device.poll(wgpu::Maintain::wait());
-            //     receiver.recv_async().await.unwrap().unwrap();
-            //     {
-            //         let view = buffer_slice.get_mapped_range();
-            //         self.headless_texture_data.extend_from_slice(&view[..]);
-            //     }
-            //     output_staging_buffer.unmap();
-            // });
+            let mut encoder = encoder;
+
+            #[cfg(feature = "headless")]
+            encoder.copy_texture_to_buffer(
+                wgpu::TexelCopyTextureInfo {
+                    texture: &render_target,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                wgpu::TexelCopyBufferInfo {
+                    buffer: &output_staging_buffer,
+                    layout: wgpu::TexelCopyBufferLayout {
+                        offset: 0,
+                        // This needs to be a multiple of 256. Normally we would need to pad
+                        // it but we here know it will work out anyways.
+                        bytes_per_row: Some(self.config.width * 4),
+                        rows_per_image: Some(self.config.height),
+                    },
+                },
+                wgpu::Extent3d {
+                    width: self.config.width,
+                    height: self.config.height,
+                    depth_or_array_layers: 1,
+                },
+            );
+
+            // submit will accept anything that implements IntoIter
+            self.queue.submit(Some(encoder.finish()));
+
+            pollster::block_on(async {
+                let buffer_slice = output_staging_buffer.slice(..);
+                let (sender, receiver) = flume::bounded(1);
+                buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+                self.device.poll(wgpu::Maintain::wait());
+                receiver.recv_async().await.unwrap().unwrap();
+                {
+                    let view = buffer_slice.get_mapped_range();
+                    self.headless_texture_data.extend_from_slice(&view[..]);
+                }
+                output_staging_buffer.unmap();
+            });
         }
 
-        frame.present();
+        #[cfg(not(feature = "headless"))]
+        if let Some(frame) = _frame {
+            // submit will accept anything that implements IntoIter
+            self.queue.submit(Some(encoder.finish()));
+
+            frame.present();
+        }
     }
 
     /// Sets the background color
@@ -478,22 +484,6 @@ macro_rules! gen_pipeline {
         }
     };
 }
-
-// pub fn output_image_native(image_data: Vec<u8>, texture_dims: (usize, usize), path: String) {
-//     let mut png_data = Vec::<u8>::with_capacity(image_data.len());
-//     let mut encoder = png::Encoder::new(
-//         std::io::Cursor::new(&mut png_data),
-//         texture_dims.0 as u32,
-//         texture_dims.1 as u32,
-//     );
-//     encoder.set_color(png::ColorType::Rgba);
-//     let mut png_writer = encoder.write_header().unwrap();
-//     png_writer.write_image_data(&image_data[..]).unwrap();
-//     png_writer.finish().unwrap();
-
-//     let mut file = std::fs::File::create(&path).unwrap();
-//     file.write_all(&png_data[..]).unwrap();
-// }
 
 gen_pipeline!(
     get_pipeline_vertex_buffer,

@@ -103,7 +103,7 @@ unsafe impl Sync for EngineSettings {}
 ///
 /// To start using the Blue Engine, you can start by creating a new Engine like follows:
 /// ```
-/// use blue_engine::prelude::{Engine, EngineSettings};
+/// use blue_engine::prelude::{Engine};
 ///
 /// fn main() {
 ///     let engine = Engine::new().expect("Couldn't create the engine");
@@ -156,15 +156,7 @@ pub struct Engine {
     /// holds the update_loop function
     ///
     /// #### USED INTERNALLY
-    pub update_loop: Option<
-        Box<
-            dyn 'static
-                + FnMut(
-                    // Core
-                    &mut Engine,
-                ),
-        >,
-    >,
+    pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine)>>,
 
     /// input events
     ///
@@ -323,6 +315,10 @@ impl Engine {
 
             let mut update_function = update_function;
             loop {
+                self.renderer.headless_texture_data = Vec::<u8>::with_capacity(
+                    (self.renderer.config.width * self.renderer.config.height) as usize * 4,
+                );
+
                 if let Ok(Some((mut encoder, view, frame, headless_output))) =
                     self.renderer.pre_render(
                         &self.objects,
@@ -330,8 +326,6 @@ impl Engine {
                         &self.camera,
                     )
                 {
-                    update_function(self);
-
                     events.iter_mut().for_each(|i| {
                         i.1.frame(self, &mut encoder, &view);
                     });
@@ -346,6 +340,8 @@ impl Engine {
                     });
 
                     self.renderer.render(encoder, frame, headless_output);
+
+                    update_function(self);
                 }
             }
         }

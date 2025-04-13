@@ -148,12 +148,6 @@ impl ApplicationHandler for Engine {
                     if let Ok(Some((mut encoder, view, frame, headless_output))) =
                         self.renderer.pre_render(&self.objects, size, &self.camera)
                     {
-                        let mut update_function = self.update_loop.take();
-                        if let Some(ref mut update_function) = update_function {
-                            update_function(self);
-                        }
-                        self.update_loop = update_function;
-
                         let mut events = std::mem::take(&mut self.signals.events);
                         events.iter_mut().for_each(|i| {
                             i.1.frame(self, &mut encoder, &view);
@@ -168,6 +162,12 @@ impl ApplicationHandler for Engine {
                                 i.1.update(&mut self.renderer);
                             }
                         });
+
+                        let mut update_function = self.update_loop.take();
+                        if let Some(ref mut update_function) = update_function {
+                            update_function(self);
+                        }
+                        self.update_loop = update_function;
 
                         self.renderer.render(encoder, frame, headless_output);
                     }

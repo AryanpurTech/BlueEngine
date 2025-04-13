@@ -15,16 +15,16 @@ exclude = ["/examples", "/resources"]
 name = "blue_engine"
 
 [features]
-default = ["debug", "static_link"]
+default = ["debug", "headless", "static_link"]
 ## use the static build of the engine
 static_link = ["dep:blue_engine_core"]
 ## Use the dynamic build of the engine
 dynamic_link = ["dep:blue_engine_dynamic"]
 ## Enables a window for rendering. This needs the `headless` feature to be disabled
-window = ["blue_engine_core?/window", "blue_engine_dynamic?/window"]
+window = ["blue_engine_core/window", "blue_engine_dynamic/window"]
 debug = ["blue_engine_core?/debug", "blue_engine_dynamic?/debug"]
 ## Enables rendering in headless mode, and without a window. Thus needs the `window` feature to be disabled
-headless = ["blue_engine_core?/headless", "blue_engine_dynamic?/headless"]
+headless = ["blue_engine_core/headless", "blue_engine_dynamic/headless"]
 ## For android builds. This needs the `headless` feature to be disabled
 android = ["blue_engine_core?/android", "blue_engine_dynamic?/android"]
 android_native_activity = [
