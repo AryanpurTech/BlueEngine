@@ -26,3 +26,5 @@ pub use utils::*;
 pub mod window;
 #[doc(inline)]
 pub use crate::prelude::*;
+/// contains defintions of top level functionality of the Engine
+pub mod engine;

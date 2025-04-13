@@ -10,11 +10,12 @@ pub use crate::definition::{
     Pipeline, PipelineData, ShaderSettings, TextureData, TextureMode, VertexBuffers,
     pixel_to_cartesian,
 };
+pub use crate::engine::{Engine, EngineSettings};
 pub use crate::objects::{
     Instance, InstanceRaw, Object, ObjectSettings, ObjectStorage, RotateAmount, RotateAxis,
 };
 pub use crate::render::Renderer;
-pub use crate::window::{EngineSettings, Window};
+pub use crate::window::Window;
 
 /// The uint type used for indices and more
 #[cfg(not(feature = "u32"))]
@@ -102,86 +103,6 @@ impl Vertex {
 }
 unsafe impl Send for Vertex {}
 unsafe impl Sync for Vertex {}
-
-/// The engine is the main starting point of using the Blue Engine.
-/// Everything that runs on Blue Engine will be under this struct.
-/// The structure of engine is monolithic, but the underlying data and the way it works is not.
-/// It gives a set of default data to work with,
-/// but also allow you to go beyond that and work as low level as you wish to.
-///
-/// You can also use the Engine to build you own custom structure the way you wish for it to be.
-/// Possibilities are endless!
-///
-/// To start using the Blue Engine, you can start by creating a new Engine like follows:
-/// ```
-/// use blue_engine::prelude::{Engine, EngineSettings};
-///
-/// fn main() {
-///     let engine = Engine::new().expect("Couldn't create the engine");
-/// }
-/// ```
-/// The EngineSettings simply holds what features you would like for your window.
-/// If you are reading this on later version of
-/// the engine, you might be able to even run the engine in headless mode
-/// meaning there would not be a need for a window and the
-/// renders would come as image files.
-///
-/// If you so wish to have a window, you would need to start a window update loop.
-/// The update loop of window runs a frame every few millisecond,
-/// and gives you details of what is happening during this time, like input events.
-/// You can also modify existing parts of the engine during
-/// this update loop, such as changing camera to look differently,
-/// or creating a new object on the scene, or even changing window details!
-///
-/// The update loop is just a method of the Engine struct
-/// that have one argument which is a callback function.
-/// ```
-///
-/// ```
-/// [THE DATA HERE IS WORK IN PROGRESS!]
-pub struct Engine {
-    /// The renderer does exactly what it is called.
-    /// It works with the GPU to render frames according to the data you gave it.
-    pub renderer: Renderer,
-    /// The event_loop handles the events of the window and inputs.
-    ///
-    /// #### USED INTERNALLY
-    pub event_loop_control_flow: crate::winit::event_loop::ControlFlow,
-    /// The window handles everything about window and inputs.
-    /// This includes ability to modify window and listen toinput devices for changes.
-    ///
-    /// ### The window is not available before update_loop.
-    pub window: Window,
-    /// The object system is a way to make it easier to work with the engine.
-    /// Obviously you can work without it, but it's for those who
-    /// do not have the know-how, or wish to handle all the work of rendering data manually.
-    pub objects: ObjectStorage,
-    /// The camera handles the way the scene looks when rendered.
-    /// You can modify everything there is to camera through this.
-    pub camera: CameraContainer,
-    /// Handles all engine plugins
-    pub signals: SignalStorage,
-
-    /// holds the update_loop function
-    ///
-    /// #### USED INTERNALLY
-    pub update_loop: Option<
-        Box<
-            dyn 'static
-                + FnMut(
-                    // Core
-                    &mut Engine,
-                ),
-        >,
-    >,
-
-    /// input events
-    ///
-    /// #### USED INTERNALLY
-    pub simple_input: crate::utils::winit_input_helper::WinitInputHelper,
-}
-unsafe impl Send for Engine {}
-unsafe impl Sync for Engine {}
 
 /// Allows all events to be fetched directly, making it easier to add custom additions to the engine.
 pub trait Signal: Any {
