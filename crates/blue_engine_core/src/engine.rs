@@ -308,23 +308,29 @@ impl Engine {
             feature = "headless"
         ))]
         {
+            let window_size = (self.renderer.config.width, self.renderer.config.height);
+
             let mut events = std::mem::take(&mut self.signals.events);
             events.iter_mut().for_each(|i| {
                 i.1.init(self);
             });
 
+            self.renderer.build_default_data();
+            self.objects.iter_mut().for_each(|i| {
+                i.1.update(&mut self.renderer);
+            });
+
+            self.camera.set_resolution(window_size);
+            self.camera.update_view_projection(&mut self.renderer);
+
             let mut update_function = update_function;
             loop {
-                self.renderer.headless_texture_data = Vec::<u8>::with_capacity(
-                    (self.renderer.config.width * self.renderer.config.height) as usize * 4,
-                );
+                self.renderer.headless_texture_data =
+                    Vec::<u8>::with_capacity((window_size.0 * window_size.1) as usize * 4);
 
-                if let Ok(Some((mut encoder, view, frame, headless_output))) =
-                    self.renderer.pre_render(
-                        &self.objects,
-                        (self.renderer.config.width, self.renderer.config.height),
-                        &self.camera,
-                    )
+                if let Ok(Some((mut encoder, view, frame, headless_output))) = self
+                    .renderer
+                    .pre_render(&self.objects, window_size, &self.camera)
                 {
                     events.iter_mut().for_each(|i| {
                         i.1.frame(self, &mut encoder, &view);
