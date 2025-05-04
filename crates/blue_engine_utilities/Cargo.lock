@@ -365,7 +365,7 @@ dependencies = [
  "image",
  "pollster",
  "thiserror 2.0.12",
- "wgpu 25.0.0",
+ "wgpu",
  "winit",
 ]
 

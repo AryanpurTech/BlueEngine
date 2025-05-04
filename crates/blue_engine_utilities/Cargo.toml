@@ -10,7 +10,7 @@ categories = ["game-development", "graphics", "rendering"]
 license = "Apache-2.0"
 
 [features]
-default = ["all"]
+default = []
 all = ["animation", "gltf", "obj", "physics", "egui"]
 animation = ["dep:keyframe_derive", "dep:keyframe"]
 gltf = ["dep:gltf"]
