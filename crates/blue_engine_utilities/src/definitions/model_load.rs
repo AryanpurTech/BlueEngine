@@ -1,9 +1,9 @@
 #![cfg(feature = "gltf")]
 
-use blue_engine::{Object, ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
+use blue_engine::{Object, ObjectSettings, ObjectStorage, Renderer, Vertex};
 
 pub fn load_gltf(
-    name: Option<impl StringBuffer>,
+    name: Option<impl AsRef<str>>,
     path: &std::path::Path,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
@@ -46,9 +46,9 @@ pub fn load_gltf(
 
             for i in 0..positions.len() {
                 verticies.push(Vertex {
-                    position: positions[i].into(),
-                    uv: [0f32, 0f32].into(),
-                    normal: normals[i].into(),
+                    position: positions[i],
+                    uv: [0f32, 0f32],
+                    normal: normals[i],
                 })
             }
 
@@ -68,11 +68,10 @@ pub fn load_gltf(
                 }
             }
         }
-        let name = if name.as_ref().is_some() {
-            let new_name = name.as_ref().unwrap();
-            new_name.as_str()
-        } else if mesh.name().is_some() {
-            mesh.name().unwrap()
+        let name = if let Some(ref new_name) = name {
+            new_name.as_ref()
+        } else if let Some(new_name) = mesh.name() {
+            new_name
         } else {
             path.to_str().unwrap()
         };
@@ -95,7 +94,7 @@ pub fn load_gltf(
 
 #[cfg(feature = "obj")]
 pub fn load_obj(
-    name: Option<impl StringBuffer>,
+    name: Option<impl AsRef<str>>,
     path: &std::path::Path,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
@@ -104,9 +103,8 @@ pub fn load_obj(
 
     let buffer = BufReader::new(std::fs::File::open(path)?);
     let model_desc: obj::Obj<obj::TexturedVertex> = obj::load_obj(buffer)?;
-    let name = if name.as_ref().is_some() {
-        let new_name = name.as_ref().unwrap();
-        new_name.as_str()
+    let name = if let Some(ref name) = name {
+        name.as_ref()
     } else {
         path.to_str().unwrap()
     };

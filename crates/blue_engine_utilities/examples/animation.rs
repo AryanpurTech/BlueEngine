@@ -1,9 +1,9 @@
 #[cfg(feature = "animation")]
-use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube, ObjectSettings};
+use blue_engine::{Engine, EngineSettings, ObjectSettings, primitive_shapes::cube};
 #[cfg(feature = "animation")]
 use blue_engine_utilities::{AnimationKeyframe, animation::Animation};
 
-fn main() -> eyre::Result<()> {
+fn main() -> Result<(), blue_engine::error::Error> {
     #[cfg(feature = "animation")]
     {
         let mut engine = Engine::new_config(EngineSettings {
@@ -14,7 +14,12 @@ fn main() -> eyre::Result<()> {
         })?;
 
         // make a cube
-        cube("cube", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects)?;
+        cube(
+            "cube",
+            ObjectSettings::default(),
+            &mut engine.renderer,
+            &mut engine.objects,
+        )?;
 
         // initialize an animation sequence
         let mut animation = Animation::new("cube");
@@ -57,9 +62,9 @@ fn main() -> eyre::Result<()> {
         // compile the animation sequence and start it.
         animation.start().expect("Couldn't compile the animation");
 
-        engine.update_loop(move |_, window, objects, _, _, _| {
+        engine.update_loop(move |engine| {
             // animate the object
-            animation.animate(objects, window.as_ref().unwrap().inner_size());
+            animation.animate(&mut engine.objects);
         })?;
     }
 

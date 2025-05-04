@@ -1,26 +1,27 @@
-use blue_engine::{Engine, WindowDescriptor, primitive_shapes::cube, ObjectSettings};
+use blue_engine::{Engine, EngineSettings, ObjectSettings, primitive_shapes::cube};
 use blue_engine_utilities::FlyCamera;
 
-fn main() -> eyre::Result<()> {
+fn main() -> Result<(), blue_engine::error::Error> {
     let mut engine = Engine::new_config(EngineSettings {
         width: 1500,
         height: 1000,
         title: "Fly Camera",
+        present_mode: egui_wgpu::wgpu::PresentMode::Fifo,
         ..Default::default()
     })?;
 
-    let texture_data = include_bytes!("../resources/BlueLogoDiscord.png").to_vec();
-    let texture = engine.renderer.build_texture(
-        "crate texture",
-        blue_engine::TextureData::Bytes(texture_data),
-        blue_engine::TextureMode::Clamp,
+    cube(
+        "floor",
+        ObjectSettings::default(),
+        &mut engine.renderer,
+        &mut engine.objects,
     )?;
-    cube("floor", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
-    engine
-        .objects
-        .get_mut("floor")
-        .unwrap()
-        .set_texture(texture);
+    engine.objects.get_mut("floor").unwrap().set_texture(
+        "crate texture",
+        blue_engine::TextureData::Path("./resources/BlueLogoDiscord.png".to_string()),
+        blue_engine::TextureMode::Clamp,
+        &mut engine.renderer,
+    )?;
 
     // camera
     let fly_camera = FlyCamera::new(&mut engine.camera);
@@ -32,7 +33,7 @@ fn main() -> eyre::Result<()> {
     let mut tick: u64 = 0;
     let mut fps: i32 = 0;
 
-    engine.update_loop(move |_, _, _, _, _, _| {
+    engine.update_loop(move |_| {
         let now = timer.elapsed().unwrap().as_secs();
         if tick < now {
             tick = now;

@@ -1,4 +1,5 @@
-use blue_engine::{Vector3, Vector4};
+use blue_engine::Vector4;
+
 // ========== For keyframe animation =============== //
 #[cfg(feature = "animation")]
 use keyframe_derive::CanTween;
@@ -60,22 +61,6 @@ impl Default for AnimationKeyframe {
             size: Point3::new(100f32, 100f32, 100f32),
         }
     }
-}
-
-pub struct FlyCamera {
-    pub camera_right: Vector3,
-    pub yaw: f32,
-    pub pitch: f32,
-    pub last_x: f64,
-    pub last_y: f64,
-
-    pub is_focus: bool,
-    pub camera_speed: f32,
-    pub camera_sensitivity: f32,
-    pub timer: std::time::Instant,
-    pub last_frame: f32,
-
-    pub test_counter: u32,
 }
 
 #[derive(Debug, Clone)]

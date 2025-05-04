@@ -28,7 +28,8 @@ fn main() {
             ObjectSettings::default(),
             &mut engine.renderer,
             &mut engine.objects,
-        );
+        )
+        .unwrap();
 
         // Start the egui context
         let gui_context = egui::EGUI::new();
@@ -40,9 +41,10 @@ fn main() {
 
         // Update loop
         engine
-            .update_loop(move |_, window, objects, _, _, signals| {
+            .update_loop(move |engine| {
                 // obtain the plugin
-                let egui_plugin = signals
+                let egui_plugin = engine
+                    .signals
                     .get_signal::<egui::EGUI>("egui")
                     .expect("Plugin not found")
                     .expect("Plugin type mismatch");
@@ -57,12 +59,13 @@ fn main() {
                             });
                         });
 
-                        objects
+                        engine
+                            .objects
                             .get_mut("triangle")
                             .unwrap()
                             .set_color(color[0], color[1], color[2], color[3]);
                     },
-                    window,
+                    &engine.window,
                 );
             })
             .expect("Error during update loop");

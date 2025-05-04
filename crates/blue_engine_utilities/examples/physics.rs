@@ -6,16 +6,15 @@
 
 #[cfg(feature = "physics")]
 use blue_engine::{
-    Engine, EngineSettings,
+    Engine, EngineSettings, ObjectSettings,
     primitive_shapes::{cube, uv_sphere},
-    ObjectSettings,
 };
 #[cfg(feature = "physics")]
-use blue_engine_utilities::{FlyCamera, physics::Physics, raycast::Raycast};
+use blue_engine_utilities::{FlyCamera, physics::Physics};
 #[cfg(feature = "physics")]
 use rapier3d::prelude::*;
 
-fn main() -> eyre::Result<()> {
+fn main() -> Result<(), blue_engine::error::Error> {
     #[cfg(feature = "physics")]
     {
         let mut engine = Engine::new_config(EngineSettings {
@@ -28,7 +27,12 @@ fn main() -> eyre::Result<()> {
         let mut physics = Physics::new();
         let fly_camera = FlyCamera::new(&mut engine.camera);
 
-        cube("floor", ObjectSettings::default(), &mut engine.renderer, &mut engine.objects);
+        cube(
+            "floor",
+            ObjectSettings::default(),
+            &mut engine.renderer,
+            &mut engine.objects,
+        )?;
         engine
             .objects
             .get_mut("floor")
@@ -42,10 +46,11 @@ fn main() -> eyre::Result<()> {
 
         uv_sphere(
             "ball",
+            ObjectSettings::default(),
             (18, 46, 1f32),
             &mut engine.renderer,
             &mut engine.objects,
-        );
+        )?;
         engine
             .objects
             .get_mut("ball")
@@ -61,10 +66,11 @@ fn main() -> eyre::Result<()> {
 
         uv_sphere(
             "ball2",
+            ObjectSettings::default(),
             (18, 46, 1f32),
             &mut engine.renderer,
             &mut engine.objects,
-        );
+        )?;
         engine
             .objects
             .get_mut("ball2")
@@ -82,40 +88,10 @@ fn main() -> eyre::Result<()> {
         let ball_body_handle = physics.insert_rigid_body("ball2", rigid_body);
         physics.insert_collider_with_parent("ball2 collider", collider, ball_body_handle);
 
-        let mut raycast = Raycast::new(engine.camera.get("main").unwrap());
-
         engine.signals.add_signal("fly", Box::new(fly_camera));
         engine.signals.add_signal("physics", Box::new(physics));
 
-        engine.update_loop(move |_, window, _, input, camera, signals| {
-            let physics = signals.get_signal::<Physics>("physics").unwrap().unwrap();
-            raycast.update(
-                camera.get("main").unwrap(),
-                input,
-                &window.as_ref().unwrap().inner_size(),
-            );
-
-            let camera_pos = camera.get("main").unwrap().position;
-            let camera_pos = blue_engine::glm::vec3(camera_pos.x, camera_pos.y, camera_pos.z);
-            let ray = Ray::new(camera_pos.into(), raycast.get_current_ray());
-            let max_toi = 4.0;
-            let solid = true;
-            let filter = QueryFilter::default();
-
-            if let Some((handle, toi)) = physics.query_pipeline.cast_ray(
-                &physics.rigid_body_set,
-                &physics.collider_set,
-                &ray,
-                max_toi,
-                solid,
-                filter,
-            ) {
-                // The first collider hit has the handle `handle` and it hit after
-                // the ray travelled a distance equal to `ray.dir * toi`.
-                let hit_point = ray.point_at(toi); // Same as: `ray.origin + ray.dir * toi`
-                println!("Collider {:?} hit at point {}", handle, hit_point);
-            }
-        })?;
+        engine.update_loop(move |_| {})?;
     }
 
     Ok(())

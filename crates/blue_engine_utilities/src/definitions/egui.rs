@@ -1,9 +1,6 @@
 #![cfg(feature = "egui")]
 
-use blue_engine::{
-    CameraContainer, CommandEncoder, DEPTH_FORMAT, InputHelper, ObjectStorage, Renderer,
-    TextureView, Window as Win, wgpu,
-};
+use blue_engine::{CommandEncoder, DEPTH_FORMAT, TextureView, Window as Win, wgpu};
 pub use egui;
 use egui::ViewportId;
 
@@ -53,14 +50,8 @@ impl Default for EGUI {
 }
 
 impl blue_engine::Signal for EGUI {
-    fn init(
-        &mut self,
-        renderer: &mut blue_engine::Renderer,
-        window: &blue_engine::Window,
-        _objects: &mut ObjectStorage,
-        _camera: &mut blue_engine::CameraContainer,
-    ) {
-        if let Some(window) = window.window.as_ref() {
+    fn init(&mut self, engine: &mut blue_engine::Engine) {
+        if let Some(window) = engine.window.window.as_ref() {
             let context = egui::Context::default();
 
             let platform = egui_winit::State::new(
@@ -74,7 +65,7 @@ impl blue_engine::Signal for EGUI {
                 None,
                 Some(egui_winit::winit::window::Theme::Dark),
                 #[cfg(not(target_os = "android"))]
-                Some(renderer.device.limits().max_texture_dimension_2d as usize),
+                Some(engine.renderer.device.limits().max_texture_dimension_2d as usize),
                 #[cfg(target_os = "android")]
                 None,
             );
@@ -82,10 +73,15 @@ impl blue_engine::Signal for EGUI {
             let format = blue_engine::wgpu::TextureFormat::Rgba8UnormSrgb;
 
             #[cfg(not(target_os = "android"))]
-            let format = renderer.config.format;
+            let format = engine.renderer.config.format;
 
-            let renderer =
-                egui_wgpu::Renderer::new(&renderer.device, format, Some(DEPTH_FORMAT), 1, true);
+            let renderer = egui_wgpu::Renderer::new(
+                &engine.renderer.device,
+                format,
+                Some(DEPTH_FORMAT),
+                1,
+                true,
+            );
 
             self.platform = Some(platform);
             self.renderer = Some(renderer);
@@ -94,14 +90,10 @@ impl blue_engine::Signal for EGUI {
     }
     fn window_events(
         &mut self,
-        _renderer: &mut blue_engine::Renderer,
-        window: &blue_engine::Window,
-        _objects: &mut ObjectStorage,
+        engine: &mut blue_engine::Engine,
         event: &blue_engine::WindowEvent,
-        _input: &blue_engine::InputHelper,
-        _camera: &mut blue_engine::CameraContainer,
     ) {
-        if let Some(window) = window.window.as_ref() {
+        if let Some(window) = engine.window.window.as_ref() {
             if let Some(platform) = self.platform.as_mut() {
                 //? has a return, maybe useful in the future
                 let _ = platform.on_window_event(window.as_ref(), event);
@@ -111,16 +103,12 @@ impl blue_engine::Signal for EGUI {
 
     fn frame(
         &mut self,
-        be_renderer: &mut Renderer,
-        window: &Win,
-        _objects: &mut ObjectStorage,
-        _camera: &mut CameraContainer,
-        _input: &InputHelper,
+        engine: &mut blue_engine::Engine,
         encoder: &mut CommandEncoder,
         view: &TextureView,
     ) {
-        if let Some(window) = window.window.as_ref() {
-            if be_renderer.surface.is_some() && self.full_output.is_some() {
+        if let Some(window) = engine.window.as_ref() {
+            if engine.renderer.surface.is_some() && self.full_output.is_some() {
                 let egui::FullOutput {
                     platform_output,
                     textures_delta,
@@ -143,13 +131,13 @@ impl blue_engine::Signal for EGUI {
 
                 let screen_descriptor = egui_wgpu::ScreenDescriptor {
                     size_in_pixels: [
-                        be_renderer.config.width,
+                        engine.renderer.config.width,
                         #[cfg(target_os = "android")]
                         {
                             renderer.config.height - 20
                         },
                         #[cfg(not(target_os = "android"))]
-                        be_renderer.config.height,
+                        engine.renderer.config.height,
                     ],
                     pixels_per_point: *pixels_per_point,
                 };
@@ -158,16 +146,16 @@ impl blue_engine::Signal for EGUI {
                     if let Some(paint_jobs) = paint_jobs {
                         for (id, image_delta) in &textures_delta.set {
                             renderer.update_texture(
-                                &be_renderer.device,
-                                &be_renderer.queue,
+                                &engine.renderer.device,
+                                &engine.renderer.queue,
                                 *id,
                                 image_delta,
                             );
                         }
 
                         renderer.update_buffers(
-                            &be_renderer.device,
-                            &be_renderer.queue,
+                            &engine.renderer.device,
+                            &engine.renderer.queue,
                             encoder,
                             &paint_jobs,
                             &screen_descriptor,
@@ -188,7 +176,7 @@ impl blue_engine::Signal for EGUI {
                                 )],
                                 depth_stencil_attachment: Some(
                                     wgpu::RenderPassDepthStencilAttachment {
-                                        view: &be_renderer.depth_buffer.1,
+                                        view: &engine.renderer.depth_buffer.1,
                                         depth_ops: Some(wgpu::Operations {
                                             load: wgpu::LoadOp::Clear(1.0),
                                             store: wgpu::StoreOp::Store,

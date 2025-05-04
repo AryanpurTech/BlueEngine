@@ -6,7 +6,7 @@
 
 #![cfg(feature = "physics")]
 
-use blue_engine::StringBuffer;
+use blue_engine::Vector3;
 use rapier3d::prelude::*;
 use std::collections::HashMap;
 
@@ -16,7 +16,7 @@ pub struct Physics {
     pub rigid_body_set_map: HashMap<String, RigidBodyHandle>,
     pub collider_set: ColliderSet,
     pub collider_set_map: HashMap<String, ColliderHandle>,
-    pub gravity: glm::Vec3,
+    pub gravity: Vector3,
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -37,7 +37,7 @@ impl Physics {
             rigid_body_set_map: HashMap::new(),
             collider_set: ColliderSet::new(),
             collider_set_map: HashMap::new(),
-            gravity: vector![0.0, -9.81, 0.0],
+            gravity: Vector3::new(0.0, -9.81, 0.0),
             integration_parameters: IntegrationParameters::default(),
             physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
@@ -58,13 +58,10 @@ impl Physics {
     /// # Arguments
     /// * `name` - The name of the collider.
     /// * `collider` - The collider to insert
-    pub fn insert_collider(
-        &mut self,
-        name: impl StringBuffer,
-        collider: Collider,
-    ) -> ColliderHandle {
+    pub fn insert_collider(&mut self, name: impl AsRef<str>, collider: Collider) -> ColliderHandle {
         let handle = self.collider_set.insert(collider.clone());
-        self.collider_set_map.insert(name.as_string(), handle);
+        self.collider_set_map
+            .insert(name.as_ref().to_string(), handle);
         handle
     }
 
@@ -77,7 +74,7 @@ impl Physics {
     /// * `parent` - The parent of the collider
     pub fn insert_collider_with_parent(
         &mut self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         collider: Collider,
         parent: RigidBodyHandle,
     ) -> ColliderHandle {
@@ -86,7 +83,8 @@ impl Physics {
             parent,
             &mut self.rigid_body_set,
         );
-        self.collider_set_map.insert(name.as_string(), handle);
+        self.collider_set_map
+            .insert(name.as_ref().to_string(), handle);
         handle
     }
 
@@ -98,11 +96,12 @@ impl Physics {
     /// * `rigid_body` - The rigid body to insert
     pub fn insert_rigid_body(
         &mut self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         rigid_body: RigidBody,
     ) -> RigidBodyHandle {
         let handle = self.rigid_body_set.insert(rigid_body.clone());
-        self.rigid_body_set_map.insert(name.as_string(), handle);
+        self.rigid_body_set_map
+            .insert(name.as_ref().to_string(), handle);
         handle
     }
 
@@ -111,14 +110,14 @@ impl Physics {
     /// # Arguments
     /// * `name` - The name of the collider.
     /// * `collider` - The collider to remove.
-    pub fn remove_collider(&mut self, name: impl StringBuffer, collider: ColliderHandle) {
+    pub fn remove_collider(&mut self, name: impl AsRef<str>, collider: ColliderHandle) {
         self.collider_set.remove(
             collider,
             &mut self.island_manager,
             &mut self.rigid_body_set,
             false,
         );
-        self.collider_set_map.remove(&name.as_string());
+        self.collider_set_map.remove(name.as_ref());
     }
 
     /// Removes a rigid body from the physics world.
@@ -126,7 +125,7 @@ impl Physics {
     /// # Arguments
     /// * `name` - The name of the rigid body.
     /// * `rigid_body` - The rigid body to remove.
-    pub fn remove_rigid_body(&mut self, name: impl StringBuffer, rigid_body: RigidBodyHandle) {
+    pub fn remove_rigid_body(&mut self, name: impl AsRef<str>, rigid_body: RigidBodyHandle) {
         self.rigid_body_set.remove(
             rigid_body,
             &mut self.island_manager,
@@ -135,7 +134,7 @@ impl Physics {
             &mut self.multibody_joint_set,
             false,
         );
-        self.rigid_body_set_map.remove(&name.as_string());
+        self.rigid_body_set_map.remove(name.as_ref());
     }
 }
 
@@ -148,16 +147,12 @@ impl Default for Physics {
 impl blue_engine::Signal for Physics {
     fn frame(
         &mut self,
-        _renderer: &mut blue_engine::Renderer,
-        _window: &blue_engine::Window,
-        objects: &mut blue_engine::ObjectStorage,
-        _camera: &mut blue_engine::CameraContainer,
-        _input: &blue_engine::InputHelper,
+        engine: &mut blue_engine::Engine,
         _encoder: &mut blue_engine::CommandEncoder,
         _view: &blue_engine::TextureView,
     ) {
         self.physics_pipeline.step(
-            &self.gravity,
+            &nalgebra_glm::vec3(self.gravity.x, self.gravity.y, self.gravity.z),
             &self.integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,
@@ -174,7 +169,7 @@ impl blue_engine::Signal for Physics {
         self.query_pipeline.update(&self.collider_set);
 
         for i in self.rigid_body_set_map.iter() {
-            let object = objects.get_mut(i.0);
+            let object = engine.objects.get_mut(i.0.as_str());
             if object.is_some() {
                 let position = self.rigid_body_set[*i.1].translation();
 

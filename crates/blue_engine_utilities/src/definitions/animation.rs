@@ -1,24 +1,25 @@
 #![cfg(feature = "animation")]
 
 use crate::AnimationKeyframe;
-use blue_engine::{ObjectStorage, StringBuffer};
+use blue_engine::ObjectStorage;
 use keyframe::{AnimationSequence, AnimationSequenceError, Keyframe, functions::Linear};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Animation {
     pub keyframes: Vec<(f64, AnimationKeyframe)>,
     pub animation_sequence: AnimationSequence<AnimationKeyframe>,
     pub time: std::time::Instant,
-    pub object: String,
+    pub object: Arc<str>,
 }
 
 impl Animation {
-    pub fn new(object: impl StringBuffer) -> Self {
+    pub fn new(object: impl AsRef<str>) -> Self {
         Self {
             keyframes: Vec::new(),
             time: std::time::Instant::now(),
             animation_sequence: AnimationSequence::new(),
-            object: object.as_string(),
+            object: object.as_ref().into(),
         }
     }
 
