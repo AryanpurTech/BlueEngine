@@ -80,3 +80,7 @@ path = "examples/physics.rs"
 [[example]]
 name = "hello_egui"
 path = "examples/hello_egui.rs"
+
+[[example]]
+name = "egui_embedded_renderer"
+path = "examples/egui_embedded_renderer.rs"

@@ -34,7 +34,8 @@ fn main() {
         // Start the egui context
         let gui_context = egui_plugin::EGUIPlugin::new();
 
-        // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
+        // We add the gui as plugin, which runs once before everything else to fetch events,
+        // and once during render times for rendering and other stuff
         engine.signals.add_signal("egui", Box::new(gui_context));
 
         let mut color = [1f32, 1f32, 1f32, 1f32];

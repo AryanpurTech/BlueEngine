@@ -1,5 +1,5 @@
 pub mod animation;
-pub mod egui;
+pub mod egui_plugin;
 pub mod flycamera;
 pub use flycamera::*;
 pub mod light;
