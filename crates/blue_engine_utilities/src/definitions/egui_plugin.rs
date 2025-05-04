@@ -200,7 +200,7 @@ impl blue_engine::Signal for EGUIPlugin {
 }
 
 // ===============================================================================================
-
+// It's usage needs to be checked more
 struct Callback;
 impl egui_wgpu::CallbackTrait for Callback {
     fn paint(
@@ -210,7 +210,22 @@ impl egui_wgpu::CallbackTrait for Callback {
         resources: &egui_wgpu::CallbackResources,
     ) {
         let resources: &TriangleRenderResources = resources.get().unwrap();
-        resources.paint(render_pass);
+        render_pass.set_bind_group(0, &resources.default_data.0, &[]);
+        render_pass.set_pipeline(&resources.default_data.1);
+        render_pass.set_bind_group(1, &resources.camera_data, &[]);
+
+        // Draw our triangle!
+        render_pass.set_pipeline(&resources.shader);
+        render_pass.set_bind_group(0, &resources.texture, &[]);
+
+        render_pass.set_bind_group(2, &resources.uniform, &[]);
+
+        render_pass.set_vertex_buffer(0, resources.vertex_buffer.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(
+            resources.vertex_buffer.index_buffer.slice(..),
+            wgpu::IndexFormat::Uint16,
+        );
+        render_pass.draw_indexed(0..resources.vertex_buffer.length, 0, 0..1);
     }
 }
 
@@ -227,36 +242,16 @@ struct TriangleRenderResources {
     pub camera_data: wgpu::BindGroup,
 }
 
-impl TriangleRenderResources {
-    fn paint(&self, render_pass: &mut wgpu::RenderPass<'_>) {
-        render_pass.set_bind_group(0, &self.default_data.0, &[]);
-        render_pass.set_pipeline(&self.default_data.1);
-        render_pass.set_bind_group(1, &self.camera_data, &[]);
-
-        // Draw our triangle!
-        let i = self;
-        println!("{:?}", i.vertex_buffer.length);
-        render_pass.set_pipeline(&i.shader);
-        render_pass.set_bind_group(0, &i.texture, &[]);
-
-        render_pass.set_bind_group(2, &i.uniform, &[]);
-
-        render_pass.set_vertex_buffer(0, i.vertex_buffer.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(
-            i.vertex_buffer.index_buffer.slice(..),
-            wgpu::IndexFormat::Uint16,
-        );
-        render_pass.draw_indexed(0..i.vertex_buffer.length, 0, 0..1);
-    }
+pub struct EmbeddedRender {
+    object: blue_engine::Object,
 }
-
-pub struct EmbeddedRender;
 impl EmbeddedRender {
     pub fn new(
-        object: &mut blue_engine::Object,
+        object: blue_engine::Object,
         cc: &mut blue_engine::Renderer,
         renderer: &mut egui_wgpu::Renderer,
-    ) -> Option<Self> {
+    ) -> Self {
+        let mut object = object;
         let buffers = object.update_and_return(cc);
 
         let camera_data = cc.build_uniform_buffer(&[
@@ -305,17 +300,16 @@ impl EmbeddedRender {
             camera_data: camera_data.0,
         });
 
-        Some(Self {})
+        Self { object }
     }
 
     pub fn prepare(
-        &self,
-        object: &mut blue_engine::Object,
+        &mut self,
         brenderer: &mut blue_engine::Renderer,
         erenderer: &mut egui_wgpu::Renderer,
         camera_data: blue_engine::UniformBuffers,
     ) {
-        let object_pipeline = object.update_and_return(brenderer);
+        let object_pipeline = self.object.update_and_return(brenderer);
 
         let resources: &mut TriangleRenderResources =
             erenderer.callback_resources.get_mut().unwrap();
