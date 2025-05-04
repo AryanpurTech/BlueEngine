@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_core"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 edition = "2024"
 description = "USE blue_engine THIS IS FOR INTERNAL USE"
@@ -26,20 +26,20 @@ u32 = []
 glam_fast_math = ["glam/fast-math"]
 
 [dependencies]
-winit = { version = "0.30", features = ["rwh_06"], optional = true }
-wgpu = { version = "24.0.3" }
-image = { version = "0.25" }
-pollster = "0.4"
+winit = { version = "0.30.10", features = ["rwh_06"], optional = true }
+wgpu = { version = "25.0.0" }
+image = { version = "0.25.6" }
+pollster = "0.4.0"
 bytemuck = { version = "1.22.0", features = ["derive"] }
-downcast = "0.11"
-thiserror = "2.0"
-env_logger = { version = "0.11", optional = true }
+downcast = "0.11.0"
+thiserror = "2.0.12"
+env_logger = { version = "0.11.8", optional = true }
 glam = { version = "0.30.1", features = ["bytemuck", "serde"] }
 flume = { version = "0.11.1", optional = true }
 
 # android
-log = { version = "0.4", optional = true }
+log = { version = "0.4.27", optional = true }
 android_logger = { version = "0.15.0", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "24.0.3", features = ["webgl"] }
+wgpu = { version = "25.0.0", features = ["webgl"] }

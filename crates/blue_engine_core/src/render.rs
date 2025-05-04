@@ -65,17 +65,15 @@ impl Renderer {
             })
             .await
         {
-            Some(adapter) => {
+            Ok(adapter) => {
                 let (device, queue) = adapter
-                    .request_device(
-                        &wgpu::DeviceDescriptor {
-                            label: Some("Device"),
-                            required_features: settings.features,
-                            required_limits: settings.limits,
-                            memory_hints: wgpu::MemoryHints::Performance,
-                        },
-                        None, // Trace path
-                    )
+                    .request_device(&wgpu::DeviceDescriptor {
+                        label: Some("Device"),
+                        required_features: settings.features,
+                        required_limits: settings.limits,
+                        memory_hints: wgpu::MemoryHints::Performance,
+                        trace: wgpu::Trace::Off,
+                    })
                     .await?;
 
                 let texture_format = wgpu::TextureFormat::Bgra8UnormSrgb;
@@ -172,7 +170,7 @@ impl Renderer {
 
                 Ok(renderer)
             }
-            None => Err(crate::error::Error::AdapterNotFound),
+            Err(e) => Err(crate::error::Error::AdapterNotFound(e)),
         }
     }
 
