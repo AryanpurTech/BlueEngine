@@ -13,7 +13,7 @@ pub enum Error {
 
     // ===== WGPU
     #[error("Failed to find an appropriate adapter")]
-    AdapterNotFound(#[from] wgpu::RequestAdapterError),
+    AdapterNotFound,
     #[error("Failed to find an appropriate device for rendering")]
     DeviceNotFound(#[from] wgpu::RequestDeviceError),
 
