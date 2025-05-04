@@ -4,7 +4,7 @@
 
 use super::Object;
 use crate::{
-    ObjectStorage, Renderer, StringBuffer,
+    ObjectStorage, Renderer,
     prelude::{ObjectSettings, UnsignedIntType, Vertex},
 };
 use std::f32::consts::PI;
@@ -12,13 +12,13 @@ use std::f32::consts::PI;
 // MARK: 2D
 /// Creates a 2D triangle
 pub fn triangle(
-    name: impl StringBuffer,
+    name: impl AsRef<str>,
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
     objects.insert(
-        name.as_string(),
+        name.as_ref().into(),
         Object::new(
             name,
             vec![
@@ -49,13 +49,13 @@ pub fn triangle(
 
 /// Creates a 2D square
 pub fn square(
-    name: impl StringBuffer,
+    name: impl AsRef<str>,
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
     objects.insert(
-        name.as_string(),
+        name.as_ref().into(),
         Object::new(
             name,
             vec![
@@ -93,13 +93,13 @@ pub fn square(
 pub fn rectangle(
     width: f32,
     height: f32,
-    name: impl StringBuffer,
+    name: impl AsRef<str>,
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
     objects.insert(
-        name.as_string(),
+        name.as_ref().into(),
         Object::new(
             name,
             vec![
@@ -137,13 +137,13 @@ pub fn rectangle(
 
 /// Creates a 3D cube
 pub fn cube(
-    name: impl StringBuffer,
+    name: impl AsRef<str>,
     settings: ObjectSettings,
     renderer: &mut Renderer,
     objects: &mut ObjectStorage,
 ) -> Result<(), crate::error::Error> {
     objects.insert(
-        name.as_string(),
+        name.as_ref().into(),
         Object::new(
             name,
             vec![
@@ -297,7 +297,7 @@ pub fn cube(
 /// example = (18, 36, 1.0)
 /// ```
 pub fn uv_sphere(
-    name: impl StringBuffer,
+    name: impl AsRef<str>,
     settings: ObjectSettings,
     details: (usize, usize, f32),
     renderer: &mut Renderer,
@@ -349,7 +349,7 @@ pub fn uv_sphere(
     }
 
     objects.insert(
-        name.as_string(),
+        name.as_ref().into(),
         Object::new(name, vertices, indices, settings, renderer)?,
     );
 

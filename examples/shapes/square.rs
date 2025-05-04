@@ -7,14 +7,11 @@
 */
 
 use blue_engine::{
-    Object, StringBuffer,
+    Object,
     prelude::{Engine, ObjectSettings, Vertex},
 };
 
-pub fn square(
-    name: impl StringBuffer,
-    engine: &mut Engine,
-) -> Result<(), blue_engine::error::Error> {
+pub fn square(name: &str, engine: &mut Engine) -> Result<(), blue_engine::error::Error> {
     let vertices = vec![
         Vertex {
             position: [1.0, 1.0, 0.0],
@@ -39,7 +36,7 @@ pub fn square(
     ];
 
     engine.objects.insert(
-        name.as_string(),
+        name.into(),
         Object::new(
             name,
             vertices,

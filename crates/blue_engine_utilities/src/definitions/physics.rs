@@ -6,7 +6,7 @@
 
 #![cfg(feature = "physics")]
 
-use blue_engine::{StringBuffer, glm};
+use blue_engine::StringBuffer;
 use rapier3d::prelude::*;
 use std::collections::HashMap;
 

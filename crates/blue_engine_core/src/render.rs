@@ -474,7 +474,7 @@ macro_rules! gen_pipeline {
         ) -> Option<&'a $buffer_type> {
             match data {
                 PipelineData::Copy(object_id) => {
-                    let data = objects.get(object_id.as_str());
+                    let data = objects.get(object_id);
                     if let Some(data) = data {
                         $function_name(&data.pipeline.$buffer_field, objects)
                     } else {
@@ -502,7 +502,7 @@ fn get_pipeline_uniform_buffer<'a>(
 ) -> Option<&'a Option<crate::UniformBuffers>> {
     match data {
         PipelineData::Copy(object_id) => {
-            let data = objects.get(object_id.as_str());
+            let data = objects.get(object_id);
             if let Some(data) = data {
                 get_pipeline_uniform_buffer(&data.pipeline.uniform, objects)
             } else {

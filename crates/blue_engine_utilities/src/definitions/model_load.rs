@@ -1,6 +1,6 @@
 #![cfg(feature = "gltf")]
 
-use blue_engine::{ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
+use blue_engine::{Object, ObjectSettings, ObjectStorage, Renderer, StringBuffer, Vertex};
 
 pub fn load_gltf(
     name: Option<impl StringBuffer>,
@@ -68,20 +68,25 @@ pub fn load_gltf(
                 }
             }
         }
+        let name = if name.as_ref().is_some() {
+            let new_name = name.as_ref().unwrap();
+            new_name.as_str()
+        } else if mesh.name().is_some() {
+            mesh.name().unwrap()
+        } else {
+            path.to_str().unwrap()
+        };
+
         //break;
-        objects.new_object(
-            if name.as_ref().is_some() {
-                let new_name = name.as_ref().unwrap();
-                new_name.as_str()
-            } else if mesh.name().is_some() {
-                mesh.name().unwrap()
-            } else {
-                path.to_str().unwrap()
-            },
-            verticies,
-            indicies,
-            ObjectSettings::default(),
-            renderer,
+        objects.insert(
+            name.into(),
+            Object::new(
+                name,
+                verticies,
+                indicies,
+                ObjectSettings::default(),
+                renderer,
+            )?,
         );
     }
 
@@ -99,33 +104,38 @@ pub fn load_obj(
 
     let buffer = BufReader::new(std::fs::File::open(path)?);
     let model_desc: obj::Obj<obj::TexturedVertex> = obj::load_obj(buffer)?;
-    objects.new_object(
-        if name.as_ref().is_some() {
-            let new_name = name.as_ref().unwrap();
-            new_name.as_str()
-        } else {
-            path.to_str().unwrap()
-        },
-        model_desc
-            .vertices
-            .iter()
-            .map(|vertex| {
-                let pos = vertex.position;
-                let norm = vertex.normal;
-                let uv = [vertex.texture[0], vertex.texture[1]];
-                blue_engine::Vertex {
-                    position: pos,
-                    uv,
-                    normal: norm,
-                }
-            })
-            .collect(),
-        model_desc.indices,
-        blue_engine::ObjectSettings {
-            ..Default::default()
-        },
-        renderer,
-    )?;
+    let name = if name.as_ref().is_some() {
+        let new_name = name.as_ref().unwrap();
+        new_name.as_str()
+    } else {
+        path.to_str().unwrap()
+    };
+
+    objects.insert(
+        name.into(),
+        Object::new(
+            name,
+            model_desc
+                .vertices
+                .iter()
+                .map(|vertex| {
+                    let pos = vertex.position;
+                    let norm = vertex.normal;
+                    let uv = [vertex.texture[0], vertex.texture[1]];
+                    blue_engine::Vertex {
+                        position: pos,
+                        uv,
+                        normal: norm,
+                    }
+                })
+                .collect(),
+            model_desc.indices,
+            blue_engine::ObjectSettings {
+                ..Default::default()
+            },
+            renderer,
+        )?,
+    );
 
     Ok(())
 }

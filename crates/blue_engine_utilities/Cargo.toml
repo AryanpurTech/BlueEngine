@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_utilities"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "Utilities for Blue Engine"
@@ -10,20 +10,23 @@ categories = ["game-development", "graphics", "rendering"]
 license = "Apache-2.0"
 
 [features]
-default = ["debug"]
+default = ["headless", "all"]
+all = ["animation", "gltf", "obj", "physics", "egui"]
 animation = ["dep:keyframe_derive", "dep:keyframe"]
 gltf = ["dep:gltf"]
 obj = ["dep:obj-rs"]
 physics = ["dep:rapier3d"]
 egui = ["dep:egui", "dep:egui-winit", "dep:egui-wgpu"]
-# pass blue engine's u32 feature
-u32 = ["blue_engine/u32"]
-# pass blue engine's debug feature
-debug = ["blue_engine/debug"]
+## pass blue engine's headless mode
+headless = ["blue_engine/headless"]
 
 [dependencies]
 # blue_engine = { path = "../Blue Engine", default-features = false }
-blue_engine = { version = "0.8.0" }
+blue_engine = { version = "0.9.0", default-features = false, features = [
+    "debug",
+    "static_link",
+    "headless",
+] }
 eyre = "0.6.12"
 
 # Animation

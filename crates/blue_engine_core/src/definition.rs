@@ -9,7 +9,7 @@ use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
     InstanceRaw, UnsignedIntType,
-    prelude::{Shaders, StringBuffer, Textures, UniformBuffers, Vertex},
+    prelude::{Shaders, Textures, UniformBuffers, Vertex},
 };
 
 /// Container for pipeline values. Each pipeline takes only 1 vertex shader,
@@ -32,7 +32,7 @@ unsafe impl Sync for Pipeline {}
 #[derive(Debug)]
 pub enum PipelineData<T> {
     /// No data, just a reference to a buffer
-    Copy(String),
+    Copy(std::sync::Arc<str>),
     /// The actual data
     Data(T),
 }
@@ -181,7 +181,7 @@ impl crate::prelude::Renderer {
     /// Creates a shader group, the input must be spir-v compiled vertex and fragment shader
     pub fn build_shader(
         &mut self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         shader_source: String,
         uniform_layout: Option<&BindGroupLayout>,
         settings: ShaderSettings,
@@ -189,7 +189,7 @@ impl crate::prelude::Renderer {
         let shader = self
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some(format!("{} Shader", name.as_str()).as_str()),
+                label: Some(format!("{} Shader", name.as_ref()).as_str()),
                 source: wgpu::ShaderSource::Wgsl(shader_source.into()),
             });
 
@@ -212,7 +212,7 @@ impl crate::prelude::Renderer {
         let render_pipeline = self
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some(name.as_str()),
+                label: Some(name.as_ref()),
                 layout: Some(&render_pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
@@ -262,7 +262,7 @@ impl crate::prelude::Renderer {
     /// Creates a new texture data
     pub fn build_texture(
         &mut self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         texture_data: TextureData,
         texture_mode: TextureMode,
     ) -> Result<Textures, crate::error::Error> {
@@ -287,7 +287,7 @@ impl crate::prelude::Renderer {
             depth_or_array_layers: 1,
         };
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some(name.as_str()),
+            label: Some(name.as_ref()),
             size,
             mip_level_count: 1,
             sample_count: 1,
@@ -346,7 +346,7 @@ impl crate::prelude::Renderer {
     }
 
     pub(crate) fn build_depth_buffer(
-        label: impl StringBuffer,
+        label: impl AsRef<str>,
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
     ) -> (Texture, TextureView, Sampler) {
@@ -356,7 +356,7 @@ impl crate::prelude::Renderer {
             depth_or_array_layers: 1,
         };
         let desc = wgpu::TextureDescriptor {
-            label: Some(label.as_str()),
+            label: Some(label.as_ref()),
             size,
             mip_level_count: 1,
             sample_count: 1,
@@ -389,12 +389,12 @@ impl crate::prelude::Renderer {
     /// This function doesn't build the entire uniform buffers list, but rather only one of them
     pub fn build_uniform_buffer_part<T: bytemuck::Zeroable + bytemuck::Pod>(
         &self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         value: T,
     ) -> wgpu::Buffer {
         self.device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(name.as_str()),
+                label: Some(name.as_ref()),
                 contents: bytemuck::cast_slice(&[value]),
                 usage: wgpu::BufferUsages::UNIFORM,
             })
@@ -491,25 +491,25 @@ impl crate::SignalStorage {
     }
 
     /// Adds an event
-    pub fn add_signal(&mut self, key: impl StringBuffer, event: Box<dyn crate::Signal>) {
-        self.events.push((key.as_string(), event));
+    pub fn add_signal(&mut self, key: impl AsRef<str>, event: Box<dyn crate::Signal>) {
+        self.events.push((key.as_ref().to_string(), event));
     }
 
     /// Removes an event
-    pub fn remove_signal(&mut self, key: impl StringBuffer) {
-        self.events.retain(|k| k.0 != key.as_string());
+    pub fn remove_signal(&mut self, key: impl AsRef<str>) {
+        self.events.retain(|k| k.0 != key.as_ref());
     }
 
     /// Gets an event
     pub fn get_signal<T: 'static>(
         &mut self,
-        key: impl StringBuffer,
+        key: impl AsRef<str>,
     ) -> Option<Result<&mut T, downcast::TypeMismatch>> {
         // fetch the event
         let event = self
             .events
             .iter_mut()
-            .find(|k| k.0 == key.as_string())
+            .find(|k| k.0 == key.as_ref())
             .map(|k| &mut k.1);
 
         if let Some(event) = event {
