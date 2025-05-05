@@ -2,8 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
----
-
 ## [0.9.1](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.0..0.9.1) - 2025-05-05
 
 ### Bug Fixes
@@ -22,8 +20,6 @@ All notable changes to this project will be documented in this file. See [conven
 - reverted wgpu update - ([73995d2](https://github.com/AryanpurTech/BlueEngine/commit/73995d2c57cfc7cbac1f3e617b61db518ca2e5d1))
 - updated utilities to the latest version - ([547c402](https://github.com/AryanpurTech/BlueEngine/commit/547c402a9694312b68ebf9085f32f18a4fb68af4))
 - some updates done to the embedded renderer - ([687d50e](https://github.com/AryanpurTech/BlueEngine/commit/687d50ee12af4267025a89130e04706bc71b482e))
-
----
 
 ## [0.9.0](https://github.com/AryanpurTech/BlueEngine/compare/v0.8.0..0.9.0) - 2025-04-13
 
