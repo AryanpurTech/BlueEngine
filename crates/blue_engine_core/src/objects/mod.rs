@@ -1,5 +1,5 @@
 //! # Objects
-//! 
+//!
 //! Objects make it easier to work with Blue Engine, it automates most of work needed for
 //! creating 3D objects and showing them on screen. A range of default objects are available
 //! as well as ability to customize each of them and even create your own! You can also
@@ -7,10 +7,10 @@
 
 use crate::utils::default_resources::{DEFAULT_SHADER, DEFAULT_TEXTURE};
 use crate::{
-    Matrix4, Pipeline, PipelineData, Quaternion, Renderer, ShaderSettings, StringBuffer,
-    TextureData, UnsignedIntType, Vector3, Vector4, Vertex,
+    Matrix4, Pipeline, PipelineData, Quaternion, Renderer, ShaderSettings, TextureData,
+    UnsignedIntType, Vector3, Vector4, Vertex,
 };
-
+use std::sync::Arc;
 mod transformation;
 pub use transformation::{RotateAmount, RotateAxis};
 mod instance;
@@ -99,7 +99,7 @@ unsafe impl Sync for ObjectSettings {}
 ///
 /// This is a container for objects that is used to apply different operations on the objects at the same time.
 /// It can deref to the object hashmap itself when needed.
-pub struct ObjectStorage(std::collections::HashMap<String, Object>);
+pub struct ObjectStorage(std::collections::HashMap<Arc<str>, Object>);
 impl ObjectStorage {
     /// Creates a new object storage
     pub fn new() -> Self {
@@ -113,7 +113,7 @@ impl Default for ObjectStorage {
 }
 unsafe impl Send for ObjectStorage {}
 unsafe impl Sync for ObjectStorage {}
-crate::macros::impl_deref!(ObjectStorage, std::collections::HashMap<String, Object>);
+crate::macros::impl_deref!(ObjectStorage, std::collections::HashMap<Arc<str>, Object>);
 
 impl Object {
     /// Creates a new object
@@ -121,7 +121,7 @@ impl Object {
     /// Is used to define a new object and add it to the storage. This offers full customizability
     /// and a framework for in-engine shapes to be developed.
     pub fn new(
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         vertices: Vec<Vertex>,
         indices: Vec<UnsignedIntType>,
         settings: ObjectSettings,
@@ -138,7 +138,7 @@ impl Object {
         let shader_source =
             ShaderBuilder::new(DEFAULT_SHADER.to_string(), settings.camera_effect.clone());
         let shader = renderer.build_shader(
-            name.as_str(),
+            name.as_ref(),
             shader_source.shader.clone(),
             Some(&uniform.1),
             settings.shader_settings,
@@ -155,7 +155,7 @@ impl Object {
         let instance_buffer = renderer.build_instance(vec![instance.build()]);
 
         Ok(Object {
-            name: name.as_arc(),
+            name: name.as_ref().into(),
             vertices,
             indices,
             pipeline: Pipeline {

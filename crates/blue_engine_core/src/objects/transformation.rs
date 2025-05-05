@@ -1,9 +1,8 @@
-use crate::{
-    Matrix4, PipelineData, Quaternion, Renderer, StringBuffer, TextureData, TextureMode, Textures,
-    Vector3, Vector4,
-};
-
 use super::Object;
+use crate::{
+    Matrix4, PipelineData, Quaternion, Renderer, TextureData, TextureMode, Textures, Vector3,
+    Vector4,
+};
 
 /// Defines how the rotation axis is
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,8 +30,8 @@ unsafe impl Sync for RotateAmount {}
 
 impl Object {
     /// Sets the name of the object
-    pub fn set_name(&mut self, name: impl StringBuffer) -> &mut Self {
-        self.name = name.as_arc();
+    pub fn set_name(&mut self, name: impl AsRef<str>) -> &mut Self {
+        self.name = name.as_ref().into();
 
         self
     }
@@ -156,7 +155,7 @@ impl Object {
     /// This function previously served the role of [crate::Object::set_texture_raw]
     pub fn set_texture(
         &mut self,
-        name: impl StringBuffer,
+        name: impl AsRef<str>,
         texture_data: TextureData,
         texture_mode: TextureMode,
         renderer: &mut Renderer,

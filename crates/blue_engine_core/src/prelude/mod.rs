@@ -141,42 +141,5 @@ pub struct SignalStorage {
     pub events: Vec<(String, Box<dyn Signal>)>,
 }
 
-/// A unified way to handle strings
-pub trait StringBuffer: StringBufferTrait + Clone {}
-/// A trait for [StringBuffer]
-pub trait StringBufferTrait {
-    /// Returns the string as &[`str`]
-    fn as_str(&self) -> &str;
-    /// Returns the string as [`String`]
-    fn as_string(&self) -> String;
-    /// Returns Arc<str> for ease of computation
-    fn as_arc(&self) -> std::sync::Arc<str>;
-}
-
-impl StringBufferTrait for String {
-    fn as_str(&self) -> &str {
-        self.as_ref()
-    }
-    fn as_string(&self) -> String {
-        self.clone()
-    }
-    fn as_arc(&self) -> std::sync::Arc<str> {
-        self.as_str().into()
-    }
-}
-impl StringBuffer for String {}
-impl StringBufferTrait for &str {
-    fn as_str(&self) -> &str {
-        self
-    }
-    fn as_string(&self) -> String {
-        self.to_string()
-    }
-    fn as_arc(&self) -> std::sync::Arc<str> {
-        self.as_str().into()
-    }
-}
-impl StringBuffer for &str {}
-
 /// To hold the width and height of the engine frames
 pub type WindowSize = (u32, u32);

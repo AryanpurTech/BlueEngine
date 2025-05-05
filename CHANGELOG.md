@@ -2,7 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
----
+## [0.9.1](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.0..0.9.1) - 2025-05-05
+
+### Bug Fixes
+
+- [**breaking**] #108 - exchanged StringBuffer with AsRef<str> and String with Arc<str> - ([a148472](https://github.com/AryanpurTech/BlueEngine/commit/a148472d83f8902f700bb938dd5f89df2f532b97))
+- #110 - Features for a backend is now empty by default for maximum compatibility - ([0e571b8](https://github.com/AryanpurTech/BlueEngine/commit/0e571b8131728f859c9134f7c36544f7659742c6))
+
+### Features
+
+- readded the embedded renderer and renamed `egui` plugin to `egui_plugin` for reduction of confusion - ([0d15919](https://github.com/AryanpurTech/BlueEngine/commit/0d15919c8de94e113c866718b9b9d8cbf3ec821b))
+
+### Miscellaneous Chores
+
+- updated dependencies - ([aa6076f](https://github.com/AryanpurTech/BlueEngine/commit/aa6076fe2ef605a06868a1dc93a1002b582e0cdb))
+- updated dependencies - ([59338e8](https://github.com/AryanpurTech/BlueEngine/commit/59338e8427f3957fdc17d15b6d6647827e03aa4c))
+- reverted wgpu update - ([73995d2](https://github.com/AryanpurTech/BlueEngine/commit/73995d2c57cfc7cbac1f3e617b61db518ca2e5d1))
+- updated utilities to the latest version - ([547c402](https://github.com/AryanpurTech/BlueEngine/commit/547c402a9694312b68ebf9085f32f18a4fb68af4))
+- some updates done to the embedded renderer - ([687d50e](https://github.com/AryanpurTech/BlueEngine/commit/687d50ee12af4267025a89130e04706bc71b482e))
+
 ## [0.9.0](https://github.com/AryanpurTech/BlueEngine/compare/v0.8.0..0.9.0) - 2025-04-13
 
 ### Bug Fixes

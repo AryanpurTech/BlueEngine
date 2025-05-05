@@ -8,9 +8,9 @@
 
 // Gui is a trait that you'll be using to add your UI
 #[cfg(feature = "egui")]
-use blue_engine_utilities::egui;
+use blue_engine_utilities::egui_plugin;
 #[cfg(feature = "egui")]
-use blue_engine_utilities::egui::egui as gui;
+use blue_engine_utilities::egui_plugin::egui as gui;
 
 // Basic imports
 #[cfg(feature = "egui")]
@@ -28,10 +28,11 @@ fn main() {
             ObjectSettings::default(),
             &mut engine.renderer,
             &mut engine.objects,
-        );
+        )
+        .unwrap();
 
         // Start the egui context
-        let gui_context = egui::EGUI::new();
+        let gui_context = egui_plugin::EGUIPlugin::new();
 
         // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
         engine.signals.add_signal("egui", Box::new(gui_context));
@@ -40,10 +41,11 @@ fn main() {
 
         // Update loop
         engine
-            .update_loop(move |_, window, objects, _, _, signals| {
+            .update_loop(move |engine| {
                 // obtain the plugin
-                let egui_plugin = signals
-                    .get_signal::<egui::EGUI>("egui")
+                let egui_plugin = engine
+                    .signals
+                    .get_signal::<egui_plugin::EGUIPlugin>("egui")
                     .expect("Plugin not found")
                     .expect("Plugin type mismatch");
 
@@ -57,12 +59,13 @@ fn main() {
                             });
                         });
 
-                        objects
+                        engine
+                            .objects
                             .get_mut("triangle")
                             .unwrap()
                             .set_color(color[0], color[1], color[2], color[3]);
                     },
-                    window,
+                    &engine.window,
                 );
             })
             .expect("Error during update loop");

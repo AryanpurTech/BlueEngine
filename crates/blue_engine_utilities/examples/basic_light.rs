@@ -1,9 +1,10 @@
+use blue_engine::ObjectSettings;
 #[cfg(feature = "gltf")]
 use blue_engine::{Engine, EngineSettings, primitive_shapes::uv_sphere};
 #[cfg(feature = "gltf")]
 use blue_engine_utilities::{LightManager, model_load::load_gltf};
 
-fn main() -> eyre::Result<()> {
+fn main() -> Result<(), blue_engine::error::Error> {
     #[cfg(feature = "gltf")]
     {
         let mut engine = Engine::new_config(EngineSettings {
@@ -16,10 +17,11 @@ fn main() -> eyre::Result<()> {
         // make a light sphere
         uv_sphere(
             "light sphere",
+            ObjectSettings::default(),
             (18, 36, 1f32),
             &mut engine.renderer,
             &mut engine.objects,
-        );
+        )?;
         engine
             .objects
             .get_mut("light sphere")
@@ -46,16 +48,17 @@ fn main() -> eyre::Result<()> {
         let radius = 10f32;
         let start = std::time::SystemTime::now();
 
-        engine.update_loop(move |renderer, _, objects, _, camera, _| {
+        engine.update_loop(move |engine| {
             light_manager
-                .update(objects, renderer, camera)
+                .update(&mut engine.objects, &mut engine.renderer, &engine.camera)
                 .expect("couldn't update the light manager");
 
             let camx = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camy = start.elapsed().unwrap().as_secs_f32().sin() * radius;
             let camz = start.elapsed().unwrap().as_secs_f32().cos() * radius;
 
-            objects
+            engine
+                .objects
                 .get_mut("light sphere")
                 .unwrap()
                 .set_position([camx, camy, camz]);

@@ -1,5 +1,18 @@
-use crate::FlyCamera;
-use blue_engine::{CameraContainer, InputHelper, ObjectStorage, Vector3, winit};
+use blue_engine::{CameraContainer, DeviceEvent, ElementState, Vector3, winit};
+
+pub struct FlyCamera {
+    pub camera_right: Vector3,
+    pub yaw: f32,
+    pub pitch: f32,
+    pub last_x: f64,
+    pub last_y: f64,
+
+    pub is_focus: bool,
+    pub camera_speed: f32,
+    pub camera_sensitivity: f32,
+    pub timer: std::time::Instant,
+    pub last_frame: f32,
+}
 
 impl FlyCamera {
     pub fn new(camera: &mut CameraContainer) -> Self {
@@ -15,8 +28,6 @@ impl FlyCamera {
             camera_sensitivity: 0.10f32,
             timer: std::time::Instant::now(),
             last_frame: 0f32,
-
-            test_counter: 0,
         }
     }
 
@@ -35,23 +46,13 @@ impl FlyCamera {
         camera.set_up(up[0], up[1], up[2]).unwrap(); */
         Vector3::new(camera_right.x, camera_right.y, camera_right.z)
     }
-
-    // purely for testing plugin system
-    pub fn test(&mut self) {
-        self.test_counter += 1;
-        println!("IT WORKS! {}", self.test_counter);
-    }
 }
 
 impl blue_engine::Signal for FlyCamera {
     fn device_events(
         &mut self,
-        _renderer: &mut blue_engine::Renderer,
-        window: &blue_engine::Window,
-        _objects: &mut ObjectStorage,
+        engine: &mut blue_engine::Engine,
         events: &winit::event::DeviceEvent,
-        input: &InputHelper,
-        camera: &mut CameraContainer,
     ) {
         // =========== MOVEMENT ============ //
         let current_frame = self.timer.elapsed().as_secs_f32();
@@ -60,13 +61,18 @@ impl blue_engine::Signal for FlyCamera {
         let mut camera_speed = self.camera_speed * delta;
 
         // ============ Window Focus ============= //
-        if input.mouse_pressed(blue_engine::MouseButton::Left) && !self.is_focus {
-            window
+        if engine
+            .simple_input
+            .mouse_pressed(blue_engine::MouseButton::Left)
+            && !self.is_focus
+        {
+            engine
+                .window
                 .as_ref()
                 .unwrap()
                 .set_cursor_grab(winit::window::CursorGrabMode::Confined)
                 .expect("Couldn't grab the cursor");
-            window.as_ref().unwrap().set_cursor_visible(false);
+            engine.window.as_ref().unwrap().set_cursor_visible(false);
             self.is_focus = true;
         }
 
@@ -89,60 +95,80 @@ impl blue_engine::Signal for FlyCamera {
                     self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
                 );
                 let direction = direction.normalize();
-                camera.set_target([direction.x, direction.y, direction.z]);
-                self.camera_right = Self::update_vertices(camera);
+                engine
+                    .camera
+                    .set_target([direction.x, direction.y, direction.z]);
+                self.camera_right = Self::update_vertices(&mut engine.camera);
             }
         }
 
-        if input.key_pressed(blue_engine::KeyCode::Escape) {
-            window
+        match events {
+            blue_engine::DeviceEvent::Button { button, state } => {
+                println!("{button}");
+                if *button == 0 && *state == ElementState::Pressed {
+                    println!("PRESSED LEFT BUTTON");
+                }
+            }
+            DeviceEvent::Key(key) => {
+                println!("{key:?}");
+            }
+            _ => {}
+        }
+
+        if engine
+            .simple_input
+            .mouse_pressed(blue_engine::MouseButton::Left)
+        {
+            engine
+                .window
                 .as_ref()
                 .unwrap()
                 .set_cursor_grab(winit::window::CursorGrabMode::None)
                 .expect("Couldn't release the cursor");
-            window.as_ref().unwrap().set_cursor_visible(true);
+            engine.window.as_ref().unwrap().set_cursor_visible(true);
             self.is_focus = false;
         }
 
         // SHIFT
-        if input.held_shift() {
-            camera_speed *= 3f32;
+        if engine.simple_input.held_shift() {
+            camera_speed *= 0.003f32;
         }
 
         // W
-        if input.key_held(blue_engine::KeyCode::KeyW) {
-            let result = camera.get("main").unwrap().position
-                + (camera.get("main").unwrap().target * camera_speed);
+        if engine.simple_input.key_held(blue_engine::KeyCode::KeyW) {
+            println!("MOVE");
+            let result = engine.camera.get("main").unwrap().position
+                + (engine.camera.get("main").unwrap().target * camera_speed);
 
-            camera.set_position([result.x, result.y, result.z]);
-            camera.set_target([result.x, result.y, result.z]);
+            engine.camera.set_position([result.x, result.y, result.z]);
+            engine.camera.set_target([result.x, result.y, result.z]);
         }
 
         // S
-        if input.key_held(blue_engine::KeyCode::KeyS) {
-            let result = camera.get("main").unwrap().position
-                - (camera.get("main").unwrap().target * camera_speed);
+        if engine.simple_input.key_held(blue_engine::KeyCode::KeyS) {
+            let result = engine.camera.get("main").unwrap().position
+                - (engine.camera.get("main").unwrap().target * camera_speed);
 
-            camera.set_position([result.x, result.y, result.z]);
-            camera.set_target([result.x, result.y, result.z]);
+            engine.camera.set_position([result.x, result.y, result.z]);
+            engine.camera.set_target([result.x, result.y, result.z]);
         }
         // A
-        if input.key_held(blue_engine::KeyCode::KeyA) {
-            let camera_pos = camera.get("main").unwrap().position;
+        if engine.simple_input.key_held(blue_engine::KeyCode::KeyA) {
+            let camera_pos = engine.camera.get("main").unwrap().position;
             let camera_pos = Vector3::new(camera_pos.x, camera_pos.y, camera_pos.z);
             let result = camera_pos - (self.camera_right * camera_speed);
 
-            camera.set_position([result.x, result.y, result.z]);
-            camera.set_target([result.x, result.y, result.z]);
+            engine.camera.set_position([result.x, result.y, result.z]);
+            engine.camera.set_target([result.x, result.y, result.z]);
         }
         // D
-        if input.key_held(blue_engine::KeyCode::KeyD) {
-            let camera_pos = camera.get("main").unwrap().position;
+        if engine.simple_input.key_held(blue_engine::KeyCode::KeyD) {
+            let camera_pos = engine.camera.get("main").unwrap().position;
             let camera_pos = Vector3::new(camera_pos.x, camera_pos.y, camera_pos.z);
             let result = camera_pos + (self.camera_right * camera_speed);
 
-            camera.set_position([result.x, result.y, result.z]);
-            camera.set_target([result.x, result.y, result.z]);
+            engine.camera.set_position([result.x, result.y, result.z]);
+            engine.camera.set_target([result.x, result.y, result.z]);
         }
     }
 }

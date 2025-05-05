@@ -57,7 +57,6 @@ pub struct EngineSettings {
 impl std::default::Default for EngineSettings {
     /// Will quickly create a window with default settings
     fn default() -> Self {
-        let backends = crate::Backends::all();
         Self {
             width: 800,
             height: 600,
@@ -71,16 +70,8 @@ impl std::default::Default for EngineSettings {
             control_flow: crate::winit::event_loop::ControlFlow::Poll,
             // wgpu
             power_preference: crate::PowerPreference::LowPower,
-            backends,
-            features: if backends == wgpu::Backends::VULKAN {
-                wgpu::Features::POLYGON_MODE_LINE | wgpu::Features::POLYGON_MODE_POINT
-            } else if backends
-                .contains(wgpu::Backends::VULKAN | wgpu::Backends::METAL | wgpu::Backends::DX12)
-            {
-                wgpu::Features::POLYGON_MODE_LINE
-            } else {
-                wgpu::Features::empty()
-            },
+            backends: crate::Backends::all(),
+            features: wgpu::Features::empty(),
             present_mode: crate::wgpu::PresentMode::AutoNoVsync,
             limits: crate::wgpu::Limits::default(),
             alpha_mode: crate::wgpu::CompositeAlphaMode::Auto,
