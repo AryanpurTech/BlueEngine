@@ -28,7 +28,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
 
     // run the engine
     engine
-        .update_loop(move |_, _, _, _, _, _| {})?;
+        .update_loop(move |_| {})?;
 
     Ok(())
 }
