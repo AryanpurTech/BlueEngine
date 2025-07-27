@@ -5,6 +5,7 @@
 */
 
 use image::GenericImageView;
+use rayon::prelude::*;
 use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
@@ -278,7 +279,23 @@ impl crate::prelude::Renderer {
             TextureData::Path(path) => image::open(path)?,
         };
 
-        let rgba = img.to_rgba8();
+        fn rgba_to_bgra_pixels_par(
+            mut buf: image::ImageBuffer<image::Rgba<u8>, Vec<u8>>,
+        ) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+            buf.enumerate_pixels_mut()
+                .par_bridge()
+                .for_each(|(_, _, px)| {
+                    let data = px.0;
+                    *px = image::Rgba([data[2], data[1], data[0], data[3]]);
+                });
+            buf
+        }
+
+        let pixels = match self.config.format {
+            wgpu::TextureFormat::Bgra8Unorm => rgba_to_bgra_pixels_par(img.to_rgba8()),
+            wgpu::TextureFormat::Bgra8UnormSrgb => rgba_to_bgra_pixels_par(img.to_rgba8()),
+            _ => img.to_rgba8(),
+        };
         let dimensions = img.dimensions();
 
         let size = wgpu::Extent3d {
@@ -307,7 +324,7 @@ impl crate::prelude::Renderer {
                 origin: wgpu::Origin3d::ZERO,
                 aspect: wgpu::TextureAspect::All,
             },
-            &rgba,
+            &pixels,
             wgpu::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(4 * dimensions.0),
