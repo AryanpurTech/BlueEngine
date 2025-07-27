@@ -318,7 +318,6 @@ dependencies = [
  "image",
  "log",
  "pollster",
- "rayon",
  "thiserror 2.0.12",
  "wgpu 26.0.1",
  "winit",

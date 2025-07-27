@@ -5,7 +5,6 @@
 */
 
 use image::GenericImageView;
-use rayon::prelude::*;
 use wgpu::{BindGroupLayout, Sampler, Texture, TextureView, util::DeviceExt};
 
 use crate::{
@@ -282,12 +281,10 @@ impl crate::prelude::Renderer {
         fn rgba_to_bgra_pixels_par(
             mut buf: image::ImageBuffer<image::Rgba<u8>, Vec<u8>>,
         ) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-            buf.enumerate_pixels_mut()
-                .par_bridge()
-                .for_each(|(_, _, px)| {
-                    let data = px.0;
-                    *px = image::Rgba([data[2], data[1], data[0], data[3]]);
-                });
+            buf.enumerate_pixels_mut().for_each(|(_, _, px)| {
+                let data = px.0;
+                *px = image::Rgba([data[2], data[1], data[0], data[3]]);
+            });
             buf
         }
 
