@@ -27,7 +27,7 @@ glam_fast_math = ["glam/fast-math"]
 
 [dependencies]
 winit = { version = "0.30.10", features = ["rwh_06"], optional = true }
-wgpu = { version = "24.0.3" }
+wgpu = { version = "26.0.1" }
 image = { version = "0.25.6" }
 pollster = "0.4.0"
 bytemuck = { version = "1.22.0", features = ["derive"] }
@@ -40,6 +40,7 @@ flume = { version = "0.11.1", optional = true }
 # android
 log = { version = "0.4.27", optional = true }
 android_logger = { version = "0.15.0", optional = true }
+rayon = "1.10.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "24.0.3", features = ["webgl"] }
+wgpu = { version = "26.0.1", features = ["webgl"] }

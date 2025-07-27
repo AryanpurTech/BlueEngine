@@ -41,10 +41,7 @@ pub fn square(name: &str, engine: &mut Engine) -> Result<(), blue_engine::error:
             name,
             vertices,
             vec![2, 1, 0, 2, 0, 3],
-            ObjectSettings {
-                camera_effect: None,
-                ..Default::default()
-            },
+            ObjectSettings::default(),
             &mut engine.renderer,
         )?,
     );
