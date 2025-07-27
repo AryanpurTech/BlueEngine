@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.9.2](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.1..0.9.2) - 2025-07-27
+
+### Bug Fixes
+
+- #112 the texture colors are now corrected - ([8e7c48b](https://github.com/AryanpurTech/BlueEngine/commit/8e7c48b23da389277965d6f9f6bd10d0cd6b01c7))
+
+### Miscellaneous Chores
+
+- removed rayon - ([5653acf](https://github.com/AryanpurTech/BlueEngine/commit/5653acfce9582fd695797f3e385e5d80236c3edb))
+
+### Refactoring
+
+- updated to a newer wgpu version - ([3b425e9](https://github.com/AryanpurTech/BlueEngine/commit/3b425e9364640565ad86697c8087d4a088572108))
+
 ## [0.9.1](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.0..0.9.1) - 2025-05-05
 
 ### Bug Fixes
