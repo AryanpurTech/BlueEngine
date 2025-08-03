@@ -7,3 +7,4 @@ publish:
     @cd crates/blue_engine_core && cargo publish --allow-dirty
     @cd crates/blue_engine_dynamic && cargo publish --allow-dirty
     @cargo publish --allow-dirty
+    @cd crates/blue_engine_utilities && cargo publish --allow-dirty

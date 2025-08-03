@@ -3,7 +3,7 @@
 use winit::event::{DeviceEvent, ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, PhysicalKey};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CurrentInput {
     pub mouse_actions: Vec<MouseAction>,
     pub key_actions: Vec<KeyAction>,
@@ -135,21 +135,21 @@ impl CurrentInput {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum KeyAction {
     Pressed(Key),
     PressedOs(Key),
     Released(Key),
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ScanCodeAction {
     Pressed(PhysicalKey),
     PressedOs(PhysicalKey),
     Released(PhysicalKey),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum MouseAction {
     Pressed(MouseButton),
     Released(MouseButton),

@@ -93,6 +93,14 @@ impl ApplicationHandler for Engine {
         }
     }
 
+    fn new_events(
+        &mut self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        _cause: winit::event::StartCause,
+    ) {
+        self.simple_input.step();
+    }
+
     fn device_event(
         &mut self,
         _event_loop: &winit::event_loop::ActiveEventLoop,
@@ -106,6 +114,8 @@ impl ApplicationHandler for Engine {
             i.1.device_events(self, &event);
         });
         std::mem::swap(&mut self.signals.events, &mut events);
+
+        self.raw_input = Some(event);
     }
 
     fn window_event(
@@ -114,14 +124,12 @@ impl ApplicationHandler for Engine {
         _window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
+        self.simple_input.process_window_event(&event);
         let mut events = std::mem::take(&mut self.signals.events);
         events.iter_mut().for_each(|i| {
             i.1.window_events(self, &event);
         });
         std::mem::swap(&mut self.signals.events, &mut events);
-
-        let mut _device_event: winit::event::DeviceEvent =
-            DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
 
         match event {
             WindowEvent::CloseRequested => {
@@ -134,10 +142,7 @@ impl ApplicationHandler for Engine {
                 self.camera.set_resolution(size);
                 self.camera.update_view_projection(&mut self.renderer);
             }
-
             WindowEvent::RedrawRequested => {
-                self.simple_input.end_step_time();
-
                 if self.window.should_close {
                     event_loop.exit();
                 }
@@ -173,23 +178,48 @@ impl ApplicationHandler for Engine {
                     }
                 }
 
-                _device_event = DeviceEvent::MouseMotion { delta: (0.0, 0.0) };
                 if let Some(window_inner) = &self.window.window {
                     window_inner.request_redraw();
                 }
             }
             _ => {}
         }
+    }
 
-        self.simple_input.process_window_event(&event);
+    fn about_to_wait(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        self.simple_input.end_step();
 
-        if event == WindowEvent::RedrawRequested {
-            self.simple_input.step();
+        if self.simple_input.close_requested() || self.simple_input.destroyed() {
+            event_loop.exit();
+            // If you don't drop window, the app won't quit before any other window event.
+            // https://github.com/rust-windowing/winit/issues/3673
+            self.window.window = None;
+            return;
         }
     }
 }
 
 macro_rules! gen_window_component_functions {
+    ($fn_name:ident, $name:ident, String) => {
+        /// see [winit::window::Window::$fn_name]
+        pub fn $fn_name(&mut self, value: String) {
+            if let Some(window) = self.window.as_mut() {
+                window.$fn_name(&value);
+            } else {
+                self.default_attributes.$name = value;
+            }
+        }
+    };
+    ($fn_name:ident, $name:ident, winit::dpi::Position) => {
+        /// see [winit::window::Window::$fn_name]
+        pub fn $fn_name(&mut self, value: winit::dpi::Position) {
+            if let Some(window) = self.window.as_mut() {
+                window.$fn_name(value);
+            } else {
+                self.default_attributes.$name = Some(value);
+            }
+        }
+    };
     ($fn_name:ident, $name:ident, $data_type:ty) => {
         /// see [winit::window::Window::$fn_name]
         pub fn $fn_name(&mut self, value: $data_type) {
@@ -242,27 +272,14 @@ impl Window {
     gen_window_component_functions!(set_content_protected, content_protected, bool);
     gen_window_component_functions!(set_window_level, window_level, winit::window::WindowLevel);
     gen_window_component_functions!(set_cursor, cursor, winit::window::Cursor);
+    gen_window_component_functions!(set_outer_position, position, winit::dpi::Position);
+    gen_window_component_functions!(set_title, title, String);
+    gen_window_component_functions!(set_theme, preferred_theme, Option<winit::window::Theme>);
 
-    /// see [winit::window::Window::set_outer_position]
-    pub fn set_outer_position(&mut self, value: winit::dpi::Position) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_outer_position(value);
-        } else {
-            self.default_attributes.position = Some(value);
-        }
-    }
-
-    /// see [winit::window::Window::set_title]
-    pub fn set_title(&mut self, value: String) {
-        if let Some(window) = self.window.as_mut() {
-            window.set_title(value.as_str());
-        } else {
-            self.default_attributes.title = value;
-        }
-    }
-
-    /// see [winit::window::Window::set_theme]
+    /// use `set_theme`
+    #[deprecated]
     pub fn set_preferred_theme(&mut self, value: Option<winit::window::Theme>) {
+        log::warn!("the function set_preferred_theme has been deprecated, use set_theme instead");
         if let Some(window) = self.window.as_mut() {
             window.set_theme(value);
         } else {

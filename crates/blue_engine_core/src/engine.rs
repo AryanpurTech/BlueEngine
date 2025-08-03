@@ -149,11 +149,13 @@ pub struct Engine {
     /// #### USED INTERNALLY
     pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine)>>,
 
-    /// input events
-    ///
-    /// #### USED INTERNALLY
+    /// Simplified input events
     #[cfg(all(feature = "window", not(feature = "headless")))]
     pub simple_input: crate::utils::winit_input_helper::WinitInputHelper,
+
+    /// Simplified input events
+    #[cfg(all(feature = "window", not(feature = "headless")))]
+    pub raw_input: Option<winit::event::DeviceEvent>,
 }
 unsafe impl Send for Engine {}
 unsafe impl Sync for Engine {}
@@ -225,6 +227,8 @@ impl Engine {
             event_loop_control_flow: settings.control_flow,
             #[cfg(all(not(feature = "headless"), feature = "window"))]
             simple_input: crate::utils::winit_input_helper::WinitInputHelper::new(),
+            #[cfg(all(not(feature = "headless"), feature = "window"))]
+            raw_input: None,
             renderer,
             objects: ObjectStorage::new(),
             camera,
