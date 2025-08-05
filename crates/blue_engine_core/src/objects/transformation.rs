@@ -128,7 +128,7 @@ impl Object {
     /// Sets the position of the object in 3D space relative to the window
     pub fn set_position(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
         let new_pos = new_pos.into();
-        self.position = new_pos;
+        self.position = Vector3::new(0f32, 0f32, 0f32).into();
         self.translation_matrix = Matrix4::IDENTITY;
 
         self.translate(new_pos)

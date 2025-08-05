@@ -145,8 +145,6 @@ pub struct Engine {
     pub signals: SignalStorage,
 
     /// holds the update_loop function
-    ///
-    /// #### USED INTERNALLY
     pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine)>>,
 
     /// Simplified input events
