@@ -299,9 +299,9 @@ dependencies = [
 
 [[package]]
 name = "blue_engine_core"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8aff43e4da26e966ea8242bb015d24c4e13756ab06f900924c172afaf7e8f03"
+checksum = "6dd6bc931a2736bc2da029f55e40b04c172f1a9307d8bbfb02e18cbdf790eaee"
 dependencies = [
  "android_logger",
  "bytemuck",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "blue_engine_dynamic"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
  "blue_engine_core",
 ]

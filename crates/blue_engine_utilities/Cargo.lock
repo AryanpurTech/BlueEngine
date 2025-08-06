@@ -329,9 +329,9 @@ dependencies = [
 
 [[package]]
 name = "blue_engine"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f2369bbf68899b35d72080d003ea6d21028438e2dc00e69d9b2e91dd827f844"
+checksum = "76ed4aefca556af7da6c190a04ed0d00c5e3110e8c69b9814f79109899d0a314"
 dependencies = [
  "blue_engine_core",
  "blue_engine_dynamic",
@@ -339,9 +339,9 @@ dependencies = [
 
 [[package]]
 name = "blue_engine_core"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8aff43e4da26e966ea8242bb015d24c4e13756ab06f900924c172afaf7e8f03"
+checksum = "6dd6bc931a2736bc2da029f55e40b04c172f1a9307d8bbfb02e18cbdf790eaee"
 dependencies = [
  "bytemuck",
  "downcast",
@@ -358,16 +358,16 @@ dependencies = [
 
 [[package]]
 name = "blue_engine_dynamic"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "920f7335a25a4c4bd0092fa1c6db573f12ba047cc638c95b97fc8448e4755908"
+checksum = "fa5eb4d3ebd36d9dd5953495366155e710d9e4acabdf1115b1ad8f468aec87ea"
 dependencies = [
  "blue_engine_core",
 ]
 
 [[package]]
 name = "blue_engine_utilities"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
  "blue_engine",
  "egui",

@@ -116,7 +116,7 @@ impl Object {
 
     /// Moves the object by the amount you specify in the axis you specify
     pub fn translate(&mut self, new_pos: impl Into<Vector3>) -> &mut Self {
-        self.position -= new_pos.into();
+        self.position += new_pos.into();
         self.translation_matrix *= Matrix4::from_translation(self.position);
 
         self.inverse_matrices();
