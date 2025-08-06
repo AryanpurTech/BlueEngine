@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.9.4](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.3..0.9.4) - 2025-08-06
+
+### Bug Fixes
+
+- translate moving in the wrong direction - ([4a38a68](https://github.com/AryanpurTech/BlueEngine/commit/4a38a68c3209902ae25431dac8696a49a5df4674))
+
 ## [0.9.3](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.2..0.9.3) - 2025-08-05
 
 ### Bug Fixes
