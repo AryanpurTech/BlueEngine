@@ -6,6 +6,8 @@ on:
 
 jobs:
   test_build:
+    needs: publish
+
     strategy:
       fail-fast: false
       matrix:
