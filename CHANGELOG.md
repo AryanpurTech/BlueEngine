@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.10.0](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.4..0.10.0) - 2025-12-07
+
+### Features
+
+- updated egui to the latest version - ([6b070cb](https://github.com/AryanpurTech/BlueEngine/commit/6b070cba689dd0759f9d506e2c7630bbe5b223ad))
+- updated utilities to latest version - ([b004018](https://github.com/AryanpurTech/BlueEngine/commit/b004018c90b81a45455e62028c62ba9b8fe75400))
+
+### Refactoring
+
+- removed flume as a dependency of headless - ([1f90fb9](https://github.com/AryanpurTech/BlueEngine/commit/1f90fb93b6650c98c5bae3631b0975c13e7d3909))
+
 ## [0.9.4](https://github.com/AryanpurTech/BlueEngine/compare/v0.9.3..0.9.4) - 2025-08-06
 
 ### Bug Fixes

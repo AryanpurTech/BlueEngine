@@ -11,7 +11,7 @@ license = "Apache-2.0"
 rust-version = "1.88"
 
 [features]
-default = ["all"]
+default = []
 all = ["animation", "gltf", "obj", "egui"]
 animation = ["dep:keyframe_derive", "dep:keyframe"]
 gltf = ["dep:gltf"]
