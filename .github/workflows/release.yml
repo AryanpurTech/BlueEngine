@@ -12,9 +12,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: publish
-        run: |
-          cd crates/blue_engine_core && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
-          cd crates/blue_engine_dynamic && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
-          cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
-          cd crates/blue_engine_utilities && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+      - name: publish core
+        run: cd crates/blue_engine_core && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+        continue-on-error: true
+      - name: publish dynamic
+        run: cd crates/blue_engine_dynamic && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+        continue-on-error: true
+      - name: publish base
+        run: cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+      - name: publish utilities
+        run: cd crates/blue_engine_utilities && cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+        continue-on-error: true
