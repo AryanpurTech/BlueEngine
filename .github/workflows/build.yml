@@ -32,16 +32,3 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: cargo build --release --verbose
-  
-  publish:
-    runs-on: ubuntu-latest
-    name: Publish Blue Engine to crates.io
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: publish
-        run: |
-          cd crates/blue_engine_core && cargo publish --allow-dirty
-          cd crates/blue_engine_dynamic && cargo publish --allow-dirty
-          cargo publish --allow-dirty
-          cd crates/blue_engine_utilities && cargo publish --allow-dirty
