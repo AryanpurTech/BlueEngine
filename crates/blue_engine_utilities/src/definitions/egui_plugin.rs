@@ -1,8 +1,6 @@
 #![cfg(feature = "egui")]
 
-use blue_engine::{
-    CommandEncoder, DEPTH_FORMAT, Matrix4, TextureView, Vector4, Window as Win, wgpu,
-};
+use blue_engine::{CommandEncoder, Matrix4, TextureView, Vector4, Window as Win, wgpu};
 pub use egui;
 use egui::ViewportId;
 
@@ -80,9 +78,7 @@ impl blue_engine::Signal for EGUIPlugin {
             let renderer = egui_wgpu::Renderer::new(
                 &engine.renderer.device,
                 format,
-                Some(DEPTH_FORMAT),
-                1,
-                true,
+                egui_wgpu::RendererOptions::default(),
             );
 
             self.platform = Some(platform);
@@ -174,18 +170,10 @@ impl blue_engine::Signal for EGUIPlugin {
                                             load: blue_engine::LoadOp::Load,
                                             store: wgpu::StoreOp::Store,
                                         },
+                                        depth_slice: None,
                                     },
                                 )],
-                                depth_stencil_attachment: Some(
-                                    wgpu::RenderPassDepthStencilAttachment {
-                                        view: &engine.renderer.depth_buffer.1,
-                                        depth_ops: Some(wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(1.0),
-                                            store: wgpu::StoreOp::Store,
-                                        }),
-                                        stencil_ops: None,
-                                    },
-                                ),
+                                depth_stencil_attachment: None,
                                 timestamp_writes: None,
                                 occlusion_query_set: None,
                             });
