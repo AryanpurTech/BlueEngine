@@ -71,8 +71,15 @@ impl Renderer {
                         label: Some("Device"),
                         required_features: settings.features,
                         required_limits: settings.limits,
-                        memory_hints: wgpu::MemoryHints::Performance,
+                        memory_hints: if settings.power_preference
+                            == wgpu::PowerPreference::HighPerformance
+                        {
+                            wgpu::MemoryHints::Performance
+                        } else {
+                            wgpu::MemoryHints::MemoryUsage
+                        },
                         trace: wgpu::Trace::Off,
+                        ..Default::default()
                     })
                     .await?;
 
@@ -437,10 +444,12 @@ impl Renderer {
 
             pollster::block_on(async {
                 let buffer_slice = output_staging_buffer.slice(..);
-                let (sender, receiver) = flume::bounded(1);
+                let (sender, receiver) = std::sync::mpsc::channel();
                 buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
-                self.device.poll(wgpu::Maintain::wait());
-                receiver.recv_async().await.unwrap().unwrap();
+                self.device
+                    .poll(wgpu::PollType::wait_indefinitely())
+                    .unwrap();
+                receiver.recv().unwrap().unwrap();
                 {
                     let view = buffer_slice.get_mapped_range();
                     self.headless_texture_data.extend_from_slice(&view[..]);

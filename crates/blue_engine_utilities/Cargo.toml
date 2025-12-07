@@ -1,6 +1,6 @@
 [package]
 name = "blue_engine_utilities"
-version = "0.9.4"
+version = "0.10.0"
 edition = "2024"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "Utilities for Blue Engine"
@@ -26,7 +26,7 @@ headless = ["blue_engine/headless"]
 #     "window",
 #     "static_link",
 # ] }
-blue_engine = { version = "0.9.4" }
+blue_engine = { version = "0.10.0" }
 eyre = "0.6.12"
 
 # Animation
