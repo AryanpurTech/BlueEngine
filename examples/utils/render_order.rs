@@ -54,7 +54,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
         let target = engine.objects.get_mut("layer1").unwrap();
 
         // on ever 2 seconds change order
-        if start.elapsed().as_secs() % 2 == 0 {
+        if start.elapsed().as_secs().is_multiple_of(2) {
             target.set_render_order(2);
         } else {
             // change back to default

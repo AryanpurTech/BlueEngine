@@ -1,8 +1,6 @@
 #![cfg(feature = "egui")]
 
-use blue_engine::{
-    CommandEncoder, DEPTH_FORMAT, Matrix4, TextureView, Vector4, Window as Win, wgpu,
-};
+use blue_engine::{CommandEncoder, Matrix4, TextureView, Vector4, Window as Win, wgpu};
 pub use egui;
 use egui::ViewportId;
 
@@ -36,10 +34,10 @@ impl EGUIPlugin {
                 None
             };
 
-            if let Some(context) = self.context.as_ref() {
-                if let Some(raw_input) = raw_input {
-                    self.full_output = Some(context.run(raw_input.clone(), callback));
-                }
+            if let Some(context) = self.context.as_ref()
+                && let Some(raw_input) = raw_input
+            {
+                self.full_output = Some(context.run(raw_input.clone(), callback));
             }
         }
     }
@@ -80,9 +78,7 @@ impl blue_engine::Signal for EGUIPlugin {
             let renderer = egui_wgpu::Renderer::new(
                 &engine.renderer.device,
                 format,
-                Some(DEPTH_FORMAT),
-                1,
-                true,
+                egui_wgpu::RendererOptions::default(),
             );
 
             self.platform = Some(platform);
@@ -95,11 +91,11 @@ impl blue_engine::Signal for EGUIPlugin {
         engine: &mut blue_engine::Engine,
         event: &blue_engine::WindowEvent,
     ) {
-        if let Some(window) = engine.window.window.as_ref() {
-            if let Some(platform) = self.platform.as_mut() {
-                //? has a return, maybe useful in the future
-                let _ = platform.on_window_event(window.as_ref(), event);
-            }
+        if let Some(window) = engine.window.window.as_ref()
+            && let Some(platform) = self.platform.as_mut()
+        {
+            //? has a return, maybe useful in the future
+            let _ = platform.on_window_event(window.as_ref(), event);
         }
     }
 
@@ -109,91 +105,81 @@ impl blue_engine::Signal for EGUIPlugin {
         encoder: &mut CommandEncoder,
         view: &TextureView,
     ) {
-        if let Some(window) = engine.window.as_ref() {
-            if engine.renderer.surface.is_some() && self.full_output.is_some() {
-                let egui::FullOutput {
-                    platform_output,
-                    textures_delta,
-                    shapes,
-                    pixels_per_point,
-                    ..
-                } = self
-                    .full_output
-                    .as_ref()
-                    .expect("Failed to get egui output");
+        if let Some(window) = engine.window.as_ref()
+            && engine.renderer.surface.is_some()
+            && self.full_output.is_some()
+        {
+            let egui::FullOutput {
+                platform_output,
+                textures_delta,
+                shapes,
+                pixels_per_point,
+                ..
+            } = self
+                .full_output
+                .as_ref()
+                .expect("Failed to get egui output");
 
-                if let Some(platform) = self.platform.as_mut() {
-                    platform.handle_platform_output(window, platform_output.clone());
+            if let Some(platform) = self.platform.as_mut() {
+                platform.handle_platform_output(window, platform_output.clone());
+            }
+
+            let paint_jobs = self
+                .context
+                .as_ref()
+                .map(|context| context.tessellate(shapes.clone(), *pixels_per_point));
+
+            let screen_descriptor = egui_wgpu::ScreenDescriptor {
+                size_in_pixels: [
+                    engine.renderer.config.width,
+                    #[cfg(target_os = "android")]
+                    {
+                        renderer.config.height - 20
+                    },
+                    #[cfg(not(target_os = "android"))]
+                    engine.renderer.config.height,
+                ],
+                pixels_per_point: *pixels_per_point,
+            };
+
+            if let Some(renderer) = self.renderer.as_mut()
+                && let Some(paint_jobs) = paint_jobs
+            {
+                for (id, image_delta) in &textures_delta.set {
+                    renderer.update_texture(
+                        &engine.renderer.device,
+                        &engine.renderer.queue,
+                        *id,
+                        image_delta,
+                    );
                 }
 
-                let paint_jobs = self
-                    .context
-                    .as_ref()
-                    .map(|context| context.tessellate(shapes.clone(), *pixels_per_point));
+                renderer.update_buffers(
+                    &engine.renderer.device,
+                    &engine.renderer.queue,
+                    encoder,
+                    &paint_jobs,
+                    &screen_descriptor,
+                );
 
-                let screen_descriptor = egui_wgpu::ScreenDescriptor {
-                    size_in_pixels: [
-                        engine.renderer.config.width,
-                        #[cfg(target_os = "android")]
-                        {
-                            renderer.config.height - 20
+                let render_pass = encoder.begin_render_pass(&blue_engine::RenderPassDescriptor {
+                    label: Some("Render pass"),
+                    color_attachments: &[Some(blue_engine::RenderPassColorAttachment {
+                        view,
+                        resolve_target: None,
+                        ops: blue_engine::Operations {
+                            load: blue_engine::LoadOp::Load,
+                            store: wgpu::StoreOp::Store,
                         },
-                        #[cfg(not(target_os = "android"))]
-                        engine.renderer.config.height,
-                    ],
-                    pixels_per_point: *pixels_per_point,
-                };
+                        depth_slice: None,
+                    })],
+                    depth_stencil_attachment: None,
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
+                });
 
-                if let Some(renderer) = self.renderer.as_mut() {
-                    if let Some(paint_jobs) = paint_jobs {
-                        for (id, image_delta) in &textures_delta.set {
-                            renderer.update_texture(
-                                &engine.renderer.device,
-                                &engine.renderer.queue,
-                                *id,
-                                image_delta,
-                            );
-                        }
-
-                        renderer.update_buffers(
-                            &engine.renderer.device,
-                            &engine.renderer.queue,
-                            encoder,
-                            &paint_jobs,
-                            &screen_descriptor,
-                        );
-
-                        let render_pass =
-                            encoder.begin_render_pass(&blue_engine::RenderPassDescriptor {
-                                label: Some("Render pass"),
-                                color_attachments: &[Some(
-                                    blue_engine::RenderPassColorAttachment {
-                                        view,
-                                        resolve_target: None,
-                                        ops: blue_engine::Operations {
-                                            load: blue_engine::LoadOp::Load,
-                                            store: wgpu::StoreOp::Store,
-                                        },
-                                    },
-                                )],
-                                depth_stencil_attachment: Some(
-                                    wgpu::RenderPassDepthStencilAttachment {
-                                        view: &engine.renderer.depth_buffer.1,
-                                        depth_ops: Some(wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(1.0),
-                                            store: wgpu::StoreOp::Store,
-                                        }),
-                                        stencil_ops: None,
-                                    },
-                                ),
-                                timestamp_writes: None,
-                                occlusion_query_set: None,
-                            });
-
-                        let mut render_pass = render_pass.forget_lifetime();
-                        renderer.render(&mut render_pass, &paint_jobs, &screen_descriptor);
-                    }
-                }
+                let mut render_pass = render_pass.forget_lifetime();
+                renderer.render(&mut render_pass, &paint_jobs, &screen_descriptor);
             }
         }
     }
