@@ -8,14 +8,15 @@ repository = "https://github.com/AryanpurTech/BlueEngineUtilities"
 keywords = ["gamedev", "utility", "3D", "2D", "animation"]
 categories = ["game-development", "graphics", "rendering"]
 license = "Apache-2.0"
+rust-version = "1.88"
 
 [features]
-default = []
-all = ["animation", "gltf", "obj", "physics", "egui"]
+default = ["all"]
+all = ["animation", "gltf", "obj", "egui"]
 animation = ["dep:keyframe_derive", "dep:keyframe"]
 gltf = ["dep:gltf"]
 obj = ["dep:obj-rs"]
-physics = ["dep:rapier3d"]
+# physics = ["dep:rapier3d"]
 egui = ["dep:egui", "dep:egui-winit", "dep:egui-wgpu"]
 ## pass blue engine's headless mode
 headless = ["blue_engine/headless"]
@@ -26,7 +27,7 @@ headless = ["blue_engine/headless"]
 #     "window",
 #     "static_link",
 # ] }
-blue_engine = { version = "0.10.0" }
+blue_engine = { version = "^0.10.0" }
 eyre = "0.6.12"
 
 # Animation
@@ -38,13 +39,13 @@ gltf = { version = "1.4.1", optional = true }
 obj-rs = { version = "0.7.4", optional = true }
 
 # physics
-rapier3d = { version = "0.23.1", features = ["simd-stable"], optional = true }
-nalgebra-glm = { version = "0.19.0" }
+# rapier3d = { version = "0.31.0", features = ["simd-stable"], optional = true }
+# nalgebra-glm = { version = "0.20.0" }
 
 # egui
-egui = { version = "0.31.1", optional = true }
-egui-wgpu = { version = "0.31.1", optional = true }
-egui-winit = { version = "0.31.1", optional = true }
+egui = { version = "0.33.2", optional = true }
+egui-wgpu = { version = "0.33.2", optional = true }
+egui-winit = { version = "0.33.2", optional = true }
 
 # Animation examples
 [[example]]
