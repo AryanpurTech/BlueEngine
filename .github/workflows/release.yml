@@ -4,8 +4,32 @@ on:
   release:
     types: [created]
 
-
 jobs:
+  test_build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Build Linux
+          - os: windows-latest
+            name: Build Windows
+          - os: macos-latest
+            name: Build MacOS
+
+    name: ${{ matrix.name }}
+    runs-on: '${{ matrix.os }}'
+    environment: production
+
+    env:
+      CARGO_INCREMENTAL: 0
+      cache-key: "cargo-cache"
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --release --verbose
+
   publish:
     runs-on: ubuntu-latest
     name: Publish Blue Engine to crates.io
