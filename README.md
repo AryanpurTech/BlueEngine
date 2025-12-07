@@ -1,7 +1,6 @@
 <img src="https://raw.githubusercontent.com/AryanpurTech/BlueEngineDocs/master/resources/logo_3d.gif" loop=infinite width="100%" />
 
-[![Build](https://github.com/AryanpurTech/BlueEngine/actions/workflows/build.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/build.yml)
-[![rust-clippy analyze](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/rust-clippy.yml)
+[![Cross Platform Build](https://github.com/AryanpurTech/BlueEngine/actions/workflows/release.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/release.yml)
 [![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/s7xsj9q)
 [![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://docs.rs/blue_engine)
 
