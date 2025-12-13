@@ -1,3 +1,4 @@
+use std::ops::ControlFlow;
 #[cfg(all(feature = "window", not(feature = "headless")))]
 use crate::Window;
 use crate::{CameraContainer, ObjectStorage, Renderer, SignalStorage};
@@ -145,7 +146,7 @@ pub struct Engine {
     pub signals: SignalStorage,
 
     /// holds the update_loop function
-    pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine)>>,
+    pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine) -> ControlFlow<()>>>,
 
     /// Simplified input events
     #[cfg(all(feature = "window", not(feature = "headless")))]
@@ -247,7 +248,7 @@ impl Engine {
         + FnMut(
             // Coreall(target_os = "android", not(feature = "headless"))
             &mut Engine,
-        ),
+        ) -> ControlFlow<()>,
     ) -> Result<(), crate::error::Error> {
         #[cfg(all(not(feature = "headless"), feature = "window"))]
         {
@@ -293,14 +294,14 @@ impl Engine {
         #[cfg(all(not(feature = "headless"), feature = "window"))]
         event_loop.set_control_flow(self.event_loop_control_flow);
         #[cfg(all(not(feature = "headless"), feature = "window"))]
-        event_loop.run_app(self)?;
+        let result = event_loop.run_app(self)?;
 
         #[cfg(all(
             not(target_os = "android"),
             not(feature = "window"),
             feature = "headless"
         ))]
-        {
+        let result = {
             let window_size = (self.renderer.config.width, self.renderer.config.height);
 
             let mut events = std::mem::take(&mut self.signals.events);
@@ -340,11 +341,14 @@ impl Engine {
 
                     self.renderer.render(encoder, frame, headless_output);
 
-                    update_function(self);
+                    match update_function(self) {
+                        ControlFlow::Break(r) => break r,
+                        ControlFlow::Continue(_) => {}
+                    }
                 }
             }
-        }
+        };
 
-        Ok(())
+        Ok(result)
     }
 }

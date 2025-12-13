@@ -44,12 +44,12 @@ glam_fast_math = [
 ]
 
 [dependencies]
-blue_engine_core = { version = "0.10.0", optional = true }
-# blue_engine_core = { path = "crates/blue_engine_core", optional = true }
+# blue_engine_core = { version = "0.10.0", optional = true }
+blue_engine_core = { path = "crates/blue_engine_core", optional = true }
 
 # Wasm does not support dynamic linking.
-blue_engine_dynamic = { version = "0.10.0", optional = true }
-# blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
+# blue_engine_dynamic = { version = "0.10.0", optional = true }
+blue_engine_dynamic = { path = "crates/blue_engine_dynamic", optional = true }
 
 # ========== EXAMPLES ========== #
 
@@ -103,6 +103,10 @@ path = "examples/utils/signals.rs"
 [[example]]
 name = "headless"
 path = "examples/utils/headless.rs"
+
+[[example]]
+name = "headless_loop"
+path = "examples/utils/headless_loop.rs"
 
 # Development ONLY
 [[example]]
