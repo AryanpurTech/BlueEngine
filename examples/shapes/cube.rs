@@ -3,10 +3,9 @@
  *
  * The license is same as the one on the root.
 */
-use std::ops::ControlFlow;
-use blue_engine_core::EngineSettings;
-use blue_engine::{prelude::Engine, primitive_shapes::cube, ObjectSettings};
 use blue_engine::wgpu::Limits;
+use blue_engine::{ObjectSettings, prelude::Engine, primitive_shapes::cube};
+use blue_engine_core::EngineSettings;
 
 fn main() -> Result<(), blue_engine::error::Error> {
     let mut engine = Engine::new_config(EngineSettings {
@@ -38,8 +37,6 @@ fn main() -> Result<(), blue_engine::error::Error> {
         let camy = start.elapsed().as_secs_f32().sin() * radius;
         let camz = start.elapsed().as_secs_f32().cos() * radius;
         engine.camera.set_position((camx, camy, camz));
-
-        ControlFlow::Continue(())
     })?;
 
     Ok(())

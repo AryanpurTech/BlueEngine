@@ -1,4 +1,3 @@
-use std::ops::ControlFlow;
 #[cfg(all(feature = "window", not(feature = "headless")))]
 use crate::Window;
 use crate::{CameraContainer, ObjectStorage, Renderer, SignalStorage};
@@ -145,8 +144,12 @@ pub struct Engine {
     /// Handles all engine plugins
     pub signals: SignalStorage,
 
-    /// holds the update_loop function
-    pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine) -> ControlFlow<()>>>,
+    /// Holds the update_loop function
+    pub update_loop: Option<Box<dyn 'static + FnMut(&mut Engine)>>,
+
+    /// Controls the flow of the update loop
+    #[cfg(all(not(feature = "window"), feature = "headless"))]
+    pub update_loop_control_flow: std::ops::ControlFlow<()>,
 
     /// Simplified input events
     #[cfg(all(feature = "window", not(feature = "headless")))]
@@ -233,6 +236,8 @@ impl Engine {
             camera,
             signals: crate::SignalStorage::new(),
             update_loop: None,
+            #[cfg(all(not(feature = "window"), feature = "headless"))]
+            update_loop_control_flow: std::ops::ControlFlow::Continue(()),
         })
     }
 
@@ -244,11 +249,7 @@ impl Engine {
     #[allow(unreachable_code)]
     pub fn update_loop(
         &mut self,
-        update_function: impl 'static
-        + FnMut(
-            // Coreall(target_os = "android", not(feature = "headless"))
-            &mut Engine,
-        ) -> ControlFlow<()>,
+        update_function: impl 'static + FnMut(&mut Engine),
     ) -> Result<(), crate::error::Error> {
         #[cfg(all(not(feature = "headless"), feature = "window"))]
         {
@@ -340,10 +341,12 @@ impl Engine {
                     });
 
                     self.renderer.render(encoder, frame, headless_output);
+                    update_function(self);
 
-                    match update_function(self) {
-                        ControlFlow::Break(r) => break r,
-                        ControlFlow::Continue(_) => {}
+                    #[cfg(all(not(feature = "window"), feature = "headless"))]
+                    match self.update_loop_control_flow {
+                        std::ops::ControlFlow::Break(r) => break r,
+                        std::ops::ControlFlow::Continue(_) => {}
                     }
                 }
             }

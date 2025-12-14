@@ -13,17 +13,19 @@
  * blue_engine = { version = "*", default-features = false, features = ["static_link", "debug", "headless"] }
  */
 
+#![cfg(all(not(feature = "window"), feature = "headless"))]
+
+use blue_engine::wgpu::Limits;
 use blue_engine::{
     Engine, EngineSettings, ObjectSettings, image::ImageEncoder, primitive_shapes::triangle,
 };
-use blue_engine::wgpu::Limits;
 
-pub fn output_image_native(image_data: &Vec<u8>, texture_dims: (usize, usize), path: &str) {
+pub fn output_image_native(image_data: &[u8], texture_dims: (usize, usize), path: &str) {
     let writer = std::fs::File::create(path).unwrap();
     let encoder = blue_engine::image::codecs::png::PngEncoder::new(writer);
     encoder
         .write_image(
-            &image_data,
+            image_data,
             texture_dims.0 as u32,
             texture_dims.1 as u32,
             blue_engine::image::ExtendedColorType::Rgba8,

@@ -12,19 +12,25 @@
  *
  * blue_engine = { version = "*", default-features = false, features = ["static_link", "debug", "headless"] }
  */
-use std::ops::ControlFlow;
-use blue_engine_core::{RotateAmount, RotateAxis};
-use blue_engine::{
-    Engine, EngineSettings, ObjectSettings, image::ImageEncoder, primitive_shapes::{triangle, cube},
-};
-use blue_engine::wgpu::Limits;
 
-pub fn output_image_native(image_data: &Vec<u8>, texture_dims: (usize, usize), path: &str) {
+#![cfg(all(not(feature = "window"), feature = "headless"))]
+
+use blue_engine::ShaderSettings;
+use blue_engine::wgpu::Limits;
+use blue_engine::{
+    Engine, EngineSettings, ObjectSettings,
+    image::ImageEncoder,
+    primitive_shapes::{cube, triangle},
+};
+use blue_engine_core::{RotateAmount, RotateAxis};
+use std::ops::ControlFlow;
+
+pub fn output_image_native(image_data: &[u8], texture_dims: (usize, usize), path: &str) {
     let writer = std::fs::File::create(path).unwrap();
     let encoder = blue_engine::image::codecs::png::PngEncoder::new(writer);
     encoder
         .write_image(
-            &image_data,
+            image_data,
             texture_dims.0 as u32,
             texture_dims.1 as u32,
             blue_engine::image::ExtendedColorType::Rgba8,
@@ -49,10 +55,15 @@ fn main() -> Result<(), blue_engine::error::Error> {
         ..Default::default()
     })?;
 
-
     triangle(
         "Triangle",
-        ObjectSettings::default(),
+        ObjectSettings {
+            shader_settings: ShaderSettings {
+                cull_mode: None,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         &mut engine.renderer,
         &mut engine.objects,
     )?;
@@ -93,7 +104,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
     let _ = engine.update_loop(move |engine| {
         frame_index += 1;
 
-        let rotate = 360f32 * (frame_index as f32 / steps as f32) ;
+        let rotate = 360f32 * (frame_index as f32 / steps as f32);
         println!("rotation: {}deg", rotate);
         engine
             .objects
@@ -122,12 +133,15 @@ fn main() -> Result<(), blue_engine::error::Error> {
         let elapsed_since_start = now - start_at;
         let frame_duration = now - last_frame_at;
         last_frame_at = now;
-        println!("frame {}, elapsed: {}ms, frame_duration: {}ms", frame_index, elapsed_since_start.as_millis(), frame_duration.as_millis());
+        println!(
+            "frame {}, elapsed: {}ms, frame_duration: {}ms",
+            frame_index,
+            elapsed_since_start.as_millis(),
+            frame_duration.as_millis()
+        );
 
         if frame_index >= steps {
-            ControlFlow::Break(())
-        } else {
-            ControlFlow::Continue(())
+            engine.update_loop_control_flow = ControlFlow::Break(());
         }
         // ^^^ added a system to allow exiting from the update loop and exiting gracefully.
         //     see API changes to `update_loop`
