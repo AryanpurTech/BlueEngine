@@ -356,6 +356,8 @@ dependencies = [
 [[package]]
 name = "blue_engine"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd9dc11926ce3c57c7b264ce77aedcd80e8de1626ffcc23cad8952ae0cbcd0b5"
 dependencies = [
  "blue_engine_core",
  "blue_engine_dynamic",
@@ -364,6 +366,8 @@ dependencies = [
 [[package]]
 name = "blue_engine_core"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d4e8832bc9146e2eaba8c40f6e12603fbffc1ddba1e19702fca05abb0ec8e90"
 dependencies = [
  "bytemuck",
  "downcast",
@@ -380,6 +384,8 @@ dependencies = [
 [[package]]
 name = "blue_engine_dynamic"
 version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd9e042a964b2fc65403f72d7b86645db9d93162e371b13e603cfa9c9f680b46"
 dependencies = [
  "blue_engine_core",
 ]
@@ -445,9 +451,9 @@ checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "bytes"
-version = "1.10.1"
+version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
+checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
 name = "calloop"
