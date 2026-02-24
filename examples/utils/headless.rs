@@ -16,8 +16,9 @@
 use blue_engine::{
     Engine, EngineSettings, ObjectSettings, image::ImageEncoder, primitive_shapes::triangle,
 };
+use blue_engine::wgpu::Limits;
 
-pub fn output_image_native(image_data: Vec<u8>, texture_dims: (usize, usize), path: &str) {
+pub fn output_image_native(image_data: &Vec<u8>, texture_dims: (usize, usize), path: &str) {
     let writer = std::fs::File::create(path).unwrap();
     let encoder = blue_engine::image::codecs::png::PngEncoder::new(writer);
     encoder
@@ -40,6 +41,11 @@ fn main() -> Result<(), blue_engine::error::Error> {
         // The width and height must be respecting of the 256 padding
         height: 1024,
         width: 1024,
+        limits: Limits {
+            max_texture_dimension_1d: 4096,
+            max_texture_dimension_2d: 4096,
+            ..Default::default()
+        },
         ..Default::default()
     })?;
 
@@ -54,7 +60,7 @@ fn main() -> Result<(), blue_engine::error::Error> {
     engine.update_loop(move |_engine| {
         #[cfg(feature = "headless")]
         output_image_native(
-            _engine.renderer.headless_texture_data.clone(),
+            &_engine.renderer.headless_texture_data,
             (
                 // since we do not have a window, the width and
                 // height is taken from the configuration of the renderer
