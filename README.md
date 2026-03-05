@@ -1,7 +1,6 @@
 <img src="https://raw.githubusercontent.com/AryanpurTech/BlueEngineDocs/master/resources/logo_3d.gif" loop=infinite width="100%" />
 
 [![Cross Platform Build](https://github.com/AryanpurTech/BlueEngine/actions/workflows/release.yml/badge.svg)](https://github.com/AryanpurTech/BlueEngine/actions/workflows/release.yml)
-[![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/s7xsj9q)
 [![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://docs.rs/blue_engine)
 
 Make sure to use latest Rust version, as the engine is always kept up to date.
@@ -39,6 +38,9 @@ fn main() -> Result<(), blue_engine::error::Error> {
 
 - Check out the [utilities library](https://crates.io/crates/blue_engine_utilities) for extra functionality with the engine
 
+- If you have ideas, questions, or simply want to showcase your cool projects, feel free to start a thread at our [GitHub discussions](https://github.com/AryanpurTech/BlueEngine/discussions)!
+
 _the credits to the image on top: NotPB_
 
 _The project isn't dead, just the development might seem slow sometimes._
+
