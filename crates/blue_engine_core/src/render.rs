@@ -1,5 +1,5 @@
 use crate::{
-    CameraContainer, ObjectStorage, PipelineData, WindowSize,
+    CameraContainer, Object, ObjectStorage, PipelineData, WindowSize,
     prelude::{ShaderSettings, TextureData},
     utils::default_resources::{DEFAULT_COLOR, DEFAULT_SHADER, DEFAULT_TEXTURE},
 };
@@ -38,6 +38,8 @@ pub struct Renderer {
     /// Scissor cut section of the screen to render to
     /// (x, y, width, height)
     pub scissor_rect: Option<(u32, u32, u32, u32)>,
+    /// Ordering buffer for rendering objects in order
+    pub sorting_buffer: Vec<usize>,
     /// The texture data that holds data for the headless mode
     #[cfg(feature = "headless")]
     pub headless_texture_data: Vec<u8>,
@@ -168,6 +170,8 @@ impl Renderer {
                     camera: None,
                     clear_color: wgpu::Color::BLACK,
                     scissor_rect: None,
+
+                    sorting_buffer: Vec::with_capacity(1024),
 
                     #[cfg(feature = "headless")]
                     headless_texture_data: Vec::<u8>::with_capacity((size.0 * size.1) as usize * 4),
@@ -333,12 +337,16 @@ impl Renderer {
             render_pass.set_pipeline(&default_data.1);
         }
 
-        // sort the object list in descending render order
-        // ! There needs to be a better way for this, to not iterate twice
-        let mut object_list = objects.iter().collect::<Vec<_>>();
-        object_list.sort_by(|(_, a), (_, b)| a.render_order.cmp(&b.render_order).reverse());
+        // SAFETY: Must clear the object list before use to ensure no dangling references
+        self.sorting_buffer.clear();
+        // SAFETY: We ensure that the transmuted lifetime does not outlive self
+        let object_list: &mut Vec<&Object> =
+            unsafe { std::mem::transmute(&mut self.sorting_buffer) };
+        object_list.reserve(objects.len() - object_list.capacity());
+        object_list.extend(objects.values());
+        object_list.sort_by(|a, b| b.render_order.cmp(&a.render_order));
 
-        for (_, i) in object_list {
+        for i in object_list {
             if let Some(camera_data) = i.camera_effect.as_ref() {
                 if let Some(camera) = camera.get(camera_data.as_ref()) {
                     render_pass.set_bind_group(1, &camera.uniform_data, &[]);
